@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="EasyIntern — Plataforma inteligente de recrutamento para estagiários e profissionais juniores. Conectando talentos às melhores empresas." />
+  <meta name="robots" content="index, follow" />
+  <meta property="og:title" content="EasyIntern — Plataforma Inteligente de Recrutamento" />
+  <meta property="og:description" content="EasyIntern: Plataforma inteligente de recrutamento para estagiários e profissionais juniores." />
+  <meta property="og:type" content="website" />
+
+  <title>{% block title %}EasyIntern — Plataforma Inteligente de Recrutamento{% endblock %}</title>
+
+  <!-- Google Fonts: Inter + Space Grotesk -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Bootstrap 5.3 Icons -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+  />
+
+  <!-- EasyIntern CSS System -->
+  <link rel="stylesheet" href="/static/css/easyintern.css" />
+
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="ag-body">
+
+  <!-- ── Partículas de fundo ─────────────────────────────────────────────── -->
+  <div class="ag-particles" aria-hidden="true">
+    {% for i in range(1, 21) %}
+    <span class="particle particle-{{ i }}"></span>
+    {% endfor %}
+  </div>
+
+  <!-- ── Orbes de gradiente (decorativos) ────────────────────────────────── -->
+  <div class="ag-orb ag-orb--violet" aria-hidden="true"></div>
+  <div class="ag-orb ag-orb--cyan"   aria-hidden="true"></div>
+  <div class="ag-orb ag-orb--green"  aria-hidden="true"></div>
+
+  <!-- ── Conteúdo principal ──────────────────────────────────────────────── -->
+  <main id="ag-main" class="ag-main">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- ── Toast de notificação ────────────────────────────────────────────── -->
+  <div class="ag-toast-container" id="ag-toast-container" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Bootstrap 5.3 JS Bundle -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-YvpcrYf0tY3lHB60NNkmXc4s9bIOgUxi8T/jzmM3YKD1B7Z4jB0Z+5fMzT6TFKD"
+    crossorigin="anonymous"
+    defer
+  ></script>
+
+  <!-- EasyIntern JS -->
+  <script src="/static/js/zero-g-auth.js?v=2" defer></script>
+
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

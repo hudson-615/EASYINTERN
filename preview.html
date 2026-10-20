@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A EasyIntern aproxima estudantes de oportunidades de estágio e ajuda empresas a encontrar novos talentos.">
+  <title>EasyIntern — O próximo passo da sua carreira</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Inter, "Segoe UI", sans-serif;
+      color: #342f28;
+      background: #f3eee5;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+      --blue: #806344;
+      --blue-dark: #493d30;
+      --ink: #342f28;
+      --muted: #83796c;
+      --line: #e2d7c7;
+      --surface: #fffdf8;
+      --soft-blue: #f1e8d9;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { min-width: 320px; margin: 0; }
+    a { color: inherit; }
+    .container { width: min(1120px, calc(100% - 48px)); margin-inline: auto; }
+
+    .site-header {
+      position: sticky;
+      z-index: 10;
+      top: 0;
+      border-bottom: 1px solid rgba(226, 215, 199, .85);
+      background: rgba(255, 253, 248, .94);
+      backdrop-filter: blur(14px);
+    }
+
+    .header-inner { min-height: 76px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+    .brand { display: inline-flex; align-items: center; gap: 10px; color: var(--ink); text-decoration: none; font-size: 1.15rem; font-weight: 800; letter-spacing: -.04em; }
+    .brand-mark { display: grid; width: 36px; height: 36px; place-items: center; border-radius: 12px; background: linear-gradient(145deg, #92704e, #648b79); color: white; box-shadow: 0 6px 16px #80634433; }
+    .brand-mark svg { width: 21px; height: 21px; }
+    .main-nav, .header-actions { display: flex; align-items: center; gap: 28px; }
+    .main-nav a, .login-link { color: #5d554b; font-size: .9rem; font-weight: 600; text-decoration: none; transition: color .18s ease; }
+    .main-nav a:hover, .login-link:hover { color: var(--blue); }
+    .header-actions { gap: 16px; }
+    .theme-toggle {
+      display: inline-grid;
+      width: 42px;
+      height: 42px;
+      flex: 0 0 42px;
+      place-items: center;
+      border: 1px solid #e2d7c7;
+      border-radius: 50%;
+      background: #fffdf8;
+      color: #5d554b;
+      cursor: pointer;
+      transition: transform .18s ease, background .18s ease, border-color .18s ease, color .18s ease;
+    }
+    .theme-toggle:hover { transform: translateY(-1px); border-color: #cbb69a; color: #806344; }
+    .theme-toggle:focus-visible { outline: 3px solid #c7b49b; outline-offset: 3px; }
+    .theme-icon { width: 20px; height: 20px; }
+
+    .button {
+      display: inline-flex;
+      min-height: 46px;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      padding: 0 19px;
+      border: 1px solid transparent;
+      border-radius: 12px;
+      background: var(--blue);
+      color: white;
+      font: inherit;
+      font-size: .92rem;
+      font-weight: 700;
+      text-decoration: none;
+      box-shadow: 0 7px 16px #80634429;
+      transition: transform .18s ease, background .18s ease, box-shadow .18s ease;
+    }
+
+    .button:hover { transform: translateY(-2px); background: #648b79; box-shadow: 0 10px 22px #80634433; }
+    .button:focus-visible, a:focus-visible { outline: 3px solid #c7b49b; outline-offset: 3px; }
+    .button-secondary { border-color: #e2d7c7; background: #fffdf8; color: var(--ink); box-shadow: none; }
+    .button-secondary:hover { border-color: #cbb69a; background: #f8f4ec; color: var(--blue-dark); box-shadow: none; }
+
+    .hero { position: relative; overflow: hidden; padding: 88px 0 84px; background: radial-gradient(ellipse at 78% 25%, #eee5d8 0, transparent 36%), linear-gradient(180deg, #fffdf8 0%, #f3eee5 100%); }
+    .hero::before { position: absolute; top: 60px; right: -130px; width: 380px; height: 380px; border: 1px solid #e2d7c7; border-radius: 50%; content: ""; pointer-events: none; }
+    .hero-grid { position: relative; display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 72px; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 9px; margin-bottom: 21px; color: var(--blue); font-size: .78rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+    .eyebrow::before { width: 22px; height: 2px; border-radius: 2px; background: currentColor; content: ""; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { max-width: 620px; margin-bottom: 20px; color: #342f28; font-size: clamp(2.7rem, 5.2vw, 4.45rem); letter-spacing: -.065em; line-height: 1.04; }
+    h1 span { color: var(--blue); }
+    .hero-copy { max-width: 540px; margin-bottom: 29px; color: #5d554b; font-size: 1.08rem; line-height: 1.75; }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+    .hero-note { display: flex; align-items: center; gap: 9px; margin-top: 25px; color: #83796c; font-size: .83rem; }
+    .check { display: inline-grid; width: 20px; height: 20px; flex: 0 0 20px; place-items: center; border-radius: 50%; background: #e8f1e8; color: #456b50; font-size: .72rem; font-weight: 900; }
+
+    .product-card { position: relative; padding: 16px; border: 1px solid #e2d7c7; border-radius: 24px; background: rgba(255,253,248,.96); box-shadow: 0 28px 70px #4a3b281c, 0 4px 12px #4a3b280a; transform: rotate(1deg); }
+    .window-bar { display: flex; align-items: center; justify-content: space-between; padding: 3px 4px 16px; }
+    .window-dots { display: flex; gap: 5px; }
+    .window-dots i { width: 8px; height: 8px; border-radius: 50%; background: #e2d7c7; }
+    .window-dots i:first-child { background: #ffb4ab; }
+    .window-dots i:nth-child(2) { background: #ffd477; }
+    .window-dots i:nth-child(3) { background: #83d7a8; }
+    .window-label { color: #83796c; font-size: .68rem; font-weight: 700; letter-spacing: .04em; }
+    .dash-preview { display: grid; grid-template-columns: 118px 1fr; min-height: 298px; overflow: hidden; border: 1px solid #e2d7c7; border-radius: 15px; background: #f8f4ec; }
+    .dash-side { padding: 16px 10px; background: #fbf8f1; border-right: 1px solid #e2d7c7; }
+    .mini-brand { margin: 0 0 22px 5px; color: var(--blue); font-size: .73rem; font-weight: 800; }
+    .side-item { margin: 5px 0; padding: 8px 8px; border-radius: 7px; color: #786e61; font-size: .63rem; font-weight: 600; }
+    .side-item.active { background: #efe5d4; color: #735638; }
+    .dash-main { padding: 18px 17px; }
+    .dash-greeting { margin: 0 0 4px; color: #342f28; font-size: .94rem; font-weight: 800; }
+    .dash-subtitle { margin: 0 0 15px; color: #83796c; font-size: .62rem; }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 13px; }
+    .stat { padding: 10px 9px; border: 1px solid #e2d7c7; border-radius: 9px; background: #fffdf8; }
+    .stat-label { display: block; margin-bottom: 7px; color: #83796c; font-size: .55rem; }
+    .stat-value { color: #342f28; font-size: .92rem; font-weight: 800; }
+    .opportunity { display: flex; align-items: center; gap: 10px; margin-top: 8px; padding: 10px; border: 1px solid #e2d7c7; border-radius: 9px; background: #fffdf8; }
+    .opportunity-icon { display: grid; width: 30px; height: 30px; flex: 0 0 30px; place-items: center; border-radius: 9px; background: #efe5d4; color: #735638; font-size: .73rem; font-weight: 900; }
+    .opportunity-title { display: block; margin-bottom: 3px; color: #342f28; font-size: .62rem; font-weight: 800; }
+    .opportunity-meta { display: block; color: #83796c; font-size: .55rem; }
+    .match { margin-left: auto; padding: 5px 7px; border-radius: 7px; background: #e8f1e8; color: #456b50; font-size: .56rem; font-weight: 800; white-space: nowrap; }
+    .floating-note { position: absolute; right: -28px; bottom: 35px; display: flex; align-items: center; gap: 10px; padding: 12px 15px; border: 1px solid #e2d7c7; border-radius: 14px; background: #fffdf8; box-shadow: 0 12px 30px #4a3b281a; }
+    .floating-note .check { width: 25px; height: 25px; flex-basis: 25px; font-size: .8rem; }
+    .floating-note strong, .floating-note small { display: block; }
+    .floating-note strong { color: #342f28; font-size: .72rem; }
+    .floating-note small { margin-top: 2px; color: #83796c; font-size: .62rem; }
+
+    .section { padding: 82px 0; }
+    .section-heading { max-width: 670px; margin: 0 auto 42px; text-align: center; }
+    .section-heading .eyebrow { margin-bottom: 13px; }
+    h2 { margin-bottom: 13px; color: #342f28; font-size: clamp(1.8rem, 3.5vw, 2.65rem); letter-spacing: -.045em; line-height: 1.15; }
+    .section-heading p { margin: 0; color: var(--muted); line-height: 1.7; }
+    .audience-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+    .audience-card { padding: 30px; border: 1px solid var(--line); border-radius: 20px; background: #fffdf8; box-shadow: 0 8px 28px #4a3b2808; }
+    .card-icon { display: grid; width: 48px; height: 48px; margin-bottom: 20px; place-items: center; border-radius: 15px; background: var(--soft-blue); color: var(--blue); }
+    .card-icon svg { width: 23px; height: 23px; }
+    .audience-card h3 { margin-bottom: 9px; color: #342f28; font-size: 1.2rem; letter-spacing: -.02em; }
+    .audience-card > p { margin-bottom: 19px; color: var(--muted); font-size: .93rem; line-height: 1.7; }
+    .feature-list { display: grid; gap: 12px; margin: 0 0 24px; padding: 0; list-style: none; }
+    .feature-list li { display: flex; align-items: flex-start; gap: 10px; color: #5d554b; font-size: .88rem; line-height: 1.5; }
+    .feature-list .check { margin-top: 1px; }
+    .text-link { display: inline-flex; align-items: center; gap: 8px; color: var(--blue); font-size: .9rem; font-weight: 800; text-decoration: none; }
+    .text-link:hover { color: var(--blue-dark); }
+
+    .how-section { background: #e9dfd0; }
+    .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .step { position: relative; padding: 24px 21px; border: 1px solid #e2d7c7; border-radius: 17px; background: rgba(255,253,248,.8); }
+    .step-number { display: grid; width: 34px; height: 34px; margin-bottom: 17px; place-items: center; border-radius: 11px; background: var(--blue); color: white; font-size: .82rem; font-weight: 800; }
+    .step h3 { margin-bottom: 8px; color: #342f28; font-size: 1rem; }
+    .step p { margin: 0; color: var(--muted); font-size: .87rem; line-height: 1.65; }
+    .closing { padding: 68px 0; }
+    .closing-card { display: flex; align-items: center; justify-content: space-between; gap: 30px; padding: 40px 44px; border-radius: 22px; background: linear-gradient(115deg, #92704e, #648b79); color: white; box-shadow: 0 18px 40px #80634433; }
+    .closing-card h2 { max-width: 550px; margin-bottom: 8px; color: white; font-size: clamp(1.7rem, 3vw, 2.25rem); }
+    .closing-card p { margin: 0; color: #f3eee5; font-size: .94rem; }
+    .closing-card .button { flex: 0 0 auto; background: #fffdf8; color: #493d30; box-shadow: none; }
+    .closing-card .button:hover { background: #f8f4ec; }
+    footer { padding: 24px 0; border-top: 1px solid var(--line); color: #83796c; font-size: .8rem; }
+    .footer-inner { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+    footer p { margin: 0; }
+    .footer-brand { color: #493d30; font-weight: 800; }
+
+    @media (max-width: 850px) {
+      .hero { padding: 66px 0; }
+      .hero-grid { grid-template-columns: 1fr; gap: 48px; }
+      .hero-copy { max-width: 650px; }
+      .product-card { width: min(560px, 100%); margin-inline: auto; }
+      .floating-note { right: -10px; }
+    }
+    @media (max-width: 640px) {
+      .container { width: min(100% - 32px, 1120px); }
+      .header-inner { min-height: 66px; gap: 12px; }
+      .brand { font-size: 1.02rem; }
+      .brand-mark { width: 32px; height: 32px; }
+      .main-nav { display: none; }
+      .header-actions { gap: 10px; }
+      .login-link { font-size: .82rem; }
+      .header-actions .theme-toggle { width: 38px; height: 38px; flex-basis: 38px; }
+      .header-actions .button { min-height: 40px; padding: 0 13px; font-size: .82rem; }
+      .hero { padding: 54px 0 60px; }
+      .hero-grid { gap: 39px; }
+      h1 { font-size: clamp(2.55rem, 12vw, 3.5rem); }
+      .hero-copy { font-size: .98rem; }
+      .hero-actions { align-items: stretch; }
+      .hero-actions .button { flex: 1 1 180px; }
+      .product-card { padding: 10px; border-radius: 18px; transform: none; }
+      .dash-preview { grid-template-columns: 86px 1fr; min-height: 260px; }
+      .dash-side { padding: 14px 6px; }
+      .side-item { padding: 8px 5px; font-size: .57rem; }
+      .dash-main { padding: 15px 10px; }
+      .stats { gap: 5px; }
+      .stat { padding: 8px 6px; }
+      .stat-label { font-size: .49rem; }
+      .stat-value { font-size: .8rem; }
+      .opportunity { gap: 7px; padding: 8px 6px; }
+      .match { padding: 4px; font-size: .49rem; }
+      .floating-note { right: 3px; bottom: -21px; padding: 9px 11px; }
+      .section { padding: 65px 0; }
+      .audience-grid, .steps { grid-template-columns: 1fr; }
+      .audience-card { padding: 24px; }
+      .closing { padding: 42px 0; }
+      .closing-card { align-items: flex-start; flex-direction: column; padding: 29px 24px; }
+      .footer-inner { align-items: flex-start; flex-direction: column; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    }
+    body[data-theme="dark"] {
+      color-scheme: dark;
+      --blue: #e0b66f;
+      --blue-dark: #a88a62;
+      --ink: #f4eee3;
+      --muted: #b7ad9e;
+      --line: #444d45;
+      --surface: #282d28;
+      --soft-blue: #3a352c;
+      color: #f4eee3;
+      background: #1c201d;
+    }
+    body[data-theme="dark"] .site-header { border-color: #3b443d; background: rgba(34, 39, 34, .96); }
+    body[data-theme="dark"] .main-nav a,
+    body[data-theme="dark"] .login-link { color: #d9d0c3; }
+    body[data-theme="dark"] .main-nav a:hover,
+    body[data-theme="dark"] .login-link:hover { color: #a0d4ca; }
+    body[data-theme="dark"] .theme-toggle { border-color: #444d45; background: #282d28; color: #e0b66f; }
+    body[data-theme="dark"] .theme-toggle:hover { border-color: #806b49; background: #3a352c; color: #f0d7ae; }
+    body[data-theme="dark"] .button { background: #8a704e; color: #fff9ef; box-shadow: 0 7px 16px #080b093d; }
+    body[data-theme="dark"] .button:hover { background: #648b79; }
+    body[data-theme="dark"] .button-secondary { border-color: #444d45; background: #282d28; color: #f4eee3; box-shadow: none; }
+    body[data-theme="dark"] .button-secondary:hover { border-color: #806b49; background: #303630; color: #f0d7ae; }
+    body[data-theme="dark"] .hero { background: radial-gradient(ellipse at 78% 25%, #303630 0, transparent 38%), linear-gradient(180deg, #222722 0%, #1c201d 100%); }
+    body[data-theme="dark"] .hero::before { border-color: #444d45; }
+    body[data-theme="dark"] h1,
+    body[data-theme="dark"] h2 { color: #f4eee3; }
+    body[data-theme="dark"] .hero-copy,
+    body[data-theme="dark"] .feature-list li { color: #d9d0c3; }
+    body[data-theme="dark"] .hero-note { color: #b7ad9e; }
+    body[data-theme="dark"] .check { background: #2b4232; color: #b2dfb6; }
+    body[data-theme="dark"] .product-card,
+    body[data-theme="dark"] .audience-card,
+    body[data-theme="dark"] .step,
+    body[data-theme="dark"] .floating-note { border-color: #404940; background: #282d28; box-shadow: 0 10px 28px rgba(8, 11, 9, .24); }
+    body[data-theme="dark"] .window-label,
+    body[data-theme="dark"] .stat-label,
+    body[data-theme="dark"] .dash-subtitle,
+    body[data-theme="dark"] .opportunity-meta,
+    body[data-theme="dark"] .floating-note small { color: #b7ad9e; }
+    body[data-theme="dark"] .window-dots i { background: #495249; }
+    body[data-theme="dark"] .dash-preview { border-color: #3b443d; background: #1c201d; }
+    body[data-theme="dark"] .dash-side { border-color: #3b443d; background: #222722; }
+    body[data-theme="dark"] .side-item { color: #c2b9aa; }
+    body[data-theme="dark"] .side-item.active { background: #3a352c; color: #f0d7ae; }
+    body[data-theme="dark"] .dash-greeting,
+    body[data-theme="dark"] .stat-value,
+    body[data-theme="dark"] .opportunity-title,
+    body[data-theme="dark"] .floating-note strong,
+    body[data-theme="dark"] .audience-card h3,
+    body[data-theme="dark"] .step h3 { color: #f4eee3; }
+    body[data-theme="dark"] .stat,
+    body[data-theme="dark"] .opportunity { border-color: #404940; background: #282d28; }
+    body[data-theme="dark"] .opportunity-icon { background: #3a352c; color: #edc98e; }
+    body[data-theme="dark"] .match { background: #2b4232; color: #b2dfb6; }
+    body[data-theme="dark"] .how-section { background: #242923; }
+    body[data-theme="dark"] .closing-card { background: linear-gradient(115deg, #5b4935, #38584e); box-shadow: 0 18px 40px rgba(8, 11, 9, .3); }
+    body[data-theme="dark"] .closing-card p { color: #e4ddd1; }
+    body[data-theme="dark"] .closing-card .button { background: #f4eee3; color: #342f28; box-shadow: none; }
+    body[data-theme="dark"] .closing-card .button:hover { background: #d9d0c3; }
+    body[data-theme="dark"] footer { border-color: #3b443d; color: #b7ad9e; }
+    body[data-theme="dark"] .footer-brand { color: #f4eee3; }
+    body[data-theme="dark"] .site-header { backdrop-filter: blur(14px); }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="#" aria-label="EasyIntern, início">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M5 15.5 18.5 4l-4 16-3.2-6.2L5 15.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m11.3 13.8 4.3-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </span>
+        EasyIntern
+      </a>
+      <nav class="main-nav" aria-label="Navegação principal">
+        <a href="#como-funciona">Como funciona</a>
+        <a href="#talentos">Para talentos</a>
+        <a href="#empresas">Para empresas</a>
+      </nav>
+      <div class="header-actions">
+        <button type="button" class="theme-toggle" id="btn-theme-toggle" aria-label="Ativar modo escuro" aria-pressed="false" title="Ativar modo escuro">
+          <svg class="theme-icon theme-icon--moon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20.2 15.1A8.5 8.5 0 0 1 8.9 3.8 8.5 8.5 0 1 0 20.2 15.1Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <svg class="theme-icon theme-icon--sun" viewBox="0 0 24 24" fill="none" aria-hidden="true" hidden><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
+        <a class="login-link" href="preview-auth.html#login">Entrar</a>
+        <a class="button" href="preview-auth.html#candidato">Criar conta</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container hero-grid">
+        <div>
+          <div class="eyebrow">Oportunidades que aproximam</div>
+          <h1>Seu próximo passo começa <span>aqui.</span></h1>
+          <p class="hero-copy">A EasyIntern conecta quem está começando a carreira com empresas em busca de novos talentos. Encontre oportunidades, apresente seu potencial e acompanhe cada etapa em um só lugar.</p>
+          <div class="hero-actions">
+            <a class="button" href="preview-auth.html#candidato">Quero encontrar oportunidades <span aria-hidden="true">→</span></a>
+            <a class="button button-secondary" href="#como-funciona">Conheça a plataforma</a>
+          </div>
+          <p class="hero-note"><span class="check" aria-hidden="true">✓</span> Uma plataforma para candidatos e empresas crescerem juntos.</p>
+        </div>
+
+        <div class="product-card" aria-label="Prévia ilustrativa do painel EasyIntern">
+          <div class="window-bar">
+            <span class="window-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="window-label">PAINEL DO CANDIDATO</span>
+          </div>
+          <div class="dash-preview">
+            <aside class="dash-side" aria-hidden="true">
+              <p class="mini-brand">easyintern</p>
+              <div class="side-item active">Visão geral</div>
+              <div class="side-item">Encontrar vagas</div>
+              <div class="side-item">Candidaturas</div>
+              <div class="side-item">Meu perfil</div>
+            </aside>
+            <div class="dash-main" aria-hidden="true">
+              <p class="dash-greeting">Olá, Lucas 👋</p>
+              <p class="dash-subtitle">Acompanhe suas oportunidades</p>
+              <div class="stats">
+                <div class="stat"><span class="stat-label">Candidaturas</span><span class="stat-value">04</span></div>
+                <div class="stat"><span class="stat-label">Em análise</span><span class="stat-value">02</span></div>
+                <div class="stat"><span class="stat-label">Perfil</span><span class="stat-value">Completo</span></div>
+              </div>
+              <p class="dash-subtitle">Oportunidades para você</p>
+              <div class="opportunity">
+                <span class="opportunity-icon">TN</span>
+                <span><span class="opportunity-title">Estágio em Desenvolvimento</span><span class="opportunity-meta">TechNova · Híbrido</span></span>
+                <span class="match">Nova vaga</span>
+              </div>
+              <div class="opportunity">
+                <span class="opportunity-icon">DA</span>
+                <span><span class="opportunity-title">Pessoa Estagiária de Dados</span><span class="opportunity-meta">Dados Abertos · Remoto</span></span>
+                <span class="match">Aberta</span>
+              </div>
+            </div>
+          </div>
+          <div class="floating-note">
+            <span class="check" aria-hidden="true">✓</span>
+            <span><strong>Do perfil à oportunidade</strong><small>Acompanhe sua jornada em um só lugar</small></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="possibilidades">
+      <div class="container">
+        <div class="section-heading">
+          <div class="eyebrow">Uma plataforma, dois caminhos</div>
+          <h2>Oportunidade para quem busca.<br>Praticidade para quem contrata.</h2>
+          <p>A EasyIntern organiza a jornada de estágio para que talentos e empresas possam se conectar e avançar com mais clareza.</p>
+        </div>
+        <div class="audience-grid">
+          <article class="audience-card" id="talentos">
+            <span class="card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" stroke="currentColor" stroke-width="1.8"/><path d="M4 21a8 8 0 0 1 16 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="m17.5 7.5 1.3 1.3 2.7-2.7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <h3>Para candidatos</h3>
+            <p>Transforme seus estudos e interesses em experiências profissionais. Organize seu perfil e descubra oportunidades para dar os próximos passos.</p>
+            <ul class="feature-list">
+              <li><span class="check" aria-hidden="true">✓</span> Explore vagas de estágio e início de carreira.</li>
+              <li><span class="check" aria-hidden="true">✓</span> Apresente sua formação e suas habilidades.</li>
+              <li><span class="check" aria-hidden="true">✓</span> Acompanhe o andamento das suas candidaturas.</li>
+            </ul>
+            <a class="text-link" href="preview-auth.html#candidato">Começar como candidato <span aria-hidden="true">→</span></a>
+          </article>
+
+          <article class="audience-card" id="empresas">
+            <span class="card-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M4 21V6.5L12 3l8 3.5V21H4Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 21v-5h6v5M8 9h.01M12 9h.01M16 9h.01M8 12h.01M16 12h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            </span>
+            <h3>Para empresas</h3>
+            <p>Encontre pessoas em início de carreira e conduza seu processo seletivo com as informações organizadas em um painel.</p>
+            <ul class="feature-list">
+              <li><span class="check" aria-hidden="true">✓</span> Publique e gerencie oportunidades.</li>
+              <li><span class="check" aria-hidden="true">✓</span> Conheça candidatos e seus perfis.</li>
+              <li><span class="check" aria-hidden="true">✓</span> Acompanhe vagas e candidaturas em um só lugar.</li>
+            </ul>
+            <a class="text-link" href="preview-auth.html#empresa">Conhecer como empresa <span aria-hidden="true">→</span></a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section how-section" id="como-funciona">
+      <div class="container">
+        <div class="section-heading">
+          <div class="eyebrow">Simples para começar</div>
+          <h2>Uma jornada mais clara, do primeiro passo ao próximo.</h2>
+          <p>Crie sua conta, use as ferramentas certas para o seu objetivo e acompanhe sua evolução na plataforma.</p>
+        </div>
+        <div class="steps">
+          <article class="step">
+            <span class="step-number">01</span>
+            <h3>Escolha seu caminho</h3>
+            <p>Cadastre-se como candidato para buscar oportunidades ou como empresa para divulgar vagas.</p>
+          </article>
+          <article class="step">
+            <span class="step-number">02</span>
+            <h3>Organize suas informações</h3>
+            <p>Apresente sua formação e seus interesses, ou descreva a oportunidade e o perfil que sua empresa procura.</p>
+          </article>
+          <article class="step">
+            <span class="step-number">03</span>
+            <h3>Acompanhe os próximos passos</h3>
+            <p>Consulte vagas e candidaturas ou gerencie oportunidades e pessoas interessadas pelo painel.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="closing">
+      <div class="container">
+        <div class="closing-card">
+          <div>
+            <h2>Pronto para dar o próximo passo?</h2>
+            <p>Crie sua conta e descubra o que a EasyIntern pode fazer pela sua jornada.</p>
+          </div>
+          <a class="button" href="preview-auth.html#candidato">Criar minha conta <span aria-hidden="true">→</span></a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container footer-inner">
+      <p><span class="footer-brand">EasyIntern</span> · Conectando talentos e oportunidades.</p>
+      <p>Prévia local da plataforma</p>
+    </div>
+  </footer>
+  <script src="./static/js/preview-demo.js" defer></script>
+</body>
+</html>

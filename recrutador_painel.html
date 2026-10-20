@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Painel Recrutador — EasyIntern</title>
+  <meta name="description" content="Painel da Empresa/Recrutador — EasyIntern Plataforma Inteligente de Recrutamento" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/easyintern.css" />
+  <link rel="stylesheet" href="/static/css/dashboard.css?v=6" />
+</head>
+<body class="dash-body" data-panel="empresa">
+
+<!-- ── Sidebar Zero-G ─────────────────────────────────────────────────────── -->
+<aside class="dash-sidebar" id="dash-sidebar">
+  <div class="sidebar-brand">
+    <i class="bi bi-rocket-takeoff-fill brand-icon-sm"></i>
+    <span class="brand-name">EasyIntern</span>
+  </div>
+
+  <nav class="sidebar-nav" aria-label="Menu principal">
+    <a href="#" class="nav-item active" data-section="overview" id="nav-overview">
+      <i class="bi bi-grid-1x2-fill"></i>
+      <span>Visão Geral</span>
+    </a>
+    <a href="#" class="nav-item" data-section="vagas" id="nav-vagas">
+      <i class="bi bi-briefcase-fill"></i>
+      <span>Vagas Publicadas</span>
+      <span class="nav-badge" id="badge-vagas">0</span>
+    </a>
+    <a href="#" class="nav-item" data-section="candidatos" id="nav-candidatos">
+      <i class="bi bi-people-fill"></i>
+      <span>Candidatos</span>
+      <span class="nav-badge ai">IA</span>
+    </a>
+    <a href="#" class="nav-item" data-section="nova-vaga" id="nav-nova-vaga">
+      <i class="bi bi-plus-circle-fill"></i>
+      <span>Nova Vaga</span>
+    </a>
+    <a href="#" class="nav-item" data-section="configuracoes" id="nav-configuracoes">
+      <i class="bi bi-sliders"></i>
+      <span>Configurações</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <button class="btn-logout" id="btn-logout" title="Sair da conta">
+      <i class="bi bi-box-arrow-left"></i>
+      <span>Sair</span>
+    </button>
+  </div>
+</aside>
+
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<!-- ── Main Content ───────────────────────────────────────────────────────── -->
+<main class="dash-main" id="dash-main">
+
+  <!-- Header -->
+  <header class="dash-header">
+    <button class="btn-menu-toggle" id="btn-menu-toggle" aria-label="Abrir menu de navegação" aria-controls="dash-sidebar" aria-expanded="false" title="Abrir menu de navegação">
+      <i class="bi bi-list"></i>
+      <span>Menu</span>
+    </button>
+    <div class="dash-header-info">
+      <h2 class="dash-page-title" id="page-title">Visão Geral</h2>
+      <span class="dash-greeting" id="dash-greeting">Painel do Recrutador</span>
+    </div>
+    <div class="dash-header-actions">
+      <button class="btn btn-ghost btn-sm" id="btn-mobile-modal" title="Conectar celular / QR Code">
+        <i class="bi bi-phone"></i> Mobile
+      </button>
+      <button class="btn btn-primary btn-sm" id="btn-nova-vaga-header">
+        <i class="bi bi-plus-lg"></i> Nova Vaga
+      </button>
+      <div class="user-avatar" id="user-avatar" role="img" aria-label="Perfil da empresa" title="Perfil da empresa">
+        <i class="bi bi-building"></i>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Seção: Overview ──────────────────────────────────────────────────── -->
+  <section class="dash-section active" id="section-overview">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon"><i class="bi bi-briefcase-fill"></i></div>
+        <div class="stat-body">
+          <span class="stat-value" id="stat-total-vagas">—</span>
+          <span class="stat-label">Total de Vagas</span>
+        </div>
+      </div>
+      <div class="stat-card accent-green">
+        <div class="stat-icon"><i class="bi bi-door-open-fill"></i></div>
+        <div class="stat-body">
+          <span class="stat-value" id="stat-vagas-abertas">—</span>
+          <span class="stat-label">Vagas Abertas</span>
+        </div>
+      </div>
+      <div class="stat-card accent-cyan">
+        <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
+        <div class="stat-body">
+          <span class="stat-value" id="stat-total-candidatos">—</span>
+          <span class="stat-label">Candidatos Recebidos</span>
+        </div>
+      </div>
+      <div class="stat-card accent-violet">
+        <div class="stat-icon"><i class="bi bi-trophy-fill"></i></div>
+        <div class="stat-body">
+          <span class="stat-value" id="stat-aprovados">—</span>
+          <span class="stat-label">Aprovados</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabela de Vagas Abertas -->
+    <div class="glass-card dash-card full-width">
+      <div class="card-header">
+        <h3><i class="bi bi-briefcase"></i> Vagas Ativas</h3>
+        <button class="btn btn-primary btn-sm" id="btn-nova-vaga-card">
+          <i class="bi bi-plus-lg"></i> Publicar Vaga
+        </button>
+      </div>
+      <div class="card-body">
+        <div class="table-wrap" id="vagas-table-wrap">
+          <div class="loading-placeholder">
+            <i class="bi bi-arrow-repeat spin"></i> Carregando vagas...
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top candidatos por IA -->
+    <div class="glass-card dash-card full-width">
+      <div class="card-header">
+        <h3><i class="bi bi-cpu"></i> Ranking IA — Melhores Candidatos</h3>
+        <span class="badge-ai">Zero-G AI</span>
+      </div>
+      <div class="card-body" id="top-candidatos-overview">
+        <p class="empty-state-small">Selecione uma vaga na tabela acima para ver o Ranking IA de candidatos.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Seção: Vagas Publicadas ────────────────────────────────────────── -->
+  <section class="dash-section" id="section-vagas">
+    <div class="section-toolbar">
+      <div class="section-filters">
+        <button class="filter-btn active" data-vaga-filter="todas">Todas</button>
+        <button class="filter-btn" data-vaga-filter="aberta">Abertas</button>
+        <button class="filter-btn" data-vaga-filter="fechada">Encerradas</button>
+      </div>
+      <button class="btn btn-primary btn-sm" id="btn-nova-vaga-section">
+        <i class="bi bi-plus-lg"></i> Nova Vaga
+      </button>
+    </div>
+    <div class="vagas-empresa-grid" id="vagas-empresa-grid">
+      <div class="loading-placeholder full">
+        <i class="bi bi-arrow-repeat spin"></i> Carregando vagas...
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Seção: Candidatos ─────────────────────────────────────────────── -->
+  <section class="dash-section" id="section-candidatos">
+    <div class="section-toolbar">
+      <div class="vaga-selector-wrap">
+        <label class="field-label" for="select-vaga-cands">
+          <i class="bi bi-briefcase"></i> Ver candidatos da vaga:
+        </label>
+        <select class="field-input field-select" id="select-vaga-cands">
+          <option value="">— Selecione uma vaga —</option>
+        </select>
+      </div>
+    </div>
+    <div class="candidatos-ranking" id="candidatos-ranking">
+      <div class="empty-state">
+        <i class="bi bi-cpu" style="font-size:2rem;color:var(--violet-light);"></i>
+        <h4>Selecione uma vaga para ver os candidatos ranqueados pela IA.</h4>
+        <p>O Motor Zero-G AI analisa compatibilidade de habilidades, nível e área de interesse para gerar um ranking automaticamente.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Seção: Nova Vaga ─────────────────────────────────────────────── -->
+  <section class="dash-section" id="section-nova-vaga">
+    <div class="glass-card dash-card form-card">
+      <div class="card-header">
+        <h3><i class="bi bi-plus-circle-fill"></i> Publicar Nova Vaga</h3>
+      </div>
+      <form class="card-body form-vaga" id="form-nova-vaga" novalidate>
+        <div class="form-grid-2">
+          <div class="field-group">
+            <label class="field-label" for="vaga-titulo">
+              <i class="bi bi-type-h1"></i> Título da Vaga *
+            </label>
+            <input type="text" class="field-input" id="vaga-titulo" placeholder="Ex: Estagiário em Desenvolvimento Python" required />
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="vaga-nivel">
+              <i class="bi bi-bar-chart-fill"></i> Nível *
+            </label>
+            <select class="field-input field-select" id="vaga-nivel" required>
+              <option value="estagiario">Estagiário</option>
+              <option value="junior">Júnior</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label" for="vaga-descricao">
+            <i class="bi bi-text-paragraph"></i> Descrição da Vaga *
+          </label>
+          <textarea class="field-input" id="vaga-descricao" rows="4"
+            placeholder="Descreva as atividades, responsabilidades e ambiente de trabalho..." required></textarea>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label" for="vaga-requisitos">
+            <i class="bi bi-list-check"></i> Requisitos / Habilidades
+          </label>
+          <textarea class="field-input" id="vaga-requisitos" rows="3"
+            placeholder="Ex: Python, Git, Excel, Inglês básico..."></textarea>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label" for="vaga-beneficios">
+            <i class="bi bi-gift-fill"></i> Benefícios
+          </label>
+          <input type="text" class="field-input" id="vaga-beneficios"
+            placeholder="Ex: Vale-refeição, Plano de saúde, Horário flexível" />
+        </div>
+
+        <div class="form-grid-2">
+          <div class="field-group">
+            <label class="field-label" for="vaga-tags">
+              <i class="bi bi-tags-fill"></i> Tags (separadas por vírgula)
+            </label>
+            <input type="text" class="field-input" id="vaga-tags"
+              placeholder="python, django, backend, junior" />
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="vaga-modalidade">
+              <i class="bi bi-geo-alt-fill"></i> Modalidade
+            </label>
+            <select class="field-input field-select" id="vaga-modalidade">
+              <option value="presencial">Presencial</option>
+              <option value="remoto">Remoto</option>
+              <option value="hibrido">Híbrido</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-grid-3">
+          <div class="field-group">
+            <label class="field-label" for="vaga-cidade">
+              <i class="bi bi-building"></i> Cidade
+            </label>
+            <input type="text" class="field-input" id="vaga-cidade" placeholder="São Paulo" />
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="vaga-estado">
+              <i class="bi bi-map"></i> Estado (UF)
+            </label>
+            <input type="text" class="field-input" id="vaga-estado" placeholder="SP" maxlength="2" />
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="vaga-salario-min">
+              <i class="bi bi-cash-coin"></i> Bolsa (R$/mês)
+            </label>
+            <input type="number" class="field-input" id="vaga-salario-min" placeholder="1500" min="0" />
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-ghost" id="btn-cancelar-vaga">Cancelar</button>
+          <button type="submit" class="btn btn-primary" id="btn-publicar-vaga">
+            <i class="bi bi-send-fill"></i> Publicar Vaga
+          </button>
+        </div>
+
+        <div class="form-feedback" id="form-vaga-feedback" hidden></div>
+      </form>
+    </div>
+  </section>
+
+  <section class="dash-section" id="section-configuracoes">
+    <div class="glass-card dash-card settings-card">
+      <div class="card-header">
+        <h3><i class="bi bi-palette2"></i> Aparência</h3>
+      </div>
+      <div class="card-body settings-theme-row">
+        <div>
+          <strong>Tema da página</strong>
+          <p class="settings-theme-description">Escolha a paleta que prefere para o painel.</p>
+        </div>
+        <button type="button" class="theme-toggle-button" id="btn-theme-toggle" aria-pressed="false">
+          <i class="bi bi-moon-stars-fill" aria-hidden="true"></i>
+          <span>Ativar modo escuro</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ── Modal: Candidato Detalhe ───────────────────────────────────────────── -->
+<div class="modal-overlay" id="modal-candidato" hidden>
+  <div class="modal-box glass-card modal-lg" role="dialog" aria-modal="true" aria-labelledby="modal-cand-nome">
+    <div class="modal-header">
+      <h3 id="modal-cand-nome"><i class="bi bi-person-circle"></i> Detalhe do Candidato</h3>
+      <button class="modal-close" id="modal-cand-close" aria-label="Fechar">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    <div class="modal-body" id="modal-candidato-body">
+      <!-- Preenchido via JS -->
+    </div>
+    <div class="modal-footer">
+      <div class="status-change-group" id="status-change-group">
+        <label class="field-label" for="select-status-cand">Alterar Status:</label>
+        <select class="field-input field-select" id="select-status-cand">
+          <option value="pendente">Pendente</option>
+          <option value="em_analise">Em Análise</option>
+          <option value="aprovado">Aprovado ✓</option>
+          <option value="reprovado">Reprovado ✗</option>
+        </select>
+        <button class="btn btn-primary btn-sm" id="btn-salvar-status">
+          <i class="bi bi-check-lg"></i> Salvar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal: Acesso Mobile / QR Code ────────────────────────────────────── -->
+<div class="modal-overlay" id="modal-mobile" hidden>
+  <div class="modal-box glass-card" role="dialog" aria-modal="true" aria-labelledby="modal-mob-title" style="max-width: 480px; text-align: center;">
+    <div class="modal-header">
+      <h3 id="modal-mob-title"><i class="bi bi-phone-vibrate"></i> Acesso Mobile & Multi-Dispositivo</h3>
+      <button class="modal-close" id="modal-mob-close" aria-label="Fechar"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="modal-body" style="display: flex; flex-direction: column; align-items: center; gap: 14px;">
+
+      <!-- Badge de status de acesso -->
+      <span id="tunnel-badge" style="
+        display: inline-block; padding: 4px 14px; border-radius: 99px;
+        font-size: 0.75rem; font-weight: 700; border: 1px solid;
+        background: rgba(6,182,212,0.1); border-color: rgba(6,182,212,0.3); color: var(--cyan-light);
+      ">📡 Wi-Fi apenas</span>
+
+      <!-- QR Code dinâmico -->
+      <div style="background: white; padding: 12px; border-radius: 12px; display: inline-flex; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
+        <img id="qr-code-img" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=http://192.168.100.201:8000" alt="QR Code" width="180" height="180" style="display: block;" />
+      </div>
+
+      <!-- Link unico de acesso -->
+      <div style="width: 100%; text-align: left; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 10px 14px;">
+        <div style="font-size: 0.6875rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">
+          <i class="bi bi-globe2"></i> Link de acesso unico:
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+          <code id="mobile-url-text" style="font-size: 0.875rem; color: var(--cyan-light); font-weight: 700; word-break: break-all;">http://192.168.100.201:8000</code>
+          <button type="button" class="btn btn-ghost btn-sm" id="btn-copy-mobile-link" style="flex-shrink:0;">
+            <i class="bi bi-copy"></i> Copiar
+          </button>
+        </div>
+      </div>
+
+      <div style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.5; text-align: center;">
+        O endereço externo permanece ativo enquanto esta janela do servidor estiver aberta.
+      </div>
+    </div>
+    <div class="modal-footer" style="justify-content: center;">
+      <button class="btn btn-ghost" id="btn-mob-ok" style="min-width: 120px;">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast de Notificações -->
+<div class="toast-container" id="toast-container" aria-live="polite"></div>
+
+<script src="/static/js/dashboard.js?v=4"></script>
+</body>
+</html>

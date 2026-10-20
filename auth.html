@@ -1,0 +1,700 @@
+{% extends "base.html" %}
+
+{% block title %}Acesse sua conta — EasyIntern{% endblock %}
+
+{% block content %}
+<!-- ═══════════════════════════════════════════════════════════════════════
+     SPA DE AUTENTICAÇÃO — 3 painéis: Login | Candidato | Empresa
+     Transições via JS (opacity + transform), sem page reload.
+════════════════════════════════════════════════════════════════════════ -->
+
+<section class="auth-section" id="auth-section">
+
+  <!-- ── Logo / Marca ────────────────────────────────────────────────────── -->
+  <div class="auth-brand" aria-label="EasyIntern — Plataforma Inteligente de Recrutamento">
+    <div class="brand-icon" aria-hidden="true">
+      <i class="bi bi-rocket-takeoff-fill"></i>
+    </div>
+    <div class="brand-text">
+      <h1 class="brand-title">EasyIntern</h1>
+      <p class="brand-subtitle">Plataforma EasyIntern de Recrutamento</p>
+    </div>
+  </div>
+
+  <!-- ── Seletor de painel ───────────────────────────────────────────────── -->
+  <div class="auth-tabs" role="tablist" aria-label="Tipo de acesso">
+    <button
+      class="auth-tab active"
+      id="tab-login"
+      role="tab"
+      aria-selected="true"
+      aria-controls="panel-login"
+      data-panel="login"
+    >
+      <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>
+      Entrar
+    </button>
+    <button
+      class="auth-tab"
+      id="tab-candidato"
+      role="tab"
+      aria-selected="false"
+      aria-controls="panel-candidato"
+      data-panel="candidato"
+    >
+      <i class="bi bi-person-badge" aria-hidden="true"></i>
+      Candidato
+    </button>
+    <button
+      class="auth-tab"
+      id="tab-empresa"
+      role="tab"
+      aria-selected="false"
+      aria-controls="panel-empresa"
+      data-panel="empresa"
+    >
+      <i class="bi bi-building" aria-hidden="true"></i>
+      Empresa
+    </button>
+  </div>
+
+  <!-- ── PAINEL: LOGIN ──────────────────────────────────────────────────── -->
+  <div
+    class="auth-panel active glass-card"
+    id="panel-login"
+    role="tabpanel"
+    aria-labelledby="tab-login"
+  >
+    <div class="panel-header">
+      <h2 class="panel-title">Bem-vindo de volta</h2>
+      <p class="panel-desc">Entre na sua conta para continuar</p>
+    </div>
+
+    <form class="auth-form" id="form-login" novalidate>
+      <!-- E-mail -->
+      <div class="field-group" id="fg-login-email">
+        <label class="field-label" for="login-email">
+          <i class="bi bi-envelope" aria-hidden="true"></i>
+          E-mail
+        </label>
+        <div class="field-input-wrap">
+          <input
+            class="field-input"
+            id="login-email"
+            type="email"
+            name="email"
+            autocomplete="email"
+            placeholder="seu@email.com"
+            required
+            aria-required="true"
+            aria-describedby="login-email-err"
+          />
+          <span class="field-status" aria-hidden="true"></span>
+        </div>
+        <span class="field-error" id="login-email-err" role="alert"></span>
+      </div>
+
+      <!-- Senha -->
+      <div class="field-group" id="fg-login-password">
+        <label class="field-label" for="login-password">
+          <i class="bi bi-lock" aria-hidden="true"></i>
+          Senha
+        </label>
+        <div class="field-input-wrap">
+          <input
+            class="field-input"
+            id="login-password"
+            type="password"
+            name="password"
+            autocomplete="current-password"
+            placeholder="Mínimo 8 caracteres"
+            required
+            aria-required="true"
+            aria-describedby="login-password-err"
+          />
+          <button
+            type="button"
+            class="field-eye"
+            aria-label="Mostrar/ocultar senha"
+            data-target="login-password"
+          >
+            <i class="bi bi-eye" aria-hidden="true"></i>
+          </button>
+        </div>
+        <span class="field-error" id="login-password-err" role="alert"></span>
+      </div>
+
+      <!-- Submit -->
+      <button type="submit" class="btn-ag btn-primary" id="btn-login">
+        <span class="btn-text">
+          <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>
+          Entrar
+        </span>
+        <span class="btn-spinner" aria-hidden="true">
+          <i class="bi bi-arrow-repeat spin" aria-hidden="true"></i>
+          Verificando...
+        </span>
+      </button>
+
+      <!-- Separador -->
+      <div class="auth-divider"><span>ou crie sua conta</span></div>
+
+      <div class="auth-links">
+        <button type="button" class="auth-link-btn" data-goto="candidato">
+          <i class="bi bi-person-plus" aria-hidden="true"></i>
+          Sou Candidato
+        </button>
+        <button type="button" class="auth-link-btn" data-goto="empresa">
+          <i class="bi bi-building-add" aria-hidden="true"></i>
+          Sou Empresa
+        </button>
+      </div>
+
+      <div class="demo-access" aria-labelledby="demo-access-title">
+        <div class="demo-access-heading">
+          <span class="demo-access-icon" aria-hidden="true"><i class="bi bi-lightning-charge-fill"></i></span>
+          <div>
+            <strong id="demo-access-title">Acesso rápido</strong>
+            <span>Entre em um ambiente de demonstração</span>
+          </div>
+        </div>
+        <div class="demo-access-actions">
+          <button type="button" class="demo-access-btn demo-access-btn--candidate" data-demo-email="candidato@easyintern.com" data-demo-password="Senha@123">
+            <i class="bi bi-person-badge" aria-hidden="true"></i>
+            <span><strong>Estagiário</strong><small>Ver vagas e candidaturas</small></span>
+            <i class="bi bi-arrow-up-right" aria-hidden="true"></i>
+          </button>
+          <button type="button" class="demo-access-btn demo-access-btn--company" data-demo-email="empresa@techcorp.com" data-demo-password="Senha@123">
+            <i class="bi bi-building" aria-hidden="true"></i>
+            <span><strong>Empresa</strong><small>Gerenciar vagas e talentos</small></span>
+            <i class="bi bi-arrow-up-right" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+
+      <div style="text-align:center;margin-top:4px;">
+        <button type="button" class="forgot-pwd-link" id="btn-forgot-pwd">
+          <i class="bi bi-question-circle" aria-hidden="true"></i>
+          Esqueci minha senha
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ── MODAL: RECUPERAÇÃO DE SENHA ──────────────────────────────────────── -->
+  <div class="modal-overlay-auth" id="modal-recovery" hidden aria-modal="true" role="dialog" aria-labelledby="modal-rec-title">
+    <div class="modal-box-auth glass-card">
+      <div class="modal-auth-header">
+        <h3 id="modal-rec-title"><i class="bi bi-envelope-open-heart"></i> Recuperar Senha</h3>
+        <button class="modal-close-auth" id="modal-rec-close" aria-label="Fechar"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="modal-auth-body">
+        <p style="font-size:.875rem;color:var(--text-muted);line-height:1.6;margin-bottom:16px;">
+          Informe seu e-mail cadastrado. Você receberá um link de redefinição de senha.
+        </p>
+        <div class="field-group">
+          <label class="field-label" for="rec-email"><i class="bi bi-envelope"></i> E-mail</label>
+          <div class="field-input-wrap">
+            <input class="field-input" id="rec-email" type="email" placeholder="seu@email.com" autocomplete="email" />
+            <span class="field-status" aria-hidden="true"></span>
+          </div>
+          <span class="field-error" id="rec-email-err" role="alert"></span>
+        </div>
+        <div class="form-feedback-modal" id="rec-feedback" hidden></div>
+      </div>
+      <div class="modal-auth-footer">
+        <button class="btn-ag btn-ghost-sm" id="btn-rec-cancel">Cancelar</button>
+        <button class="btn-ag btn-violet-sm" id="btn-rec-send">
+          <span class="btn-text"><i class="bi bi-send-fill"></i> Enviar Link</span>
+          <span class="btn-spinner" aria-hidden="true"><i class="bi bi-arrow-repeat spin"></i> Enviando...</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── MODAL: REDEFINIR SENHA ──────────────────────────────────────────── -->
+  <div class="modal-overlay-auth" id="modal-reset" hidden aria-modal="true" role="dialog" aria-labelledby="modal-rst-title">
+    <div class="modal-box-auth glass-card">
+      <div class="modal-auth-header">
+        <h3 id="modal-rst-title"><i class="bi bi-shield-lock-fill"></i> Nova Senha</h3>
+        <button class="modal-close-auth" id="modal-rst-close" aria-label="Fechar"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="modal-auth-body">
+        <p style="font-size:.875rem;color:var(--text-muted);line-height:1.6;margin-bottom:16px;">
+          Digite e confirme sua nova senha.
+        </p>
+        <input type="hidden" id="rst-token" />
+        <div class="field-group">
+          <label class="field-label" for="rst-pwd"><i class="bi bi-lock"></i> Nova Senha</label>
+          <div class="field-input-wrap">
+            <input class="field-input" id="rst-pwd" type="password" placeholder="Mín. 8 chars, 1 maiúscula, 1 número" />
+            <button type="button" class="field-eye" data-target="rst-pwd" aria-label="Mostrar/ocultar">
+              <i class="bi bi-eye"></i>
+            </button>
+          </div>
+          <span class="field-error" id="rst-pwd-err" role="alert"></span>
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="rst-pwd-confirm"><i class="bi bi-lock-fill"></i> Confirmar Senha</label>
+          <div class="field-input-wrap">
+            <input class="field-input" id="rst-pwd-confirm" type="password" placeholder="Repita a nova senha" />
+          </div>
+          <span class="field-error" id="rst-pwd-confirm-err" role="alert"></span>
+        </div>
+        <div class="form-feedback-modal" id="rst-feedback" hidden></div>
+      </div>
+      <div class="modal-auth-footer">
+        <button class="btn-ag btn-ghost-sm" id="btn-rst-cancel">Cancelar</button>
+        <button class="btn-ag btn-violet-sm" id="btn-rst-save">
+          <span class="btn-text"><i class="bi bi-shield-check"></i> Redefinir Senha</span>
+          <span class="btn-spinner" aria-hidden="true"><i class="bi bi-arrow-repeat spin"></i> Salvando...</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ── PAINEL: CADASTRO CANDIDATO ────────────────────────────────────── -->
+  <div
+    class="auth-panel glass-card"
+    id="panel-candidato"
+    role="tabpanel"
+    aria-labelledby="tab-candidato"
+    hidden
+  >
+    <div class="panel-header">
+      <h2 class="panel-title">Cadastro de Candidato</h2>
+      <p class="panel-desc">Estagiário ou profissional júnior — sua vaga está aqui</p>
+    </div>
+
+    <form class="auth-form" id="form-candidato" novalidate>
+      <!-- Nome Completo -->
+      <div class="field-group" id="fg-c-nome">
+        <label class="field-label" for="c-nome">
+          <i class="bi bi-person" aria-hidden="true"></i>
+          Nome Completo
+        </label>
+        <div class="field-input-wrap">
+          <input
+            class="field-input"
+            id="c-nome"
+            type="text"
+            name="nome_completo"
+            autocomplete="name"
+            placeholder="Seu nome completo"
+            required
+            aria-required="true"
+            aria-describedby="c-nome-err"
+          />
+          <span class="field-status" aria-hidden="true"></span>
+        </div>
+        <span class="field-error" id="c-nome-err" role="alert"></span>
+      </div>
+
+      <!-- E-mail -->
+      <div class="field-group" id="fg-c-email">
+        <label class="field-label" for="c-email">
+          <i class="bi bi-envelope" aria-hidden="true"></i>
+          E-mail
+        </label>
+        <div class="field-input-wrap">
+          <input
+            class="field-input"
+            id="c-email"
+            type="email"
+            name="email"
+            autocomplete="email"
+            placeholder="seu@email.com"
+            required
+            aria-required="true"
+            aria-describedby="c-email-err"
+          />
+          <span class="field-status" aria-hidden="true"></span>
+        </div>
+        <span class="field-error" id="c-email-err" role="alert"></span>
+      </div>
+
+      <!-- Nível -->
+      <div class="field-group" id="fg-c-nivel">
+        <label class="field-label" for="c-nivel">
+          <i class="bi bi-bar-chart-steps" aria-hidden="true"></i>
+          Nível de Carreira
+        </label>
+        <div class="field-input-wrap select-wrap">
+          <select class="field-input field-select" id="c-nivel" name="nivel" aria-describedby="c-nivel-err">
+            <option value="estagiario">🎓 Estagiário</option>
+            <option value="junior">🚀 Júnior</option>
+          </select>
+          <i class="bi bi-chevron-down select-chevron" aria-hidden="true"></i>
+        </div>
+        <span class="field-error" id="c-nivel-err" role="alert"></span>
+      </div>
+
+      <!-- Área de interesse (Integrado com CNCT/ETEC e Microdados do Censo) -->
+      <div class="field-group" id="fg-c-area">
+        <div class="field-label-row">
+          <label class="field-label" for="c-area">
+            <i class="bi bi-mortarboard-fill" aria-hidden="true"></i>
+            Formação Técnica / Bacharelado
+            <span class="field-optional">(opcional)</span>
+          </label>
+          <span class="field-badge-api" title="Integrado com Catálogo Nacional de Cursos Técnicos (CNCT/SETEC/MEC) e Censo da Educação Superior (INEP)">
+            <i class="bi bi-database-check"></i> CNCT &amp; MEC
+          </span>
+        </div>
+        <div class="field-input-wrap autocomplete-wrap" id="area-autocomplete-wrap">
+          <input
+            class="field-input"
+            id="c-area"
+            type="text"
+            name="area_interesse"
+            placeholder="Ex: Técnico em Dev de Sistemas, Bacharelado em Ciência da Computação..."
+            autocomplete="off"
+            aria-autocomplete="list"
+            aria-controls="area-suggestions"
+            aria-expanded="false"
+            aria-describedby="c-area-err"
+          />
+          <button
+            type="button"
+            class="field-clear-btn"
+            id="btn-clear-area"
+            aria-label="Limpar campo de área de interesse"
+            tabindex="-1"
+            hidden
+          >
+            <i class="bi bi-x-circle-fill"></i>
+          </button>
+          <span class="field-status" aria-hidden="true"></span>
+
+          <!-- Painel Flutuante Zero-G de Autocomplete / Sugestões -->
+          <div
+            class="autocomplete-dropdown glass-card"
+            id="area-suggestions"
+            role="listbox"
+            aria-label="Formações Técnicas e Bacharelados sugeridos"
+            hidden
+          >
+            <!-- Injetado dinamicamente via zero-g-auth.js -->
+          </div>
+        </div>
+
+        <!-- Chips de seleção rápida categorizados: Técnicos e Bacharelados -->
+        <div class="area-quick-chips" id="area-quick-chips" aria-label="Sugestões de Formações Técnicas e Bacharelados">
+          <div class="chips-category-group">
+            <span class="quick-chips-label"><i class="bi bi-mortarboard"></i> Técnicos:</span>
+            <button type="button" class="area-chip chip-tec" data-value="Técnico em Desenvolvimento de Sistemas">
+              🎓 Técnico em Dev de Sistemas
+            </button>
+            <button type="button" class="area-chip chip-tec" data-value="Técnico em Administração">
+              🎓 Técnico em Administração
+            </button>
+            <button type="button" class="area-chip chip-tec" data-value="Técnico em Mecatrônica">
+              🎓 Técnico em Mecatrônica
+            </button>
+          </div>
+          <div class="chips-category-group">
+            <span class="quick-chips-label"><i class="bi bi-bank"></i> Bacharelados:</span>
+            <button type="button" class="area-chip chip-bach" data-value="Bacharelado em Ciência da Computação">
+              🏛️ Bacharelado em Ciência da Comp.
+            </button>
+            <button type="button" class="area-chip chip-bach" data-value="Bacharelado em Engenharia de Software">
+              🏛️ Bacharelado em Eng. de Software
+            </button>
+            <button type="button" class="area-chip chip-bach" data-value="Bacharelado em Administração">
+              🏛️ Bacharelado em Administração
+            </button>
+          </div>
+        </div>
+
+        <span class="field-error" id="c-area-err" role="alert"></span>
+      </div>
+
+      <!-- Senha -->
+      <div class="field-group" id="fg-c-password">
+        <label class="field-label" for="c-password">
+          <i class="bi bi-lock" aria-hidden="true"></i>
+          Senha
+        </label>
+        <div class="field-input-wrap">
+          <input
+            class="field-input"
+            id="c-password"
+            type="password"
+            name="password"
+            autocomplete="new-password"
+            placeholder="Mín. 8 chars, 1 maiúscula, 1 número"
+            required
+            aria-required="true"
+            aria-describedby="c-password-err c-password-strength"
+          />
+          <button
+            type="button"
+            class="field-eye"
+            aria-label="Mostrar/ocultar senha"
+            data-target="c-password"
+          >
+            <i class="bi bi-eye" aria-hidden="true"></i>
+          </button>
+        </div>
+        <!-- Strength meter -->
+        <div class="password-strength" id="c-password-strength" aria-label="Força da senha">
+          <div class="strength-bar">
+            <div class="strength-fill" id="c-strength-fill"></div>
+          </div>
+          <span class="strength-label" id="c-strength-label"></span>
+        </div>
+        <span class="field-error" id="c-password-err" role="alert"></span>
+      </div>
+
+      <button type="submit" class="btn-ag btn-success" id="btn-candidato">
+        <span class="btn-text">
+          <i class="bi bi-person-check" aria-hidden="true"></i>
+          Criar Conta de Candidato
+        </span>
+        <span class="btn-spinner" aria-hidden="true">
+          <i class="bi bi-arrow-repeat spin" aria-hidden="true"></i>
+          Criando conta...
+        </span>
+      </button>
+
+      <div class="auth-divider"><span>já tem conta?</span></div>
+      <button type="button" class="auth-link-btn" data-goto="login">
+        <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>
+        Fazer Login
+      </button>
+    </form>
+  </div>
+
+  <!-- ── PAINEL: CADASTRO EMPRESA ──────────────────────────────────────── -->
+  <div
+    class="auth-panel glass-card"
+    id="panel-empresa"
+    role="tabpanel"
+    aria-labelledby="tab-empresa"
+    hidden
+  >
+    <div class="panel-header">
+      <h2 class="panel-title">Cadastro de Empresa</h2>
+      <p class="panel-desc">Encontre os melhores talentos entre estagiários e profissionais juniores</p>
+    </div>
+
+    <form class="auth-form" id="form-empresa" novalidate>
+      <!-- Razão Social -->
+      <div class="field-group" id="fg-e-razao">
+        <label class="field-label" for="e-razao">
+          <i class="bi bi-building" aria-hidden="true"></i>
+          Razão Social
+        </label>
+        <div class="field-input-wrap">
+          <input
+            class="field-input"
+            id="e-razao"
+            type="text"
+            name="razao_social"
+            autocomplete="organization"
+            placeholder="Nome empresarial oficial"
+            required
+            aria-required="true"
+            aria-describedby="e-razao-err"
+          />
+          <span class="field-status" aria-hidden="true"></span>
+        </div>
+        <span class="field-error" id="e-razao-err" role="alert"></span>
+      </div>
+
+      <!-- Nome Fantasia -->
+      <div class="field-group" id="fg-e-fantasia">
+        <label class="field-label" for="e-fantasia">
+          <i class="bi bi-star" aria-hidden="true"></i>
+          Nome Fantasia
+          <span class="field-optional">(opcional)</span>
+        </label>
+        <div class="field-input-wrap">
+          <input
+            class="field-input"
+            id="e-fantasia"
+            type="text"
+            name="nome_fantasia"
+            placeholder="Como é conhecida no mercado"
+            aria-describedby="e-fantasia-err"
+          />
+          <span class="field-status" aria-hidden="true"></span>
+        </div>
+        <span class="field-error" id="e-fantasia-err" role="alert"></span>
+      </div>
+
+      <!-- CNPJ -->
+      <div class="field-group" id="fg-e-cnpj">
+        <label class="field-label" for="e-cnpj">
+          <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
+          CNPJ
+          <span class="field-optional">(opcional)</span>
+        </label>
+        <div class="field-input-wrap">
+          <input
+            class="field-input"
+            id="e-cnpj"
+            type="text"
+            name="cnpj"
+            placeholder="00.000.000/0001-00"
+            maxlength="18"
+            aria-describedby="e-cnpj-err"
+          />
+          <span class="field-status" aria-hidden="true"></span>
+        </div>
+        <span class="field-error" id="e-cnpj-err" role="alert"></span>
+      </div>
+
+      <!-- Setor -->
+      <div class="field-group" id="fg-e-setor">
+        <label class="field-label" for="e-setor">
+          <i class="bi bi-grid" aria-hidden="true"></i>
+          Setor
+          <span class="field-optional">(opcional)</span>
+        </label>
+        <div class="field-input-wrap select-wrap">
+          <select class="field-input field-select" id="e-setor" name="setor">
+            <option value="">Selecione um setor...</option>
+            <option value="Tecnologia">💻 Tecnologia</option>
+            <option value="Saúde">🏥 Saúde</option>
+            <option value="Educação">📚 Educação</option>
+            <option value="Financeiro">💰 Financeiro</option>
+            <option value="E-commerce">🛒 E-commerce</option>
+            <option value="Varejo">🏪 Varejo</option>
+            <option value="Indústria">🏭 Indústria</option>
+            <option value="Consultoria">📊 Consultoria</option>
+            <option value="Marketing">📣 Marketing</option>
+            <option value="Outros">🌐 Outros</option>
+          </select>
+          <i class="bi bi-chevron-down select-chevron" aria-hidden="true"></i>
+        </div>
+      </div>
+
+      <!-- E-mail -->
+      <div class="field-group" id="fg-e-email">
+        <label class="field-label" for="e-email">
+          <i class="bi bi-envelope" aria-hidden="true"></i>
+          E-mail Corporativo
+        </label>
+        <div class="field-input-wrap">
+          <input
+            class="field-input"
+            id="e-email"
+            type="email"
+            name="email"
+            autocomplete="email"
+            placeholder="rh@suaempresa.com"
+            required
+            aria-required="true"
+            aria-describedby="e-email-err"
+          />
+          <span class="field-status" aria-hidden="true"></span>
+        </div>
+        <span class="field-error" id="e-email-err" role="alert"></span>
+      </div>
+
+      <!-- Senha -->
+      <div class="field-group" id="fg-e-password">
+        <label class="field-label" for="e-password">
+          <i class="bi bi-lock" aria-hidden="true"></i>
+          Senha
+        </label>
+        <div class="field-input-wrap">
+          <input
+            class="field-input"
+            id="e-password"
+            type="password"
+            name="password"
+            autocomplete="new-password"
+            placeholder="Mín. 8 chars, 1 maiúscula, 1 número"
+            required
+            aria-required="true"
+            aria-describedby="e-password-err e-password-strength"
+          />
+          <button
+            type="button"
+            class="field-eye"
+            aria-label="Mostrar/ocultar senha"
+            data-target="e-password"
+          >
+            <i class="bi bi-eye" aria-hidden="true"></i>
+          </button>
+        </div>
+        <!-- Strength meter -->
+        <div class="password-strength" id="e-password-strength" aria-label="Força da senha">
+          <div class="strength-bar">
+            <div class="strength-fill" id="e-strength-fill"></div>
+          </div>
+          <span class="strength-label" id="e-strength-label"></span>
+        </div>
+        <span class="field-error" id="e-password-err" role="alert"></span>
+      </div>
+
+      <button type="submit" class="btn-ag btn-violet" id="btn-empresa">
+        <span class="btn-text">
+          <i class="bi bi-building-check" aria-hidden="true"></i>
+          Criar Conta de Empresa
+        </span>
+        <span class="btn-spinner" aria-hidden="true">
+          <i class="bi bi-arrow-repeat spin" aria-hidden="true"></i>
+          Criando conta...
+        </span>
+      </button>
+
+      <div class="auth-divider"><span>já tem conta?</span></div>
+      <button type="button" class="auth-link-btn" data-goto="login">
+        <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>
+        Fazer Login
+      </button>
+    </form>
+  </div>
+
+  <!-- ── Rodapé de auth ─────────────────────────────────────────────────── -->
+  <footer class="auth-footer">
+    <p>
+      <i class="bi bi-shield-lock" aria-hidden="true"></i>
+      Conexão segura · OWASP A07 ·
+      <a href="/api/docs" target="_blank" rel="noopener" class="footer-link">API Docs</a> ·
+      <button type="button" class="btn-mobile-access" id="btn-mobile-modal" title="Abrir no celular / QR Code">
+        <i class="bi bi-phone"></i> Acesso Mobile
+      </button>
+    </p>
+  </footer>
+
+  <!-- ── MODAL: ACESSO MOBILE / QR CODE ──────────────────────────────────── -->
+  <div class="modal-overlay-auth" id="modal-mobile" hidden aria-modal="true" role="dialog" aria-labelledby="modal-mob-title">
+    <div class="modal-box-auth glass-card" style="max-width: 480px; text-align: center;">
+      <div class="modal-auth-header">
+        <h3 id="modal-mob-title"><i class="bi bi-phone-vibrate"></i> Acesso Mobile & Multi-Aparelhos</h3>
+        <button class="modal-close-auth" id="modal-mob-close" aria-label="Fechar"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="modal-auth-body" style="display: flex; flex-direction: column; align-items: center; gap: 14px;">
+        <p style="font-size: 0.84375rem; color: var(--text-secondary); line-height: 1.5; margin: 0;">
+          Acesso pelo mesmo link em redes Wi-Fi, 4G ou 5G.
+        </p>
+
+        <!-- QR Code Container -->
+        <div style="background: white; padding: 12px; border-radius: 12px; display: inline-flex; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
+          <img id="qr-code-img" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=http://192.168.100.201:8000" alt="QR Code Acesso Mobile" width="180" height="180" style="display: block;" />
+        </div>
+
+        <div style="width: 100%; text-align: left; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px 16px;">
+          <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">Link de Acesso Único:</div>
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+            <code id="mobile-url-text" style="font-family: monospace; font-size: 0.9375rem; color: var(--cyan-light); font-weight: 700;">Carregando...</code>
+            <button type="button" class="btn-ag btn-ghost-sm" id="btn-copy-mobile-link" style="padding: 4px 10px; font-size: 0.75rem;">
+              <i class="bi bi-copy"></i> Copiar
+            </button>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-auth-footer" style="justify-content: center;">
+        <button class="btn-ag btn-ghost-sm" id="btn-mob-ok" style="min-width: 120px;">Entendi</button>
+      </div>
+    </div>
+  </div>
+
+</section>
+{% endblock %}
