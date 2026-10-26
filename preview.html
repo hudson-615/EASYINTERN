@@ -13,13 +13,13 @@
       background: #f3eee5;
       font-synthesis: none;
       text-rendering: optimizeLegibility;
-      --blue: #806344;
-      --blue-dark: #493d30;
+      --blue: #20b479;
+      --blue-dark: #189a64;
       --ink: #342f28;
       --muted: #83796c;
       --line: #e2d7c7;
       --surface: #fffdf8;
-      --soft-blue: #f1e8d9;
+      --soft-blue: rgba(32, 180, 121, 0.12);
     }
 
     * { box-sizing: border-box; }
@@ -30,7 +30,7 @@
 
     .site-header {
       position: sticky;
-      z-index: 10;
+      z-index: 100;
       top: 0;
       border-bottom: 1px solid rgba(226, 215, 199, .85);
       background: rgba(255, 253, 248, .94);
@@ -38,29 +38,160 @@
     }
 
     .header-inner { min-height: 76px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
-    .brand { display: inline-flex; align-items: center; gap: 10px; color: var(--ink); text-decoration: none; font-size: 1.15rem; font-weight: 800; letter-spacing: -.04em; }
-    .brand-mark { display: grid; width: 36px; height: 36px; place-items: center; border-radius: 12px; background: linear-gradient(145deg, #92704e, #648b79); color: white; box-shadow: 0 6px 16px #80634433; }
+    .header-left { display: flex; align-items: center; gap: 16px; }
+    .brand { display: inline-flex; align-items: center; gap: 10px; color: #20b479; text-decoration: none; font-size: 1.15rem; font-weight: 800; letter-spacing: -.04em; }
+    .brand-mark { display: grid; width: 36px; height: 36px; place-items: center; border-radius: 12px; background: #20b479; color: white; box-shadow: 0 6px 16px rgba(32, 180, 121, 0.28); }
     .brand-mark svg { width: 21px; height: 21px; }
-    .main-nav, .header-actions { display: flex; align-items: center; gap: 28px; }
-    .main-nav a, .login-link { color: #5d554b; font-size: .9rem; font-weight: 600; text-decoration: none; transition: color .18s ease; }
-    .main-nav a:hover, .login-link:hover { color: var(--blue); }
-    .header-actions { gap: 16px; }
+    .header-actions { display: flex; align-items: center; gap: 16px; }
+    .login-link { color: #5d554b; font-size: .9rem; font-weight: 600; text-decoration: none; transition: color .18s ease; }
+    .login-link:hover { color: var(--blue); }
+
+    .btn-menu-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border: 1px solid rgba(32, 180, 121, 0.35);
+      border-radius: 10px;
+      background: rgba(32, 180, 121, 0.12);
+      color: #20b479;
+      font-size: .88rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .2s ease;
+      box-shadow: 0 2px 6px rgba(32, 180, 121, 0.12);
+    }
+    .btn-menu-toggle:hover {
+      background: #20b479;
+      border-color: #20b479;
+      color: #ffffff;
+      outline: 3px solid rgba(32, 180, 121, 0.25);
+    }
+    .btn-menu-toggle[aria-expanded="true"] {
+      background: #20b479;
+      border-color: #20b479;
+      color: #ffffff;
+    }
+
+    .preview-drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(4px);
+      z-index: 998;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity .3s ease, visibility .3s ease;
+    }
+    .preview-drawer-overlay.is-open {
+      opacity: 1;
+      visibility: visible;
+    }
+    .preview-drawer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: min(320px, 85vw);
+      background: rgba(255, 253, 248, 0.98);
+      border-right: 1px solid #e2d7c7;
+      backdrop-filter: blur(24px);
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      transform: translateX(-100%);
+      transition: transform .35s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 4px 0 28px rgba(0, 0, 0, 0.12);
+      padding: 24px;
+    }
+    .preview-drawer.is-open {
+      transform: translateX(0);
+    }
+    .preview-drawer-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #e2d7c7;
+    }
+    .preview-drawer-close {
+      display: grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      border: 1px solid #e2d7c7;
+      background: transparent;
+      color: #5d554b;
+      cursor: pointer;
+      transition: all .18s ease;
+    }
+    .preview-drawer-close:hover {
+      background: rgba(32, 180, 121, 0.12);
+      color: #20b479;
+      border-color: #20b479;
+    }
+    .preview-drawer-nav {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding-top: 20px;
+    }
+    .preview-drawer-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      color: #342f28;
+      font-size: .95rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all .18s ease;
+    }
+    .preview-drawer-link:hover {
+      background: rgba(32, 180, 121, 0.12);
+      color: #20b479;
+    }
+    .preview-drawer-footer {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding-top: 20px;
+      border-top: 1px solid #e2d7c7;
+    }
+
     .theme-toggle {
       display: inline-grid;
       width: 42px;
       height: 42px;
       flex: 0 0 42px;
       place-items: center;
-      border: 1px solid #e2d7c7;
+      border: 1px solid rgba(32, 180, 121, 0.35);
       border-radius: 50%;
-      background: #fffdf8;
-      color: #5d554b;
+      background: rgba(32, 180, 121, 0.08);
+      color: #20b479;
       cursor: pointer;
-      transition: transform .18s ease, background .18s ease, border-color .18s ease, color .18s ease;
+      position: relative;
+      overflow: hidden;
+      transition: transform .22s cubic-bezier(0.34, 1.56, 0.64, 1), background .18s ease, border-color .18s ease, box-shadow .18s ease;
     }
-    .theme-toggle:hover { transform: translateY(-1px); border-color: #cbb69a; color: #806344; }
-    .theme-toggle:focus-visible { outline: 3px solid #c7b49b; outline-offset: 3px; }
-    .theme-icon { width: 20px; height: 20px; }
+    .theme-toggle:hover {
+      transform: scale(1.08) translateY(-1px);
+      border-color: #20b479;
+      box-shadow: 0 0 12px rgba(32, 180, 121, 0.28);
+    }
+    .theme-toggle:focus-visible { outline: 3px solid rgba(32, 180, 121, 0.4); outline-offset: 3px; }
+    .theme-icon {
+      width: 22px;
+      height: 22px;
+      object-fit: contain;
+      transition: transform .45s cubic-bezier(0.34, 1.56, 0.64, 1), opacity .3s ease;
+    }
+    .theme-toggle:hover .theme-icon {
+      transform: rotate(20deg) scale(1.1);
+    }
 
     .button {
       display: inline-flex;
@@ -71,20 +202,20 @@
       padding: 0 19px;
       border: 1px solid transparent;
       border-radius: 12px;
-      background: var(--blue);
+      background: #20b479;
       color: white;
       font: inherit;
       font-size: .92rem;
       font-weight: 700;
       text-decoration: none;
-      box-shadow: 0 7px 16px #80634429;
+      box-shadow: 0 7px 16px rgba(32, 180, 121, 0.25);
       transition: transform .18s ease, background .18s ease, box-shadow .18s ease;
     }
 
-    .button:hover { transform: translateY(-2px); background: #648b79; box-shadow: 0 10px 22px #80634433; }
-    .button:focus-visible, a:focus-visible { outline: 3px solid #c7b49b; outline-offset: 3px; }
-    .button-secondary { border-color: #e2d7c7; background: #fffdf8; color: var(--ink); box-shadow: none; }
-    .button-secondary:hover { border-color: #cbb69a; background: #f8f4ec; color: var(--blue-dark); box-shadow: none; }
+    .button:hover { transform: translateY(-2px); background: #189a64; box-shadow: 0 10px 22px rgba(32, 180, 121, 0.35); }
+    .button:focus-visible, a:focus-visible { outline: 3px solid rgba(32, 180, 121, 0.4); outline-offset: 3px; }
+    .button-secondary { border-color: rgba(32, 180, 121, 0.35); background: #fffdf8; color: var(--ink); box-shadow: none; }
+    .button-secondary:hover { border-color: #20b479; background: rgba(32, 180, 121, 0.1); color: #189a64; box-shadow: none; }
 
     .hero { position: relative; overflow: hidden; padding: 88px 0 84px; background: radial-gradient(ellipse at 78% 25%, #eee5d8 0, transparent 36%), linear-gradient(180deg, #fffdf8 0%, #f3eee5 100%); }
     .hero::before { position: absolute; top: 60px; right: -130px; width: 380px; height: 380px; border: 1px solid #e2d7c7; border-radius: 50%; content: ""; pointer-events: none; }
@@ -111,7 +242,7 @@
     .dash-side { padding: 16px 10px; background: #fbf8f1; border-right: 1px solid #e2d7c7; }
     .mini-brand { margin: 0 0 22px 5px; color: var(--blue); font-size: .73rem; font-weight: 800; }
     .side-item { margin: 5px 0; padding: 8px 8px; border-radius: 7px; color: #786e61; font-size: .63rem; font-weight: 600; }
-    .side-item.active { background: #efe5d4; color: #735638; }
+    .side-item.active { background: rgba(32, 180, 121, 0.15); color: #20b479; }
     .dash-main { padding: 18px 17px; }
     .dash-greeting { margin: 0 0 4px; color: #342f28; font-size: .94rem; font-weight: 800; }
     .dash-subtitle { margin: 0 0 15px; color: #83796c; font-size: .62rem; }
@@ -120,7 +251,7 @@
     .stat-label { display: block; margin-bottom: 7px; color: #83796c; font-size: .55rem; }
     .stat-value { color: #342f28; font-size: .92rem; font-weight: 800; }
     .opportunity { display: flex; align-items: center; gap: 10px; margin-top: 8px; padding: 10px; border: 1px solid #e2d7c7; border-radius: 9px; background: #fffdf8; }
-    .opportunity-icon { display: grid; width: 30px; height: 30px; flex: 0 0 30px; place-items: center; border-radius: 9px; background: #efe5d4; color: #735638; font-size: .73rem; font-weight: 900; }
+    .opportunity-icon { display: grid; width: 30px; height: 30px; flex: 0 0 30px; place-items: center; border-radius: 9px; background: rgba(32, 180, 121, 0.15); color: #20b479; font-size: .73rem; font-weight: 900; }
     .opportunity-title { display: block; margin-bottom: 3px; color: #342f28; font-size: .62rem; font-weight: 800; }
     .opportunity-meta { display: block; color: #83796c; font-size: .55rem; }
     .match { margin-left: auto; padding: 5px 7px; border-radius: 7px; background: #e8f1e8; color: #456b50; font-size: .56rem; font-weight: 800; white-space: nowrap; }
@@ -154,11 +285,11 @@
     .step h3 { margin-bottom: 8px; color: #342f28; font-size: 1rem; }
     .step p { margin: 0; color: var(--muted); font-size: .87rem; line-height: 1.65; }
     .closing { padding: 68px 0; }
-    .closing-card { display: flex; align-items: center; justify-content: space-between; gap: 30px; padding: 40px 44px; border-radius: 22px; background: linear-gradient(115deg, #92704e, #648b79); color: white; box-shadow: 0 18px 40px #80634433; }
+    .closing-card { display: flex; align-items: center; justify-content: space-between; gap: 30px; padding: 40px 44px; border-radius: 22px; background: linear-gradient(115deg, #20b479, #1ca06b); color: white; box-shadow: 0 18px 40px rgba(32, 180, 121, 0.25); }
     .closing-card h2 { max-width: 550px; margin-bottom: 8px; color: white; font-size: clamp(1.7rem, 3vw, 2.25rem); }
     .closing-card p { margin: 0; color: #f3eee5; font-size: .94rem; }
-    .closing-card .button { flex: 0 0 auto; background: #fffdf8; color: #493d30; box-shadow: none; }
-    .closing-card .button:hover { background: #f8f4ec; }
+    .closing-card .button { flex: 0 0 auto; background: #ffffff; color: #189a64; box-shadow: none; }
+    .closing-card .button:hover { background: #f0fdf4; }
     footer { padding: 24px 0; border-top: 1px solid var(--line); color: #83796c; font-size: .8rem; }
     .footer-inner { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
     footer p { margin: 0; }
@@ -211,27 +342,46 @@
     }
     body[data-theme="dark"] {
       color-scheme: dark;
-      --blue: #e0b66f;
-      --blue-dark: #a88a62;
+      --blue: #20b479;
+      --blue-dark: #2dd48f;
       --ink: #f4eee3;
       --muted: #b7ad9e;
       --line: #444d45;
       --surface: #282d28;
-      --soft-blue: #3a352c;
+      --soft-blue: rgba(32, 180, 121, 0.16);
       color: #f4eee3;
       background: #1c201d;
     }
-    body[data-theme="dark"] .site-header { border-color: #3b443d; background: rgba(34, 39, 34, .96); }
-    body[data-theme="dark"] .main-nav a,
+    body[data-theme="dark"] .brand { color: #20b479; }
+    body[data-theme="dark"] .brand-mark { background: #20b479; box-shadow: 0 6px 16px rgba(32, 180, 121, 0.35); }
+    body[data-theme="dark"] .site-header { border-color: #3b443d; background: rgba(34, 39, 34, .96); backdrop-filter: blur(14px); }
     body[data-theme="dark"] .login-link { color: #d9d0c3; }
-    body[data-theme="dark"] .main-nav a:hover,
-    body[data-theme="dark"] .login-link:hover { color: #a0d4ca; }
-    body[data-theme="dark"] .theme-toggle { border-color: #444d45; background: #282d28; color: #e0b66f; }
-    body[data-theme="dark"] .theme-toggle:hover { border-color: #806b49; background: #3a352c; color: #f0d7ae; }
-    body[data-theme="dark"] .button { background: #8a704e; color: #fff9ef; box-shadow: 0 7px 16px #080b093d; }
-    body[data-theme="dark"] .button:hover { background: #648b79; }
+    body[data-theme="dark"] .login-link:hover { color: #2dd48f; }
+    body[data-theme="dark"] .btn-menu-toggle {
+      background: rgba(32, 180, 121, 0.16);
+      border-color: rgba(32, 180, 121, 0.4);
+      color: #20b479;
+    }
+    body[data-theme="dark"] .btn-menu-toggle:hover {
+      background: #20b479;
+      border-color: #20b479;
+      color: #ffffff;
+    }
+    body[data-theme="dark"] .theme-toggle {
+      border-color: rgba(32, 180, 121, 0.35);
+      background: rgba(32, 180, 121, 0.12);
+      color: #20b479;
+    }
+    body[data-theme="dark"] .theme-toggle:hover {
+      border-color: #20b479;
+      background: rgba(32, 180, 121, 0.22);
+      color: #2dd48f;
+      box-shadow: 0 0 12px rgba(32, 180, 121, 0.35);
+    }
+    body[data-theme="dark"] .button { background: #20b479; color: #ffffff; box-shadow: 0 7px 16px rgba(0, 0, 0, .35); }
+    body[data-theme="dark"] .button:hover { background: #189a64; }
     body[data-theme="dark"] .button-secondary { border-color: #444d45; background: #282d28; color: #f4eee3; box-shadow: none; }
-    body[data-theme="dark"] .button-secondary:hover { border-color: #806b49; background: #303630; color: #f0d7ae; }
+    body[data-theme="dark"] .button-secondary:hover { border-color: #20b479; background: rgba(32, 180, 121, 0.15); color: #2dd48f; }
     body[data-theme="dark"] .hero { background: radial-gradient(ellipse at 78% 25%, #303630 0, transparent 38%), linear-gradient(180deg, #222722 0%, #1c201d 100%); }
     body[data-theme="dark"] .hero::before { border-color: #444d45; }
     body[data-theme="dark"] h1,
@@ -253,7 +403,7 @@
     body[data-theme="dark"] .dash-preview { border-color: #3b443d; background: #1c201d; }
     body[data-theme="dark"] .dash-side { border-color: #3b443d; background: #222722; }
     body[data-theme="dark"] .side-item { color: #c2b9aa; }
-    body[data-theme="dark"] .side-item.active { background: #3a352c; color: #f0d7ae; }
+    body[data-theme="dark"] .side-item.active { background: rgba(32, 180, 121, 0.2); color: #20b479; }
     body[data-theme="dark"] .dash-greeting,
     body[data-theme="dark"] .stat-value,
     body[data-theme="dark"] .opportunity-title,
@@ -262,42 +412,77 @@
     body[data-theme="dark"] .step h3 { color: #f4eee3; }
     body[data-theme="dark"] .stat,
     body[data-theme="dark"] .opportunity { border-color: #404940; background: #282d28; }
-    body[data-theme="dark"] .opportunity-icon { background: #3a352c; color: #edc98e; }
+    body[data-theme="dark"] .opportunity-icon { background: rgba(32, 180, 121, 0.18); color: #20b479; }
     body[data-theme="dark"] .match { background: #2b4232; color: #b2dfb6; }
     body[data-theme="dark"] .how-section { background: #242923; }
-    body[data-theme="dark"] .closing-card { background: linear-gradient(115deg, #5b4935, #38584e); box-shadow: 0 18px 40px rgba(8, 11, 9, .3); }
+    body[data-theme="dark"] .closing-card { background: linear-gradient(115deg, #189a64, #126341); box-shadow: 0 18px 40px rgba(8, 11, 9, .3); }
     body[data-theme="dark"] .closing-card p { color: #e4ddd1; }
-    body[data-theme="dark"] .closing-card .button { background: #f4eee3; color: #342f28; box-shadow: none; }
-    body[data-theme="dark"] .closing-card .button:hover { background: #d9d0c3; }
+    body[data-theme="dark"] .closing-card .button { background: #ffffff; color: #189a64; box-shadow: none; }
+    body[data-theme="dark"] .closing-card .button:hover { background: #f0fdf4; }
     body[data-theme="dark"] footer { border-color: #3b443d; color: #b7ad9e; }
-    body[data-theme="dark"] .footer-brand { color: #f4eee3; }
-    body[data-theme="dark"] .site-header { backdrop-filter: blur(14px); }
+    body[data-theme="dark"] .footer-brand { color: #20b479; }
   </style>
 </head>
 <body>
   <header class="site-header">
     <div class="container header-inner">
-      <a class="brand" href="#" aria-label="EasyIntern, início">
-        <span class="brand-mark" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none"><path d="M5 15.5 18.5 4l-4 16-3.2-6.2L5 15.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m11.3 13.8 4.3-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-        </span>
-        EasyIntern
-      </a>
-      <nav class="main-nav" aria-label="Navegação principal">
-        <a href="#como-funciona">Como funciona</a>
-        <a href="#talentos">Para talentos</a>
-        <a href="#empresas">Para empresas</a>
-      </nav>
+      <div class="header-left">
+        <button type="button" class="btn-menu-toggle" id="btn-preview-menu" aria-label="Abrir menu de navegação" aria-controls="preview-drawer" aria-expanded="false" title="Abrir menu">
+          <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+          <span>Menu</span>
+        </button>
+        <a class="brand" href="#" aria-label="EasyIntern, início">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M5 15.5 18.5 4l-4 16-3.2-6.2L5 15.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m11.3 13.8 4.3-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </span>
+          EasyIntern
+        </a>
+      </div>
+
       <div class="header-actions">
-        <button type="button" class="theme-toggle" id="btn-theme-toggle" aria-label="Ativar modo escuro" aria-pressed="false" title="Ativar modo escuro">
-          <svg class="theme-icon theme-icon--moon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20.2 15.1A8.5 8.5 0 0 1 8.9 3.8 8.5 8.5 0 1 0 20.2 15.1Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          <svg class="theme-icon theme-icon--sun" viewBox="0 0 24 24" fill="none" aria-hidden="true" hidden><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <button type="button" class="theme-toggle" id="btn-theme-toggle" aria-label="Ativar modo escuro" aria-pressed="false" title="Alternar modo claro / escuro">
+          <img src="./static/img/moon.png" class="theme-icon theme-icon--moon" alt="Modo escuro (Lua)" width="22" height="22">
+          <img src="./static/img/sun.svg" class="theme-icon theme-icon--sun" alt="Modo claro (Sol)" width="22" height="22" hidden>
         </button>
         <a class="login-link" href="preview-auth.html#login">Entrar</a>
         <a class="button" href="preview-auth.html#candidato">Criar conta</a>
       </div>
     </div>
   </header>
+
+  <!-- ── Drawer Mobile / Menu Retrátil em todas as telas ────────────────────── -->
+  <div class="preview-drawer-overlay" id="preview-menu-overlay" aria-hidden="true"></div>
+  <aside class="preview-drawer" id="preview-drawer" aria-label="Menu principal">
+    <div class="preview-drawer-header">
+      <a class="brand" href="#" aria-label="EasyIntern">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M5 15.5 18.5 4l-4 16-3.2-6.2L5 15.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m11.3 13.8 4.3-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </span>
+        EasyIntern
+      </a>
+      <button type="button" class="preview-drawer-close" id="preview-menu-close" aria-label="Fechar menu">
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <nav class="preview-drawer-nav">
+      <a href="#como-funciona" class="preview-drawer-link">
+        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+        Como funciona
+      </a>
+      <a href="#talentos" class="preview-drawer-link">
+        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Para talentos
+      </a>
+      <a href="#empresas" class="preview-drawer-link">
+        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><rect width="16" height="20" x="4" y="2" rx="2"/><path d="M9 22v-4h6v4M8 6h.01M16 6h.01M8 10h.01M16 10h.01M8 14h.01M16 14h.01"/></svg>
+        Para empresas
+      </a>
+    </nav>
+    <div class="preview-drawer-footer">
+      <a class="button button-secondary" href="preview-auth.html#login" style="width: 100%;">Entrar</a>
+      <a class="button" href="preview-auth.html#candidato" style="width: 100%;">Criar conta</a>
+    </div>
+  </aside>
 
   <main>
     <section class="hero">
