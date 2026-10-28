@@ -1,12 +1,8 @@
-from flask import Flask
+from fastapi import FastAPI
 
-app = Flask(__name__)
+app = FastAPI(title="EasyIntern")
 
 
-@app.route("/")
+@app.get("/")
 def inicio():
-    return "EasyIntern - Backend funcionando!"
-
-
-if __name__ == "__main__":
-    app.run(debug=True)
+    return {"mensagem": "EasyIntern - Backend funcionando!"}
