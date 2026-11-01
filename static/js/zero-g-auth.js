@@ -1,20 +1,9 @@
 /**
- * zero-g-auth.js — SPA de autenticação: Fetch API + validação em tempo real.
- *
- * Responsabilidades:
- *  - Troca de painéis (Login ↔ Candidato ↔ Empresa)
- *  - Validação de campos em tempo real
- *  - Password strength meter
- *  - Comunicação com a API FastAPI
- *  - Armazenamento do JWT no localStorage
- *  - Sistema seguro de toasts
- *  - Integração com o menu Rotary via evento ag:navigate
+ * zero-g-auth.js — EasyIntern
+ * Autenticação, validações e autocomplete de formações.
  */
-
 (function ZeroGAuth() {
   'use strict';
-
-  /* ── Configuração da API ───────────────────────────────────────────── */
 
   const API = {
     login: '/api/auth/login',
@@ -30,38 +19,31 @@
   const TOKEN_KEY_LEGACY = 'ag_token';
   const USER_KEY = 'easyintern_user';
 
-  /* ── Helpers de storage ────────────────────────────────────────────── */
-
   const store = {
     setToken(token) {
       localStorage.setItem(TOKEN_KEY, token);
       localStorage.setItem(TOKEN_KEY_LEGACY, token);
     },
-
     getToken() {
       return (
         localStorage.getItem(TOKEN_KEY) ||
         localStorage.getItem(TOKEN_KEY_LEGACY)
       );
     },
-
     clearToken() {
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(TOKEN_KEY_LEGACY);
       localStorage.removeItem(USER_KEY);
       localStorage.removeItem('ag_user');
     },
-
     setUser(user) {
       localStorage.setItem(USER_KEY, JSON.stringify(user));
     },
-
     getUser() {
       try {
         const user =
           localStorage.getItem(USER_KEY) ||
           localStorage.getItem('ag_user');
-
         return user ? JSON.parse(user) : null;
       } catch {
         return null;
@@ -69,19 +51,15 @@
     },
   };
 
-  /* ── Comunicação com a API ─────────────────────────────────────────── */
-
+  // Comunicação com FastAPI
   async function apiFetch(url, body = null, method = 'POST') {
-    const headers = {
-      Accept: 'application/json',
-    };
+    const headers = { Accept: 'application/json' };
 
     if (body !== null && body !== undefined) {
       headers['Content-Type'] = 'application/json';
     }
 
     const token = store.getToken();
-
     if (token) {
       headers.Authorization = `Bearer ${token}`;
     }
@@ -104,7 +82,6 @@
     }
 
     const contentType = response.headers.get('content-type') || '';
-
     let data = {};
 
     if (contentType.includes('application/json')) {
@@ -115,17 +92,13 @@
       }
     } else {
       const responseText = await response.text();
-
       if (responseText) {
-        data = {
-          detail: responseText,
-        };
+        data = { detail: responseText };
       }
     }
 
     if (!response.ok) {
       const detail = data?.detail || data?.message;
-
       let message = `Erro ${response.status} ao comunicar com o servidor.`;
 
       if (typeof detail === 'string') {
@@ -142,10 +115,7 @@
     return data;
   }
 
-  /* ════════════════════════════════════════════════════════════════════
-     SISTEMA DE PAINÉIS
-  ════════════════════════════════════════════════════════════════════ */
-
+  // Painéis
   const panels = {
     login: document.getElementById('panel-login'),
     candidato: document.getElementById('panel-candidato'),
@@ -204,9 +174,7 @@
 
     Object.entries(tabs).forEach(([key, tab]) => {
       if (!tab) return;
-
       const isActive = key === name;
-
       tab.classList.toggle('active', isActive);
       tab.setAttribute('aria-selected', String(isActive));
     });
@@ -214,8 +182,7 @@
     activePanel = name;
 
     setTimeout(() => {
-      const firstInput = panels[name]?.querySelector('input');
-      firstInput?.focus();
+      panels[name]?.querySelector('input')?.focus();
     }, 380);
   }
 
@@ -225,38 +192,25 @@
 
   document.addEventListener('click', e => {
     const btn = e.target.closest('[data-goto]');
-
-    if (btn) {
-      switchPanel(btn.dataset.goto);
-    }
+    if (btn) switchPanel(btn.dataset.goto);
   });
 
   document.addEventListener('ag:navigate', e => {
     const panel = e.detail?.panel;
-
-    if (panels[panel]) {
-      switchPanel(panel);
-    }
+    if (panels[panel]) switchPanel(panel);
   });
 
-  /* ════════════════════════════════════════════════════════════════════
-     VALIDAÇÃO EM TEMPO REAL
-  ════════════════════════════════════════════════════════════════════ */
-
+  // Validadores
   const validators = {
     email(val) {
       const clean = (val || '').trim();
-
       return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(clean);
     },
-
     notEmpty(val) {
       return (val || '').trim().length > 0;
     },
-
     cnpj(val) {
       const clean = (val || '').trim();
-
       return (
         clean === '' ||
         /^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/.test(clean)
@@ -268,32 +222,26 @@
     if (!input) return;
 
     const group = input.closest('.field-group');
-
     if (!group) return;
 
     group.classList.remove('is-valid', 'is-invalid');
-
-    if (state) {
-      group.classList.add(state);
-    }
+    if (state) group.classList.add(state);
 
     const errEl = group.querySelector('.field-error');
-
-    if (errEl) {
-      errEl.textContent = message;
-    }
+    if (errEl) errEl.textContent = message;
   }
 
   function showFieldError(input, errorElement, message) {
-    if (errorElement) {
-      errorElement.textContent = message;
-    }
+    if (errorElement) errorElement.textContent = message;
 
     if (input) {
       setFieldState(input, 'is-invalid', message);
       input.focus();
     }
   }
+
+  // Uma formação só é válida quando foi selecionada do catálogo.
+  let selectedAreaItem = null;
 
   function validateField(input) {
     const val =
@@ -308,12 +256,28 @@
 
     if (!val) {
       if (required) {
-        setFieldState(input, 'is-invalid', 'Este campo é obrigatório.');
+        setFieldState(
+          input,
+          'is-invalid',
+          'Este campo é obrigatório.'
+        );
         return false;
       }
 
       setFieldState(input, null);
       return true;
+    }
+
+    if (
+      id === 'c-area' &&
+      (!selectedAreaItem || selectedAreaItem.nome !== val)
+    ) {
+      setFieldState(
+        input,
+        'is-invalid',
+        'Selecione uma formação da lista de sugestões.'
+      );
+      return false;
     }
 
     if (type === 'email' || name === 'email') {
@@ -323,24 +287,29 @@
           'is-invalid',
           'Digite um e-mail válido (ex: nome@exemplo.com).'
         );
-
         return false;
       }
     }
 
     if (id === 'login-password') {
       if (val.length < 1) {
-        setFieldState(input, 'is-invalid', 'Informe sua senha.');
+        setFieldState(
+          input,
+          'is-invalid',
+          'Informe sua senha.'
+        );
         return false;
       }
-    } else if (id === 'c-password' || id === 'e-password') {
+    } else if (
+      id === 'c-password' ||
+      id === 'e-password'
+    ) {
       if (val.length < 8) {
         setFieldState(
           input,
           'is-invalid',
           'A senha deve ter no mínimo 8 caracteres.'
         );
-
         return false;
       }
 
@@ -350,7 +319,6 @@
           'is-invalid',
           'Inclua ao menos uma letra maiúscula (ex: A, B).'
         );
-
         return false;
       }
 
@@ -360,7 +328,6 @@
           'is-invalid',
           'Inclua ao menos um número (ex: 1, 2, 3).'
         );
-
         return false;
       }
     }
@@ -371,17 +338,19 @@
         'is-invalid',
         'Formato inválido: 00.000.000/0001-00'
       );
-
       return false;
     }
 
     if (name === 'nome_completo' && val.length < 2) {
-      setFieldState(input, 'is-invalid', 'Nome muito curto.');
+      setFieldState(
+        input,
+        'is-invalid',
+        'Nome muito curto.'
+      );
       return false;
     }
 
     setFieldState(input, 'is-valid');
-
     return true;
   }
 
@@ -407,8 +376,7 @@
     });
   });
 
-  /* ── Máscara de CNPJ ───────────────────────────────────────────────── */
-
+  // Máscara de CNPJ
   const cnpjInput = document.getElementById('e-cnpj');
 
   if (cnpjInput) {
@@ -441,9 +409,14 @@
     });
   }
 
-  /* ── Password strength meter ──────────────────────────────────────── */
-
-  const STRENGTH_LABELS = ['', 'Fraca', 'Razoável', 'Boa', 'Forte'];
+  // Medidor de força da senha
+  const STRENGTH_LABELS = [
+    '',
+    'Fraca',
+    'Razoável',
+    'Boa',
+    'Forte',
+  ];
 
   const STRENGTH_COLORS = [
     '',
@@ -503,17 +476,16 @@
     label.style.color = STRENGTH_COLORS[level];
   }
 
-  /* ── Mostrar/ocultar senha ────────────────────────────────────────── */
-
+  // Mostrar ou ocultar senha
   document.querySelectorAll('.field-eye').forEach(btn => {
     btn.addEventListener('click', () => {
-      const targetId = btn.dataset.target;
-      const input = document.getElementById(targetId);
+      const input = document.getElementById(
+        btn.dataset.target
+      );
 
       if (!input) return;
 
       const isPassword = input.type === 'password';
-
       input.type = isPassword ? 'text' : 'password';
 
       const icon = btn.querySelector('.bi');
@@ -526,10 +498,7 @@
     });
   });
 
-  /* ════════════════════════════════════════════════════════════════════
-     AUTOCOMPLETE E SUGESTÕES DE FORMAÇÕES
-  ════════════════════════════════════════════════════════════════════ */
-
+  // Autocomplete de formações
   function initAreaAutocomplete() {
     const input = document.getElementById('c-area');
     const dropdown = document.getElementById('area-suggestions');
@@ -542,8 +511,56 @@
     let activeIndex = -1;
     let cachedItems = [];
     let currentTypeFilter = 'todos';
+    let searchRequestId = 0;
 
+    const verifiedQuickChips = new Map();
+
+    // Confirma os botões rápidos no catálogo antes de exibi-los.
+    async function verifyQuickChips() {
+      quickChips.forEach(chip => {
+        chip.disabled = true;
+        chip.hidden = true;
+        chip.style.display = 'none';
+      });
+
+      await Promise.all(
+        Array.from(quickChips, async chip => {
+          const nome = (chip.dataset.value || '').trim();
+          if (!nome) return;
+
+          try {
+            const url =
+              `${API.dataAreas}?q=${encodeURIComponent(nome)}&limit=35`;
+
+            const items = await apiFetch(url, null, 'GET');
+            if (!Array.isArray(items)) return;
+
+            const match = items.find(item =>
+              item &&
+              Number.isInteger(Number(item.id)) &&
+              item.nome === nome
+            );
+
+            if (!match) return;
+
+            verifiedQuickChips.set(chip, match);
+            chip.disabled = false;
+            chip.hidden = false;
+            chip.style.removeProperty('display');
+          } catch (error) {
+            console.warn(
+              'Não foi possível validar um botão de formação:',
+              error.message
+            );
+          }
+        })
+      );
+    }
+
+    // Busca sugestões e descarta respostas antigas.
     async function fetchSuggestions(query = '') {
+      const requestId = ++searchRequestId;
+
       try {
         dropdown.hidden = false;
         input.setAttribute('aria-expanded', 'true');
@@ -561,18 +578,25 @@
             : '';
 
         const url =
-          `${API.dataAreas}?q=${encodeURIComponent(query.trim())}${typeParam}&limit=35`;
+          `${API.dataAreas}?q=${encodeURIComponent(
+            query.trim().slice(0, 100)
+          )}${typeParam}&limit=35`;
 
         const data = await apiFetch(url, null, 'GET');
+
+        if (requestId !== searchRequestId) return;
 
         if (!Array.isArray(data)) {
           throw new Error('Formato de resposta inválido.');
         }
 
         cachedItems = data;
-
         renderSuggestions(cachedItems, query.trim());
       } catch (err) {
+        if (requestId !== searchRequestId) return;
+
+        cachedItems = [];
+
         dropdown.innerHTML = `
           <div class="autocomplete-empty">
             <i class="bi bi-exclamation-circle"></i>
@@ -585,20 +609,35 @@
     function renderSuggestions(items, query) {
       const filterBarHtml = `
         <div class="autocomplete-filter-bar">
-          <button type="button"
-            class="filter-pill ${currentTypeFilter === 'todos' ? 'is-active' : ''}"
+          <button
+            type="button"
+            class="filter-pill ${
+              currentTypeFilter === 'todos'
+                ? 'is-active'
+                : ''
+            }"
             data-type="todos">
             ✨ Todos
           </button>
 
-          <button type="button"
-            class="filter-pill ${currentTypeFilter === 'tecnico' ? 'is-active' : ''}"
+          <button
+            type="button"
+            class="filter-pill ${
+              currentTypeFilter === 'tecnico'
+                ? 'is-active'
+                : ''
+            }"
             data-type="tecnico">
             🎓 Formações Técnicas (ETEC)
           </button>
 
-          <button type="button"
-            class="filter-pill ${currentTypeFilter === 'bacharelado' ? 'is-active' : ''}"
+          <button
+            type="button"
+            class="filter-pill ${
+              currentTypeFilter === 'bacharelado'
+                ? 'is-active'
+                : ''
+            }"
             data-type="bacharelado">
             🏛️ Bacharelados
           </button>
@@ -608,14 +647,16 @@
       if (!items || items.length === 0) {
         dropdown.innerHTML = `
           ${filterBarHtml}
+
           <div class="autocomplete-empty">
             <i class="bi bi-search"></i>
-            <span>Nenhum curso encontrado para "${escapeHtml(query)}".</span>
+            <span>
+              Nenhum curso encontrado para "${escapeHtml(query)}".
+            </span>
           </div>
         `;
 
         bindFilterPills();
-
         return;
       }
 
@@ -643,14 +684,16 @@
         `;
 
         html += `
-          <ul class="autocomplete-list"
+          <ul
+            class="autocomplete-list"
             role="group"
             aria-label="${escapeHtml(eixo)}">
         `;
 
         groupItems.forEach(item => {
           const isTecnico = item.tipo_code === 'tecnico';
-          const isBacharelado = item.tipo_code === 'bacharelado';
+          const isBacharelado =
+            item.tipo_code === 'bacharelado';
 
           let badgeClass = 'badge--superior';
           let badgeIcon = '🎓 Graduação';
@@ -666,13 +709,17 @@
             badgeIcon = '⚡ Tecnólogo';
           }
 
-          const highlightedName = highlightMatch(item.nome, query);
+          const highlightedName = highlightMatch(
+            item.nome,
+            query
+          );
 
           html += `
             <li
               class="autocomplete-item"
               role="option"
               data-index="${globalIndex}"
+              data-id="${Number(item.id)}"
               data-value="${escapeHtml(item.nome)}"
               id="ac-opt-${globalIndex}"
             >
@@ -700,28 +747,29 @@
       });
 
       dropdown.innerHTML = html;
-
       activeIndex = -1;
+      input.removeAttribute('aria-activedescendant');
 
       bindFilterPills();
     }
 
     function bindFilterPills() {
-      dropdown.querySelectorAll('.filter-pill').forEach(pill => {
-        pill.addEventListener('click', e => {
-          e.stopPropagation();
+      dropdown
+        .querySelectorAll('.filter-pill')
+        .forEach(pill => {
+          pill.addEventListener('click', e => {
+            e.stopPropagation();
 
-          currentTypeFilter = pill.dataset.type || 'todos';
+            currentTypeFilter =
+              pill.dataset.type || 'todos';
 
-          fetchSuggestions(input.value);
+            fetchSuggestions(input.value);
+          });
         });
-      });
     }
 
     function highlightMatch(text, query) {
-      if (!query) {
-        return escapeHtml(text);
-      }
+      if (!query) return escapeHtml(text);
 
       const regex = new RegExp(
         `(${escapeRegex(query)})`,
@@ -746,28 +794,56 @@
     }
 
     function escapeRegex(str) {
-      return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      return String(str).replace(
+        /[.*+?^${}()|[\]\\]/g,
+        '\\$&'
+      );
     }
 
-    function selectItem(value) {
-      input.value = value;
+    // Somente objetos recebidos e confirmados pela API.
+    function selectItem(item) {
+      if (
+        !item ||
+        !Number.isInteger(Number(item.id)) ||
+        typeof item.nome !== 'string' ||
+        !item.nome.trim()
+      ) {
+        return;
+      }
+
+      selectedAreaItem = {
+        id: Number(item.id),
+        nome: item.nome,
+      };
+
+      input.value = item.nome;
 
       closeDropdown();
       updateClearBtn();
-
       setFieldState(input, 'is-valid');
 
       quickChips.forEach(chip => {
         chip.classList.toggle(
           'is-selected',
-          chip.dataset.value === value
+          chip.dataset.value === item.nome
         );
       });
     }
 
-    function closeDropdown() {
-      dropdown.hidden = true;
+    function getSuggestionItem(element) {
+      if (!element) return null;
 
+      return cachedItems.find(item =>
+        item &&
+        String(item.id) === element.dataset.id &&
+        item.nome === element.dataset.value
+      ) || null;
+    }
+
+    function closeDropdown() {
+      searchRequestId++;
+
+      dropdown.hidden = true;
       input.setAttribute('aria-expanded', 'false');
       input.removeAttribute('aria-activedescendant');
 
@@ -786,6 +862,15 @@
     });
 
     input.addEventListener('input', () => {
+      // Digitar novamente invalida a seleção anterior.
+      selectedAreaItem = null;
+      setFieldState(input, null);
+
+      quickChips.forEach(chip => {
+        chip.classList.remove('is-selected');
+      });
+
+      searchRequestId++;
       updateClearBtn();
 
       clearTimeout(debounceTimer);
@@ -796,7 +881,9 @@
     });
 
     input.addEventListener('keydown', e => {
-      const items = dropdown.querySelectorAll('.autocomplete-item');
+      const items = dropdown.querySelectorAll(
+        '.autocomplete-item'
+      );
 
       if (!items.length || dropdown.hidden) {
         if (e.key === 'ArrowDown' && dropdown.hidden) {
@@ -810,7 +897,8 @@
       if (e.key === 'ArrowDown') {
         e.preventDefault();
 
-        activeIndex = (activeIndex + 1) % items.length;
+        activeIndex =
+          (activeIndex + 1) % items.length;
 
         updateActiveItem(items);
       } else if (e.key === 'ArrowUp') {
@@ -824,7 +912,9 @@
         if (activeIndex >= 0 && items[activeIndex]) {
           e.preventDefault();
 
-          selectItem(items[activeIndex].dataset.value);
+          selectItem(
+            getSuggestionItem(items[activeIndex])
+          );
         }
       } else if (e.key === 'Escape') {
         closeDropdown();
@@ -849,26 +939,33 @@
     }
 
     dropdown.addEventListener('click', e => {
-      const item = e.target.closest('.autocomplete-item');
+      const item = e.target.closest(
+        '.autocomplete-item'
+      );
 
       if (item && item.dataset.value) {
-        selectItem(item.dataset.value);
+        selectItem(getSuggestionItem(item));
       }
     });
 
     quickChips.forEach(chip => {
       chip.addEventListener('click', () => {
-        selectItem(chip.dataset.value);
-        input.focus();
+        const verified = verifiedQuickChips.get(chip);
+
+        if (verified) {
+          selectItem(verified);
+        }
       });
     });
+
+    verifyQuickChips();
 
     if (clearBtn) {
       clearBtn.addEventListener('click', () => {
         input.value = '';
+        selectedAreaItem = null;
 
         updateClearBtn();
-
         setFieldState(input, null);
 
         quickChips.forEach(chip => {
@@ -876,10 +973,19 @@
         });
 
         input.focus();
-
         fetchSuggestions('');
       });
     }
+
+    input.form?.addEventListener('reset', () => {
+      selectedAreaItem = null;
+
+      quickChips.forEach(chip => {
+        chip.classList.remove('is-selected');
+      });
+
+      closeDropdown();
+    });
 
     document.addEventListener('click', e => {
       if (
@@ -892,11 +998,10 @@
     });
   }
 
-  /* ════════════════════════════════════════════════════════════════════
-     SISTEMA DE TOASTS
-  ════════════════════════════════════════════════════════════════════ */
-
-  const toastContainer = document.getElementById('ag-toast-container');
+  // Notificações Toast
+  const toastContainer = document.getElementById(
+    'ag-toast-container'
+  );
 
   function showToast(message, type = 'info', duration = 4000) {
     if (!toastContainer) return;
@@ -907,10 +1012,11 @@
       info: 'bi-info-circle-fill',
     };
 
-    const safeType = Object.hasOwn(icons, type) ? type : 'info';
+    const safeType = Object.hasOwn(icons, type)
+      ? type
+      : 'info';
 
     const toast = document.createElement('div');
-
     toast.className = `ag-toast ag-toast--${safeType}`;
 
     toast.setAttribute(
@@ -919,17 +1025,14 @@
     );
 
     const icon = document.createElement('i');
-
     icon.className = `bi ${icons[safeType]}`;
     icon.setAttribute('aria-hidden', 'true');
 
     const text = document.createElement('span');
-
     text.textContent = String(message ?? '');
 
     toast.appendChild(icon);
     toast.appendChild(text);
-
     toastContainer.appendChild(toast);
 
     setTimeout(() => {
@@ -947,10 +1050,7 @@
     }, Math.max(0, Number(duration) || 0));
   }
 
-  /* ════════════════════════════════════════════════════════════════════
-     BOTÃO LOADING E VALIDAÇÃO DE FORMULÁRIOS
-  ════════════════════════════════════════════════════════════════════ */
-
+  // Loading e validação de formulários
   function setLoading(btn, loading) {
     if (!btn) return;
 
@@ -984,10 +1084,7 @@
     return valid;
   }
 
-  /* ════════════════════════════════════════════════════════════════════
-     FORMULÁRIO DE LOGIN
-  ════════════════════════════════════════════════════════════════════ */
-
+  // Formulário de login
   const formLogin = document.getElementById('form-login');
   const btnLogin = document.getElementById('btn-login');
 
@@ -995,13 +1092,20 @@
     .querySelectorAll('[data-demo-email][data-demo-password]')
     .forEach(button => {
       button.addEventListener('click', () => {
-        const emailInput = document.getElementById('login-email');
-        const passwordInput = document.getElementById('login-password');
+        const emailInput = document.getElementById(
+          'login-email'
+        );
+        const passwordInput = document.getElementById(
+          'login-password'
+        );
 
-        if (!emailInput || !passwordInput || !formLogin) return;
+        if (!emailInput || !passwordInput || !formLogin) {
+          return;
+        }
 
         emailInput.value = button.dataset.demoEmail || '';
-        passwordInput.value = button.dataset.demoPassword || '';
+        passwordInput.value =
+          button.dataset.demoPassword || '';
 
         setFieldState(emailInput, 'is-valid');
         setFieldState(passwordInput, 'is-valid');
@@ -1061,12 +1165,15 @@
             : '/dashboard/empresa';
         }
       }, 500);
-
     } catch (err) {
       showToast(err.message, 'error');
 
-      const emailInput = document.getElementById('login-email');
-      const pwdInput = document.getElementById('login-password');
+      const emailInput = document.getElementById(
+        'login-email'
+      );
+      const pwdInput = document.getElementById(
+        'login-password'
+      );
 
       if (emailInput && pwdInput) {
         setFieldState(emailInput, 'is-invalid');
@@ -1077,12 +1184,13 @@
     }
   });
 
-  /* ════════════════════════════════════════════════════════════════════
-     FORMULÁRIO DE CADASTRO CANDIDATO
-  ════════════════════════════════════════════════════════════════════ */
-
-  const formCandidato = document.getElementById('form-candidato');
-  const btnCandidato = document.getElementById('btn-candidato');
+  // Cadastro de candidato
+  const formCandidato = document.getElementById(
+    'form-candidato'
+  );
+  const btnCandidato = document.getElementById(
+    'btn-candidato'
+  );
 
   formCandidato?.addEventListener('submit', async e => {
     e.preventDefault();
@@ -1097,7 +1205,8 @@
       ...rawData,
       email: (rawData.email || '').trim().toLowerCase(),
       nome_completo: (rawData.nome_completo || '').trim(),
-      area_interesse: (rawData.area_interesse || '').trim() || null,
+      area_interesse:
+        (rawData.area_interesse || '').trim() || null,
       password: rawData.password || '',
     };
 
@@ -1137,7 +1246,6 @@
           ? 'candidato_dashboard.html'
           : '/dashboard/candidato';
       }, 700);
-
     } catch (err) {
       showToast(err.message, 'error');
     } finally {
@@ -1145,12 +1253,13 @@
     }
   });
 
-  /* ════════════════════════════════════════════════════════════════════
-     FORMULÁRIO DE CADASTRO EMPRESA
-  ════════════════════════════════════════════════════════════════════ */
-
-  const formEmpresa = document.getElementById('form-empresa');
-  const btnEmpresa = document.getElementById('btn-empresa');
+  // Cadastro de empresa
+  const formEmpresa = document.getElementById(
+    'form-empresa'
+  );
+  const btnEmpresa = document.getElementById(
+    'btn-empresa'
+  );
 
   formEmpresa?.addEventListener('submit', async e => {
     e.preventDefault();
@@ -1208,7 +1317,6 @@
           ? 'recrutador_painel.html'
           : '/dashboard/empresa';
       }, 700);
-
     } catch (err) {
       showToast(err.message, 'error');
     } finally {
@@ -1216,13 +1324,9 @@
     }
   });
 
-  /* ════════════════════════════════════════════════════════════════════
-     VERIFICAÇÃO DE SESSÃO EXISTENTE
-  ════════════════════════════════════════════════════════════════════ */
-
+  // Verificação de sessão
   async function checkExistingSession() {
     const token = store.getToken();
-
     if (!token) return;
 
     try {
@@ -1258,42 +1362,59 @@
           );
 
       window.location.replace(target);
-
     } catch {
       store.clearToken();
     }
   }
 
-  /* ── Inicializações ────────────────────────────────────────────────── */
-
+  // Inicializações
   initAreaAutocomplete();
   checkExistingSession();
   initRecoveryModals();
   checkUrlForResetToken();
   initMobileModal();
 
-  /* ════════════════════════════════════════════════════════════════════
-     RECUPERAÇÃO DE SENHA — MODAIS
-  ════════════════════════════════════════════════════════════════════ */
-
+  // Recuperação de senha
   function initRecoveryModals() {
-    const btnForgot = document.getElementById('btn-forgot-pwd');
-    const modalRec = document.getElementById('modal-recovery');
-    const modalRst = document.getElementById('modal-reset');
+    const btnForgot = document.getElementById(
+      'btn-forgot-pwd'
+    );
+    const modalRec = document.getElementById(
+      'modal-recovery'
+    );
+    const modalRst = document.getElementById(
+      'modal-reset'
+    );
 
-    const btnRecClose = document.getElementById('modal-rec-close');
-    const btnRecCancel = document.getElementById('btn-rec-cancel');
-    const btnRecSend = document.getElementById('btn-rec-send');
+    const btnRecClose = document.getElementById(
+      'modal-rec-close'
+    );
+    const btnRecCancel = document.getElementById(
+      'btn-rec-cancel'
+    );
+    const btnRecSend = document.getElementById(
+      'btn-rec-send'
+    );
 
-    const btnRstClose = document.getElementById('modal-rst-close');
-    const btnRstCancel = document.getElementById('btn-rst-cancel');
-    const btnRstSave = document.getElementById('btn-rst-save');
+    const btnRstClose = document.getElementById(
+      'modal-rst-close'
+    );
+    const btnRstCancel = document.getElementById(
+      'btn-rst-cancel'
+    );
+    const btnRstSave = document.getElementById(
+      'btn-rst-save'
+    );
 
     if (!modalRec || !modalRst) return;
 
     btnForgot?.addEventListener('click', () => {
-      const emailInput = document.getElementById('rec-email');
-      const feedback = document.getElementById('rec-feedback');
+      const emailInput = document.getElementById(
+        'rec-email'
+      );
+      const feedback = document.getElementById(
+        'rec-feedback'
+      );
 
       if (emailInput) emailInput.value = '';
 
@@ -1312,9 +1433,15 @@
     });
 
     btnRecSend?.addEventListener('click', async () => {
-      const emailInput = document.getElementById('rec-email');
-      const emailError = document.getElementById('rec-email-err');
-      const feedback = document.getElementById('rec-feedback');
+      const emailInput = document.getElementById(
+        'rec-email'
+      );
+      const emailError = document.getElementById(
+        'rec-email-err'
+      );
+      const feedback = document.getElementById(
+        'rec-feedback'
+      );
 
       const email = emailInput?.value?.trim().toLowerCase();
 
@@ -1324,7 +1451,6 @@
           emailError,
           'Informe um e-mail válido.'
         );
-
         return;
       }
 
@@ -1343,20 +1469,22 @@
 
         if (feedback) {
           feedback.hidden = false;
-          feedback.className = 'form-feedback-modal success';
+          feedback.className =
+            'form-feedback-modal success';
           feedback.textContent =
-            res.mensagem || 'Link enviado! Verifique seu e-mail.';
+            res.mensagem ||
+            'Link enviado! Verifique seu e-mail.';
         }
 
         showToast(
           'Link de recuperação enviado!',
           'success'
         );
-
       } catch (err) {
         if (feedback) {
           feedback.hidden = false;
-          feedback.className = 'form-feedback-modal error';
+          feedback.className =
+            'form-feedback-modal error';
           feedback.textContent = err.message;
         }
       } finally {
@@ -1371,13 +1499,25 @@
     });
 
     btnRstSave?.addEventListener('click', async () => {
-      const token = document.getElementById('rst-token')?.value;
-      const pwd = document.getElementById('rst-pwd')?.value;
-      const pwdConf = document.getElementById('rst-pwd-confirm')?.value;
+      const token = document.getElementById(
+        'rst-token'
+      )?.value;
+      const pwd = document.getElementById(
+        'rst-pwd'
+      )?.value;
+      const pwdConf = document.getElementById(
+        'rst-pwd-confirm'
+      )?.value;
 
-      const feedback = document.getElementById('rst-feedback');
-      const pwdErr = document.getElementById('rst-pwd-err');
-      const confErr = document.getElementById('rst-pwd-confirm-err');
+      const feedback = document.getElementById(
+        'rst-feedback'
+      );
+      const pwdErr = document.getElementById(
+        'rst-pwd-err'
+      );
+      const confErr = document.getElementById(
+        'rst-pwd-confirm-err'
+      );
 
       if (pwdErr) pwdErr.textContent = '';
       if (confErr) confErr.textContent = '';
@@ -1387,15 +1527,14 @@
           pwdErr.textContent =
             'A senha deve ter ao menos 8 caracteres.';
         }
-
         return;
       }
 
       if (pwd !== pwdConf) {
         if (confErr) {
-          confErr.textContent = 'As senhas não conferem.';
+          confErr.textContent =
+            'As senhas não conferem.';
         }
-
         return;
       }
 
@@ -1404,7 +1543,6 @@
           'Token de redefinição não encontrado.',
           'error'
         );
-
         return;
       }
 
@@ -1426,9 +1564,11 @@
 
         if (feedback) {
           feedback.hidden = false;
-          feedback.className = 'form-feedback-modal success';
+          feedback.className =
+            'form-feedback-modal success';
           feedback.textContent =
-            res.mensagem || 'Senha redefinida com sucesso!';
+            res.mensagem ||
+            'Senha redefinida com sucesso!';
         }
 
         showToast(
@@ -1439,11 +1579,11 @@
         setTimeout(() => {
           modalRst.hidden = true;
         }, 2500);
-
       } catch (err) {
         if (feedback) {
           feedback.hidden = false;
-          feedback.className = 'form-feedback-modal error';
+          feedback.className =
+            'form-feedback-modal error';
           feedback.textContent = err.message;
         }
       } finally {
@@ -1452,10 +1592,11 @@
     });
   }
 
-  /* ── Validação do token de redefinição ─────────────────────────────── */
-
+  // Validação do token de redefinição
   function checkUrlForResetToken() {
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(
+      window.location.search
+    );
 
     const modo = params.get('modo');
     const token = params.get('token');
@@ -1469,8 +1610,12 @@
     )
       .then(res => {
         if (res.valido) {
-          const tokenInput = document.getElementById('rst-token');
-          const modal = document.getElementById('modal-reset');
+          const tokenInput = document.getElementById(
+            'rst-token'
+          );
+          const modal = document.getElementById(
+            'modal-reset'
+          );
 
           if (tokenInput) {
             tokenInput.value = token;
@@ -1485,7 +1630,6 @@
             '',
             window.location.pathname
           );
-
         } else {
           showToast(
             'Link de redefinição inválido ou expirado. Solicite um novo.',
@@ -1502,19 +1646,30 @@
       });
   }
 
-  /* ════════════════════════════════════════════════════════════════════
-     MODAL ACESSO MOBILE / QR CODE
-  ════════════════════════════════════════════════════════════════════ */
-
+  // Modal de acesso pelo celular
   function initMobileModal() {
-    const btn = document.getElementById('btn-mobile-modal');
-    const modal = document.getElementById('modal-mobile');
-    const close = document.getElementById('modal-mob-close');
-    const ok = document.getElementById('btn-mob-ok');
-    const copy = document.getElementById('btn-copy-mobile-link');
+    const btn = document.getElementById(
+      'btn-mobile-modal'
+    );
+    const modal = document.getElementById(
+      'modal-mobile'
+    );
+    const close = document.getElementById(
+      'modal-mob-close'
+    );
+    const ok = document.getElementById(
+      'btn-mob-ok'
+    );
+    const copy = document.getElementById(
+      'btn-copy-mobile-link'
+    );
 
-    const urlText = document.getElementById('mobile-url-text');
-    const qrImg = document.getElementById('qr-code-img');
+    const urlText = document.getElementById(
+      'mobile-url-text'
+    );
+    const qrImg = document.getElementById(
+      'qr-code-img'
+    );
 
     if (!btn || !modal) return;
 
@@ -1523,20 +1678,23 @@
         const res = await fetch('/api/network-info');
 
         if (!res.ok) {
-          throw new Error('Não foi possível obter os dados da rede.');
+          throw new Error(
+            'Não foi possível obter os dados da rede.'
+          );
         }
 
         const data = await res.json();
 
         if (urlText) {
           urlText.textContent =
-            data.access_url || data.mobile_network_url || '';
+            data.access_url ||
+            data.mobile_network_url ||
+            '';
         }
 
         if (qrImg && data.qr_code_url) {
           qrImg.src = data.qr_code_url;
         }
-
       } catch (error) {
         console.warn(
           'Não foi possível carregar as informações de rede:',
@@ -1558,11 +1716,14 @@
 
     copy?.addEventListener('click', async () => {
       const url =
-        urlText?.textContent || window.location.origin;
+        urlText?.textContent ||
+        window.location.origin;
 
       try {
         if (!navigator.clipboard?.writeText) {
-          throw new Error('Área de transferência indisponível.');
+          throw new Error(
+            'Área de transferência indisponível.'
+          );
         }
 
         await navigator.clipboard.writeText(url);
@@ -1571,7 +1732,6 @@
           'Link copiado para a área de transferência! 📱',
           'success'
         );
-
       } catch {
         showToast(
           'Não foi possível copiar o link: ' + url,
@@ -1581,10 +1741,7 @@
     });
   }
 
-  /* ════════════════════════════════════════════════════════════════════
-     CONSOLE BRANDING
-  ════════════════════════════════════════════════════════════════════ */
-
+  // Informações no console
   console.log(
     '%c🛸 EasyIntern Platform %cv1.0.0 ',
     'background: linear-gradient(90deg, #7c3aed, #06b6d4); color: white; padding: 4px 12px; border-radius: 4px 0 0 4px; font-weight: bold;',
@@ -1595,5 +1752,4 @@
     '%cGravidade: 0.0 | Status: Zero-G nominal',
     'color: #a855f7; font-style: italic;'
   );
-
 })();

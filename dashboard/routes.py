@@ -1,0 +1,606 @@
+from fastapi import APIRouter, Depends, HTTPException, status
+from mysql.connector import Error
+
+from database.connection import conectar
+from usuarios.routes import obter_usuario_autenticado
+
+
+router = APIRouter(
+    prefix="/dashboard/api",
+    tags=["Dashboard"]
+)
+
+
+# ============================================================
+# ESTATÍSTICAS DO CANDIDATO
+# GET /dashboard/api/candidato/stats
+# ============================================================
+
+@router.get("/candidato/stats")
+def estatisticas_candidato(
+    token: dict = Depends(obter_usuario_autenticado)
+):
+    conexao = None
+    cursor = None
+
+    try:
+        # Identifica o usuário pelo JWT validado.
+        id_usuario = int(token["sub"])
+
+        conexao = conectar()
+        cursor = conexao.cursor(dictionary=True)
+
+        # Confirma que a conta existe, está ativa
+        # e pertence a um candidato.
+        cursor.execute(
+            """
+            SELECT
+                id_usuario,
+                tipo_usuario,
+                ativo,
+                deletado_em
+            FROM usuarios
+            WHERE id_usuario = %s
+            """,
+            (id_usuario,)
+        )
+
+        usuario = cursor.fetchone()
+
+        if (
+            not usuario
+            or not usuario["ativo"]
+            or usuario["deletado_em"] is not None
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Conta inexistente ou indisponível."
+            )
+
+        if usuario["tipo_usuario"] != "Candidato":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Acesso permitido apenas para candidatos."
+            )
+
+        # Busca as informações do perfil e
+        # uma formação vinculada ao candidato.
+        cursor.execute(
+            """
+            SELECT
+                c.id_candidato,
+                c.nome_completo,
+                c.nivel_carreira,
+                c.cidade,
+                c.uf,
+                c.linkedin_url,
+                c.github_url,
+                (
+                    SELECT f.nome_curso
+                    FROM candidato_formacao AS cf
+                    JOIN catalogo_formacoes AS f
+                        ON f.id_formacao = cf.id_formacao
+                    WHERE cf.id_candidato = c.id_candidato
+                    ORDER BY cf.id_formacao
+                    LIMIT 1
+                ) AS area_interesse
+            FROM candidatos AS c
+            WHERE c.id_usuario = %s
+            """,
+            (id_usuario,)
+        )
+
+        candidato = cursor.fetchone()
+
+        if not candidato:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Perfil de candidato não encontrado."
+            )
+
+        id_candidato = candidato["id_candidato"]
+
+        # Calcula os indicadores diretamente
+        # a partir das candidaturas reais.
+        cursor.execute(
+            """
+            SELECT
+                COUNT(*) AS total_candidaturas,
+
+                COALESCE(
+                    SUM(status = 'Aprovado'),
+                    0
+                ) AS aprovadas,
+
+                COALESCE(
+                    SUM(status = 'Em Análise'),
+                    0
+                ) AS em_analise
+
+            FROM candidaturas
+            WHERE id_candidato = %s
+            """,
+            (id_candidato,)
+        )
+
+        indicadores = cursor.fetchone()
+
+        # Consulta a média existente na view do banco.
+        # A fórmula da view será revisada na etapa da IA.
+        cursor.execute(
+            """
+            SELECT score_medio
+            FROM vw_dashboard_candidato
+            WHERE id_candidato = %s
+            """,
+            (id_candidato,)
+        )
+
+        resultado_match = cursor.fetchone()
+
+        taxa_match = 0.0
+
+        if resultado_match:
+            taxa_match = float(
+                resultado_match["score_medio"] or 0
+            )
+
+        nivel = (
+            "junior"
+            if candidato["nivel_carreira"] == "Júnior"
+            else "estagiario"
+        )
+
+        return {
+            "nome": candidato["nome_completo"],
+            "nivel": nivel,
+            "area_interesse": candidato["area_interesse"],
+            "cidade": candidato["cidade"],
+            "estado": candidato["uf"],
+            "linkedin": candidato["linkedin_url"],
+            "github": candidato["github_url"],
+            "total_candidaturas": int(
+                indicadores["total_candidaturas"]
+            ),
+            "aprovadas": int(
+                indicadores["aprovadas"]
+            ),
+            "em_analise": int(
+                indicadores["em_analise"]
+            ),
+            "taxa_match": taxa_match
+        }
+
+    except HTTPException:
+        raise
+
+    except (ValueError, TypeError, KeyError):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Identificação de usuário inválida."
+        )
+
+    except (Error, RuntimeError) as erro:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Não foi possível consultar o dashboard."
+        ) from erro
+
+    finally:
+        if cursor is not None:
+            cursor.close()
+
+        if conexao is not None:
+            conexao.close()
+
+
+# ============================================================
+# LISTAR CANDIDATURAS DO CANDIDATO
+# GET /dashboard/api/candidato/candidaturas
+# ============================================================
+
+@router.get("/candidato/candidaturas")
+def listar_candidaturas_candidato(
+    token: dict = Depends(obter_usuario_autenticado)
+):
+    conexao = None
+    cursor = None
+
+    try:
+        # Identifica o usuário pelo token JWT.
+        id_usuario = int(token["sub"])
+
+        conexao = conectar()
+        cursor = conexao.cursor(dictionary=True)
+
+        # Verifica se a conta está ativa e é de candidato.
+        cursor.execute(
+            """
+            SELECT
+                id_usuario,
+                tipo_usuario,
+                ativo,
+                deletado_em
+            FROM usuarios
+            WHERE id_usuario = %s
+            """,
+            (id_usuario,)
+        )
+
+        usuario = cursor.fetchone()
+
+        if (
+            not usuario
+            or not usuario["ativo"]
+            or usuario["deletado_em"] is not None
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Conta inexistente ou indisponível."
+            )
+
+        if usuario["tipo_usuario"] != "Candidato":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Acesso permitido apenas para candidatos."
+            )
+
+        # Descobre o ID do candidato autenticado.
+        cursor.execute(
+            """
+            SELECT id_candidato
+            FROM candidatos
+            WHERE id_usuario = %s
+            """,
+            (id_usuario,)
+        )
+
+        candidato = cursor.fetchone()
+
+        if not candidato:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Perfil de candidato não encontrado."
+            )
+
+        id_candidato = candidato["id_candidato"]
+
+        # Consulta as candidaturas reais do MySQL.
+        cursor.execute(
+            """
+            SELECT
+                ca.id_candidatura AS id,
+                ca.status,
+                ca.data_candidatura AS created_at,
+
+                v.titulo AS vaga_titulo,
+                v.modalidade,
+                v.cidade,
+                v.uf AS estado,
+
+                COALESCE(
+                    NULLIF(e.nome_fantasia, ''),
+                    e.razao_social
+                ) AS empresa_nome,
+
+                ia.match_score,
+                ia.veredito_ia
+
+            FROM candidaturas AS ca
+
+            JOIN vagas AS v
+                ON v.id_vaga = ca.id_vaga
+
+            JOIN empresas AS e
+                ON e.id_empresa = v.id_empresa
+
+            LEFT JOIN avaliacoes_ia AS ia
+                ON ia.id_candidatura = ca.id_candidatura
+
+            WHERE ca.id_candidato = %s
+
+            ORDER BY
+                ca.data_candidatura DESC,
+                ca.id_candidatura DESC
+            """,
+            (id_candidato,)
+        )
+
+        registros = cursor.fetchall()
+
+        # Converte os dados do MySQL para o formato
+        # esperado pelo JavaScript do dashboard.
+        mapa_status = {
+            "Pendente": "pendente",
+            "Em Análise": "em_analise",
+            "Entrevista": "em_analise",
+            "Aprovado": "aprovado",
+            "Reprovado": "reprovado"
+        }
+
+        mapa_modalidade = {
+            "Presencial": "presencial",
+            "Remoto": "remoto",
+            "Híbrido": "hibrido"
+        }
+
+        resultado = []
+
+        for registro in registros:
+            avaliacao_disponivel = (
+                registro["match_score"] is not None
+            )
+
+            score = (
+                float(registro["match_score"])
+                if avaliacao_disponivel
+                else 0.0
+            )
+
+            score = max(0.0, min(100.0, score))
+
+            if not avaliacao_disponivel:
+                cor = "#6b7280"
+            elif score >= 80:
+                cor = "#20b479"
+            elif score >= 60:
+                cor = "#3b82f6"
+            elif score >= 40:
+                cor = "#f59e0b"
+            else:
+                cor = "#6b7280"
+
+            data_candidatura = registro["created_at"]
+
+            if data_candidatura is not None:
+                data_candidatura = (
+                    data_candidatura.isoformat()
+                )
+
+            resultado.append({
+                "id": registro["id"],
+                "vaga_titulo": registro["vaga_titulo"],
+                "empresa_nome": registro["empresa_nome"],
+                "modalidade": mapa_modalidade.get(
+                    registro["modalidade"],
+                    "presencial"
+                ),
+                "cidade": registro["cidade"],
+                "estado": registro["estado"],
+                "status": mapa_status.get(
+                    registro["status"],
+                    "pendente"
+                ),
+                "created_at": data_candidatura,
+                "match": {
+                    "score": score,
+                    "cor": cor,
+                    "avaliado": avaliacao_disponivel,
+                    "veredicto": registro["veredito_ia"]
+                }
+            })
+
+        return resultado
+
+    except HTTPException:
+        raise
+
+    except (ValueError, TypeError, KeyError):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Identificação de usuário inválida."
+        )
+
+    except (Error, RuntimeError) as erro:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Não foi possível consultar as candidaturas."
+        ) from erro
+
+    finally:
+        if cursor is not None:
+            cursor.close()
+
+        if conexao is not None:
+            conexao.close()
+
+
+# ============================================================
+# VAGAS DISPONÍVEIS PARA O CANDIDATO
+# GET /dashboard/api/candidato/vagas-recomendadas
+# ============================================================
+
+@router.get("/candidato/vagas-recomendadas")
+def listar_vagas_recomendadas(
+    token: dict = Depends(obter_usuario_autenticado)
+):
+    conexao = None
+    cursor = None
+
+    try:
+        # Obtém o ID do usuário autenticado.
+        id_usuario = int(token["sub"])
+
+        conexao = conectar()
+        cursor = conexao.cursor(dictionary=True)
+
+        # Verifica se o usuário está ativo
+        # e possui uma conta de candidato.
+        cursor.execute(
+            """
+            SELECT
+                id_usuario,
+                tipo_usuario,
+                ativo,
+                deletado_em
+            FROM usuarios
+            WHERE id_usuario = %s
+            """,
+            (id_usuario,)
+        )
+
+        usuario = cursor.fetchone()
+
+        if (
+            not usuario
+            or not usuario["ativo"]
+            or usuario["deletado_em"] is not None
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Conta inexistente ou indisponível."
+            )
+
+        if usuario["tipo_usuario"] != "Candidato":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Acesso permitido apenas para candidatos."
+            )
+
+        # Busca o perfil do candidato.
+        cursor.execute(
+            """
+            SELECT id_candidato
+            FROM candidatos
+            WHERE id_usuario = %s
+            """,
+            (id_usuario,)
+        )
+
+        candidato = cursor.fetchone()
+
+        if not candidato:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Perfil de candidato não encontrado."
+            )
+
+        id_candidato = candidato["id_candidato"]
+
+        # Busca vagas abertas e verifica se
+        # o candidato já se inscreveu em cada uma.
+        cursor.execute(
+            """
+            SELECT
+                v.id_vaga AS id,
+                v.titulo,
+                v.nivel,
+                v.descricao,
+                v.beneficios,
+                v.modalidade,
+                v.cidade,
+                v.uf AS estado,
+                v.bolsa AS salario_min,
+
+                COALESCE(
+                    NULLIF(e.nome_fantasia, ''),
+                    e.razao_social
+                ) AS empresa,
+
+                EXISTS (
+                    SELECT 1
+                    FROM candidaturas AS ca
+                    WHERE ca.id_vaga = v.id_vaga
+                      AND ca.id_candidato = %s
+                ) AS ja_candidatou
+
+            FROM vagas AS v
+
+            JOIN empresas AS e
+                ON e.id_empresa = v.id_empresa
+
+            WHERE v.status = 'Aberta'
+              AND (
+                  v.prazo_encerramento IS NULL
+                  OR v.prazo_encerramento >= CURDATE()
+              )
+
+            ORDER BY
+                v.criado_em DESC,
+                v.id_vaga DESC
+
+            LIMIT 50
+            """,
+            (id_candidato,)
+        )
+
+        vagas = cursor.fetchall()
+
+        mapa_modalidade = {
+            "Presencial": "presencial",
+            "Remoto": "remoto",
+            "Híbrido": "hibrido"
+        }
+
+        resultado = []
+
+        for vaga in vagas:
+            nivel = (
+                "junior"
+                if vaga["nivel"]
+                and vaga["nivel"].lower() in (
+                    "júnior", "junior"
+                )
+                else "estagio"
+            )
+
+            salario = (
+                float(vaga["salario_min"])
+                if vaga["salario_min"] is not None
+                else None
+            )
+
+            resultado.append({
+                "id": vaga["id"],
+                "titulo": vaga["titulo"],
+                "empresa": vaga["empresa"],
+                "nivel": nivel,
+                "modalidade": mapa_modalidade.get(
+                    vaga["modalidade"],
+                    "presencial"
+                ),
+                "cidade": vaga["cidade"],
+                "estado": vaga["estado"],
+                "salario_min": salario,
+                "descricao": vaga["descricao"],
+                "beneficios": vaga["beneficios"],
+                "requisitos": None,
+                "tags": "",
+                "ja_candidatou": bool(
+                    vaga["ja_candidatou"]
+                ),
+
+                # A IA ainda não foi integrada.
+                # Não inventamos uma pontuação.
+                "match": {
+                    "score": None,
+                    "cor": "#6b7280",
+                    "avaliado": False,
+                    "veredicto": None,
+                    "motivo": None
+                }
+            })
+
+        return resultado
+
+    except HTTPException:
+        raise
+
+    except (ValueError, TypeError, KeyError):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Identificação de usuário inválida."
+        )
+
+    except (Error, RuntimeError) as erro:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Não foi possível consultar as vagas."
+        ) from erro
+
+    finally:
+        if cursor is not None:
+            cursor.close()
+
+        if conexao is not None:
+            conexao.close()

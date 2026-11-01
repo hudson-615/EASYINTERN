@@ -1,442 +1,656 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Meu Painel — EasyIntern</title>
   <meta name="description" content="Dashboard do Candidato — EasyIntern Plataforma Inteligente de Recrutamento" />
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
-  <link rel="stylesheet" href="./static/css/easyintern.css" />
-  <link rel="stylesheet" href="./static/css/dashboard.css?v=6" />
+
+  <link rel="stylesheet" href="/static/css/easyintern.css" />
+  <link rel="stylesheet" href="/static/css/dashboard.css?v=6" />
 </head>
+
 <body class="dash-body" data-panel="candidato">
 
-<!-- ── Sidebar Zero-G ─────────────────────────────────────────────────────── -->
-<aside class="dash-sidebar" id="dash-sidebar">
-  <div class="sidebar-brand">
-    <i class="bi bi-rocket-takeoff-fill brand-icon-sm"></i>
-    <span class="brand-name">EasyIntern</span>
-  </div>
-
-  <nav class="sidebar-nav" aria-label="Menu principal">
-    <a href="#" class="nav-item active" data-section="overview" id="nav-overview">
-      <i class="bi bi-grid-1x2-fill"></i>
-      <span>Visão Geral</span>
-    </a>
-    <a href="#" class="nav-item" data-section="candidaturas" id="nav-candidaturas">
-      <i class="bi bi-send-fill"></i>
-      <span>Minhas Candidaturas</span>
-      <span class="nav-badge" id="badge-candidaturas">0</span>
-    </a>
-    <a href="#" class="nav-item" data-section="recomendadas" id="nav-recomendadas">
-      <i class="bi bi-stars"></i>
-      <span>Vagas Recomendadas</span>
-      <span class="nav-badge ai">IA</span>
-    </a>
-    <a href="#" class="nav-item" data-section="perfil" id="nav-perfil">
-      <i class="bi bi-person-circle"></i>
-      <span>Meu Perfil</span>
-    </a>
-    <a href="#" class="nav-item" data-section="configuracoes" id="nav-configuracoes">
-      <i class="bi bi-sliders"></i>
-      <span>Configurações</span>
-    </a>
-  </nav>
-
-  <div class="sidebar-footer">
-    <button class="btn-logout" id="btn-logout" title="Sair da conta">
-      <i class="bi bi-box-arrow-left"></i>
-      <span>Sair</span>
-    </button>
-  </div>
-</aside>
-
-<!-- ── Overlay mobile ────────────────────────────────────────────────────── -->
-<div class="sidebar-overlay" id="sidebar-overlay"></div>
-
-<!-- ── Main Content ───────────────────────────────────────────────────────── -->
-<main class="dash-main" id="dash-main">
-
-  <!-- Header -->
-  <header class="dash-header">
-    <button class="btn-menu-toggle" id="btn-menu-toggle" aria-label="Abrir menu de navegação" aria-controls="dash-sidebar" aria-expanded="false" title="Abrir menu de navegação">
-      <i class="bi bi-list"></i>
-      <span>Menu</span>
-    </button>
-    <div class="dash-header-info">
-      <h2 class="dash-page-title" id="page-title">Visão Geral</h2>
-      <span class="dash-greeting" id="dash-greeting">Carregando...</span>
+  <!-- Sidebar Zero-G -->
+  <aside class="dash-sidebar" id="dash-sidebar">
+    <div class="sidebar-brand">
+      <i class="bi bi-rocket-takeoff-fill brand-icon-sm"></i>
+      <span class="brand-name">EasyIntern</span>
     </div>
-    <div class="dash-header-actions">
-      <span class="header-badge-nivel" id="header-nivel">Estagiário</span>
-      <button type="button" class="user-avatar" id="user-avatar" data-section="perfil" aria-label="Ir para Meu Perfil" title="Ir para Meu Perfil">
-        <i class="bi bi-person-fill"></i>
+
+    <nav class="sidebar-nav" aria-label="Menu principal">
+      <a href="#" class="nav-item active" data-section="overview" id="nav-overview">
+        <i class="bi bi-grid-1x2-fill"></i>
+        <span>Visão Geral</span>
+      </a>
+
+      <a href="#" class="nav-item" data-section="candidaturas" id="nav-candidaturas">
+        <i class="bi bi-send-fill"></i>
+        <span>Minhas Candidaturas</span>
+        <span class="nav-badge" id="badge-candidaturas">0</span>
+      </a>
+
+      <a href="#" class="nav-item" data-section="recomendadas" id="nav-recomendadas">
+        <i class="bi bi-stars"></i>
+        <span>Vagas Recomendadas</span>
+        <span class="nav-badge ai">IA</span>
+      </a>
+
+      <a href="#" class="nav-item" data-section="perfil" id="nav-perfil">
+        <i class="bi bi-person-circle"></i>
+        <span>Meu Perfil</span>
+      </a>
+
+      <a href="#" class="nav-item" data-section="configuracoes" id="nav-configuracoes">
+        <i class="bi bi-sliders"></i>
+        <span>Configurações</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="btn-logout" id="btn-logout" title="Sair da conta">
+        <i class="bi bi-box-arrow-left"></i>
+        <span>Sair</span>
       </button>
     </div>
-  </header>
+  </aside>
 
-  <!-- ── Seção: Overview ──────────────────────────────────────────────────── -->
-  <section class="dash-section active" id="section-overview">
+  <!-- Overlay mobile -->
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
-    <!-- Stats Grid (Arrastar e Soltar) -->
-    <div class="stats-grid" id="stats-grid">
-      <div class="stat-card draggable-card" id="stat-candidaturas" draggable="true" data-widget-id="stat-candidaturas">
-        <span class="drag-handle" title="Clique e arraste para reposicionar"><i class="bi bi-grip-vertical"></i></span>
-        <div class="stat-icon"><i class="bi bi-send-fill"></i></div>
-        <div class="stat-body">
-          <div class="nf nf-stat" data-number-flow-stat>
-            <number-flow class="nf-number stat-value" id="stat-total-c" data-stat-number>0</number-flow>
-          </div>
-          <span class="stat-label">Candidaturas</span>
-        </div>
-      </div>
-      <div class="stat-card accent-green draggable-card" id="stat-aprovadas" draggable="true" data-widget-id="stat-aprovadas">
-        <span class="drag-handle" title="Clique e arraste para reposicionar"><i class="bi bi-grip-vertical"></i></span>
-        <div class="stat-icon"><i class="bi bi-check-circle-fill"></i></div>
-        <div class="stat-body">
-          <div class="nf nf-stat" data-number-flow-stat>
-            <number-flow class="nf-number stat-value" id="stat-aprovadas-v" data-stat-number>0</number-flow>
-          </div>
-          <span class="stat-label">Aprovações</span>
-        </div>
-      </div>
-      <div class="stat-card accent-cyan draggable-card" id="stat-em-analise" draggable="true" data-widget-id="stat-em-analise">
-        <span class="drag-handle" title="Clique e arraste para reposicionar"><i class="bi bi-grip-vertical"></i></span>
-        <div class="stat-icon"><i class="bi bi-hourglass-split"></i></div>
-        <div class="stat-body">
-          <div class="nf nf-stat" data-number-flow-stat>
-            <number-flow class="nf-number stat-value" id="stat-analise-v" data-stat-number>0</number-flow>
-          </div>
-          <span class="stat-label">Em Análise</span>
-        </div>
-      </div>
-      <div class="stat-card accent-violet draggable-card" id="stat-match" draggable="true" data-widget-id="stat-match">
-        <span class="drag-handle" title="Clique e arraste para reposicionar"><i class="bi bi-grip-vertical"></i></span>
-        <div class="stat-icon"><i class="bi bi-cpu-fill"></i></div>
-        <div class="stat-body">
-          <div class="nf nf-stat" data-number-flow-stat>
-            <number-flow class="nf-number stat-value" id="stat-taxa-match" data-stat-number>0</number-flow>
-          </div>
-          <span class="stat-label">Taxa de Match</span>
-        </div>
-      </div>
-    </div>
+  <!-- Conteúdo principal -->
+  <main class="dash-main" id="dash-main">
 
-    <!-- IA Match Showcase + Top Vagas (Arrastar e Soltar) -->
-    <div class="dash-two-col" id="dash-widgets-grid">
-      <!-- Match Radial Chart -->
-      <div class="glass-card dash-card draggable-card" id="card-compatibilidade-ia" draggable="true" data-widget-id="card-compatibilidade-ia">
-        <div class="card-header">
-          <h3><i class="bi bi-cpu"></i> Compatibilidade IA</h3>
-          <span class="badge-ai">Zero-G AI</span>
-          <span class="drag-handle" title="Clique e arraste para reposicionar"><i class="bi bi-grip-vertical"></i></span>
-        </div>
-        <div class="card-body center-content">
-          <div class="match-donut-wrap" id="match-donut-wrap">
-            <svg class="match-donut" viewBox="0 0 120 120" aria-hidden="true">
-              <circle class="donut-bg" cx="60" cy="60" r="52" />
-              <circle class="donut-progress" id="donut-progress" cx="60" cy="60" r="52"
-                stroke-dasharray="0 326.73" stroke-dashoffset="81.68" />
-            </svg>
-            <div class="donut-label">
-              <span class="donut-score" id="donut-score">
-                <number-flow class="nf-number" id="flow-donut-score" data-stat-number>0</number-flow>
-              </span>
-              <span class="donut-sub">match médio</span>
-            </div>
-          </div>
-          <p class="match-tip" id="match-tip">Candidate-se a vagas para ver sua compatibilidade com IA.</p>
-        </div>
+    <!-- Header -->
+    <header class="dash-header">
+      <button
+        class="btn-menu-toggle"
+        id="btn-menu-toggle"
+        aria-label="Abrir menu de navegação"
+        aria-controls="dash-sidebar"
+        aria-expanded="false"
+        title="Abrir menu de navegação"
+      >
+        <i class="bi bi-list"></i>
+        <span>Menu</span>
+      </button>
+
+      <div class="dash-header-info">
+        <h2 class="dash-page-title" id="page-title">Visão Geral</h2>
+        <span class="dash-greeting" id="dash-greeting">Carregando...</span>
       </div>
 
-      <!-- Top Vagas Recomendadas (preview) -->
-      <div class="glass-card dash-card draggable-card" id="card-top-vagas" draggable="true" data-widget-id="card-top-vagas">
-        <div class="card-header">
-          <h3><i class="bi bi-stars"></i> Top Recomendações</h3>
-          <a href="#" class="card-link" data-section="recomendadas">Ver todas</a>
-          <span class="drag-handle" title="Clique e arraste para reposicionar"><i class="bi bi-grip-vertical"></i></span>
-        </div>
-        <div class="card-body" id="top-vagas-list">
-          <div class="loading-placeholder">
-            <i class="bi bi-arrow-repeat spin"></i> Carregando recomendações...
-          </div>
-        </div>
-      </div>
-    </div>
+      <div class="dash-header-actions">
+        <span class="header-badge-nivel" id="header-nivel">Estagiário</span>
 
-    <!-- Timeline de Candidaturas Recentes -->
-    <div class="glass-card dash-card full-width draggable-card" id="card-timeline" draggable="true" data-widget-id="card-timeline">
-      <div class="card-header">
-        <h3><i class="bi bi-clock-history"></i> Atividade Recente</h3>
-        <span class="drag-handle" title="Clique e arraste para reposicionar"><i class="bi bi-grip-vertical"></i></span>
-      </div>
-      <div class="card-body" id="timeline-recente">
-        <div class="loading-placeholder">
-          <i class="bi bi-arrow-repeat spin"></i> Carregando atividade...
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ── Seção: Candidaturas ─────────────────────────────────────────────── -->
-  <section class="dash-section" id="section-candidaturas">
-    <div class="section-toolbar">
-      <div class="section-filters">
-        <button class="filter-btn active" data-filter="todos">Todas</button>
-        <button class="filter-btn" data-filter="pendente">Pendente</button>
-        <button class="filter-btn" data-filter="em_analise">Em Análise</button>
-        <button class="filter-btn" data-filter="aprovado">Aprovado</button>
-        <button class="filter-btn" data-filter="reprovado">Reprovado</button>
-      </div>
-    </div>
-    <div class="candidaturas-grid" id="candidaturas-grid">
-      <div class="loading-placeholder full">
-        <i class="bi bi-arrow-repeat spin"></i> Carregando candidaturas...
-      </div>
-    </div>
-  </section>
-
-  <!-- ── Seção: Vagas Recomendadas ──────────────────────────────────────── -->
-  <section class="dash-section" id="section-recomendadas">
-    <div class="section-toolbar">
-      <div class="section-filters">
-        <button class="filter-btn active" data-rec-filter="todos">Todos</button>
-        <button class="filter-btn" data-rec-filter="presencial">Presencial</button>
-        <button class="filter-btn" data-rec-filter="remoto">Remoto</button>
-        <button class="filter-btn" data-rec-filter="hibrido">Híbrido</button>
-      </div>
-      <span class="filter-count" id="rec-count">0 vagas</span>
-    </div>
-    <div class="vagas-grid" id="vagas-recomendadas-grid">
-      <div class="loading-placeholder full">
-        <i class="bi bi-arrow-repeat spin"></i> Calculando compatibilidade com IA...
-      </div>
-    </div>
-  </section>
-
-  <!-- ── Seção: Perfil ───────────────────────────────────────────────────── -->
-  <section class="dash-section" id="section-perfil">
-    <div class="perfil-layout">
-      <div class="glass-card perfil-card">
-        <div class="perfil-avatar-wrap">
-          <div class="perfil-avatar-lg" aria-hidden="true">
-            <i class="bi bi-person-fill"></i>
-          </div>
-          <h2 class="perfil-nome" id="perfil-nome">—</h2>
-          <span class="perfil-nivel-tag" id="perfil-nivel-tag">Estagiário</span>
-        </div>
-        <div class="perfil-info-list" id="perfil-info-list">
-          <!-- Preenchido via JS -->
-        </div>
-        <div class="perfil-links" id="perfil-links"></div>
-      </div>
-      <div class="glass-card perfil-area-card">
-        <div class="card-header">
-          <h3><i class="bi bi-cpu"></i> Área de Interesse</h3>
-        </div>
-        <div class="card-body">
-          <p class="perfil-area" id="perfil-area">—</p>
-          <p class="perfil-hint">Sua área de interesse é usada pela IA para recomendar vagas e calcular seu Score de Compatibilidade.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="dash-section" id="section-configuracoes">
-    <div class="glass-card dash-card settings-card">
-      <div class="card-header">
-        <h3><i class="bi bi-palette2"></i> Aparência</h3>
-      </div>
-      <div class="card-body settings-theme-row">
-        <div>
-          <strong>Tema da página</strong>
-          <p class="settings-theme-description">Escolha a paleta que prefere para o painel.</p>
-        </div>
-        <button type="button" class="theme-toggle-button" id="btn-theme-toggle" aria-pressed="false">
-          <img src="./static/img/moon.png" class="theme-icon theme-icon--moon" alt="Lua" width="18" height="18" style="vertical-align:middle;margin-right:6px;">
-          <img src="./static/img/sun.svg" class="theme-icon theme-icon--sun" alt="Sol" width="18" height="18" hidden style="vertical-align:middle;margin-right:6px;">
-          <span>Ativar modo escuro</span>
+        <button
+          type="button"
+          class="user-avatar"
+          id="user-avatar"
+          data-section="perfil"
+          aria-label="Ir para Meu Perfil"
+          title="Ir para Meu Perfil"
+        >
+          <i class="bi bi-person-fill"></i>
         </button>
       </div>
-    </div>
+    </header>
 
-    <!-- ── Área: Editar dashboards ─────────────────────────────────────────── -->
-    <div class="glass-card dash-card edit-dashboards-card" id="card-editar-dashboards">
-      <div class="card-header">
-        <h3><i class="bi bi-kanban"></i> Editar dashboards</h3>
-        <span class="drag-instruction-badge"><i class="bi bi-arrows-move"></i> Arrastar e Soltar ativado no painel</span>
-      </div>
-      <div class="card-body">
-        <p style="color: var(--text-secondary); font-size: 0.875rem; margin-top: 0; line-height: 1.5;">
-          Personalize a visualização do seu painel: selecione quais cartões de métricas devem ser exibidos e alterne entre a grade tradicional e o modo carrossel interativo. As métricas são sincronizadas automaticamente via NumberFlow conforme você se candidata a vagas.
-        </p>
+    <!-- Seção: Visão Geral -->
+    <section class="dash-section active" id="section-overview">
 
-        <div class="edit-dash-grid">
-          <!-- Bloco 1: Selecionar Componentes Visíveis -->
-          <div class="edit-dash-block">
-            <div class="edit-dash-block-title">
-              <i class="bi bi-toggles"></i> Escolher Componentes do Dashboard
-            </div>
-            <div class="edit-dash-toggles">
-              <label class="edit-dash-toggle-item">
-                <span class="edit-dash-toggle-label"><i class="bi bi-send-fill" style="color: #20b479;"></i> Candidaturas</span>
-                <span class="edit-dash-switch">
-                  <input type="checkbox" id="toggle-stat-candidaturas" checked data-target-widget="stat-candidaturas">
-                  <span class="edit-dash-slider"></span>
-                </span>
-              </label>
-              <label class="edit-dash-toggle-item">
-                <span class="edit-dash-toggle-label"><i class="bi bi-check-circle-fill" style="color: #20b479;"></i> Aprovações</span>
-                <span class="edit-dash-switch">
-                  <input type="checkbox" id="toggle-stat-aprovadas" checked data-target-widget="stat-aprovadas">
-                  <span class="edit-dash-slider"></span>
-                </span>
-              </label>
-              <label class="edit-dash-toggle-item">
-                <span class="edit-dash-toggle-label"><i class="bi bi-hourglass-split" style="color: #639c9e;"></i> Em Análise</span>
-                <span class="edit-dash-switch">
-                  <input type="checkbox" id="toggle-stat-em-analise" checked data-target-widget="stat-em-analise">
-                  <span class="edit-dash-slider"></span>
-                </span>
-              </label>
-              <label class="edit-dash-toggle-item">
-                <span class="edit-dash-toggle-label"><i class="bi bi-cpu-fill" style="color: #9d87ba;"></i> Taxa de Match</span>
-                <span class="edit-dash-switch">
-                  <input type="checkbox" id="toggle-stat-match" checked data-target-widget="stat-match">
-                  <span class="edit-dash-slider"></span>
-                </span>
-              </label>
-              <label class="edit-dash-toggle-item">
-                <span class="edit-dash-toggle-label"><i class="bi bi-pie-chart-fill" style="color: #20b479;"></i> Compatibilidade IA (Donut)</span>
-                <span class="edit-dash-switch">
-                  <input type="checkbox" id="toggle-card-compatibilidade-ia" checked data-target-widget="card-compatibilidade-ia">
-                  <span class="edit-dash-slider"></span>
-                </span>
-              </label>
-              <label class="edit-dash-toggle-item">
-                <span class="edit-dash-toggle-label"><i class="bi bi-stars" style="color: #20b479;"></i> Top Recomendações</span>
-                <span class="edit-dash-switch">
-                  <input type="checkbox" id="toggle-card-top-vagas" checked data-target-widget="card-top-vagas">
-                  <span class="edit-dash-slider"></span>
-                </span>
-              </label>
-              <label class="edit-dash-toggle-item">
-                <span class="edit-dash-toggle-label"><i class="bi bi-activity" style="color: #20b479;"></i> Atividade Recente</span>
-                <span class="edit-dash-switch">
-                  <input type="checkbox" id="toggle-card-timeline" checked data-target-widget="card-timeline">
-                  <span class="edit-dash-slider"></span>
-                </span>
-              </label>
-            </div>
+      <!-- Estatísticas -->
+      <div class="stats-grid" id="stats-grid">
+
+        <div class="stat-card draggable-card" id="stat-candidaturas" draggable="true" data-widget-id="stat-candidaturas">
+          <span class="drag-handle" title="Clique e arraste para reposicionar">
+            <i class="bi bi-grip-vertical"></i>
+          </span>
+
+          <div class="stat-icon">
+            <i class="bi bi-send-fill"></i>
           </div>
 
-          <!-- Bloco 2: Modo de Apresentação (Carrossel vs Grade) -->
-          <div class="edit-dash-block">
-            <div class="edit-dash-block-title">
-              <i class="bi bi-view-stacked"></i> Apresentação dos Dashboards
+          <div class="stat-body">
+            <div class="nf nf-stat" data-number-flow-stat>
+              <number-flow class="nf-number stat-value" id="stat-total-c" data-stat-number>0</number-flow>
             </div>
-            <p style="font-size: 0.8125rem; color: var(--text-secondary); margin: 4px 0 10px; line-height: 1.4;">
-              Selecione o modelo visual para exibir seus indicadores. As opções são mantidas salvas para o seu perfil no front-end.
-            </p>
+            <span class="stat-label">Candidaturas</span>
+          </div>
+        </div>
 
-            <div class="edit-dash-mode-selector">
-              <div class="edit-dash-mode-card active" id="mode-opt-grid" data-mode="grid">
-                <div class="edit-dash-mode-header">
-                  <span><i class="bi bi-grid-fill" style="color:#20b479;margin-right:6px;"></i>Grade Modular</span>
-                  <i class="bi bi-check-circle-fill mode-check" style="color:#20b479;"></i>
-                </div>
-                <span class="edit-dash-mode-desc">Exibição clássica em blocos com recurso de arrastar e soltar.</span>
-              </div>
+        <div class="stat-card accent-green draggable-card" id="stat-aprovadas" draggable="true" data-widget-id="stat-aprovadas">
+          <span class="drag-handle" title="Clique e arraste para reposicionar">
+            <i class="bi bi-grip-vertical"></i>
+          </span>
 
-              <div class="edit-dash-mode-card" id="mode-opt-carousel" data-mode="carousel">
-                <div class="edit-dash-mode-header">
-                  <span><i class="bi bi-collection-play-fill" style="color:#20b479;margin-right:6px;"></i>Modo Carrossel</span>
-                  <i class="bi bi-circle mode-check"></i>
-                </div>
-                <span class="edit-dash-mode-desc">Apresentação fluida em slides com setas e paginação.</span>
-              </div>
+          <div class="stat-icon">
+            <i class="bi bi-check-circle-fill"></i>
+          </div>
+
+          <div class="stat-body">
+            <div class="nf nf-stat" data-number-flow-stat>
+              <number-flow class="nf-number stat-value" id="stat-aprovadas-v" data-stat-number>0</number-flow>
             </div>
+            <span class="stat-label">Aprovações</span>
+          </div>
+        </div>
 
-            <div class="carousel-suboptions" id="carousel-suboptions" style="display: none;">
-              <span class="carousel-suboptions-title"><i class="bi bi-sliders"></i> Modelo do Carrossel</span>
-              <div class="carousel-model-chips">
-                <button type="button" class="carousel-chip active" data-carousel-model="panoramic">
-                  <i class="bi bi-columns-gap"></i> Panorâmico (Múltiplos Cards)
-                </button>
-                <button type="button" class="carousel-chip" data-carousel-model="spotlight">
-                  <i class="bi bi-card-heading"></i> Destaque (1 por Slide)
-                </button>
-              </div>
-              <label class="edit-dash-toggle-item" style="margin-top:4px;">
-                <span class="edit-dash-toggle-label"><i class="bi bi-play-circle" style="color: #20b479;"></i> Transição Automática</span>
-                <span class="edit-dash-switch">
-                  <input type="checkbox" id="toggle-carousel-autoplay">
-                  <span class="edit-dash-slider"></span>
+        <div class="stat-card accent-cyan draggable-card" id="stat-em-analise" draggable="true" data-widget-id="stat-em-analise">
+          <span class="drag-handle" title="Clique e arraste para reposicionar">
+            <i class="bi bi-grip-vertical"></i>
+          </span>
+
+          <div class="stat-icon">
+            <i class="bi bi-hourglass-split"></i>
+          </div>
+
+          <div class="stat-body">
+            <div class="nf nf-stat" data-number-flow-stat>
+              <number-flow class="nf-number stat-value" id="stat-analise-v" data-stat-number>0</number-flow>
+            </div>
+            <span class="stat-label">Em Análise</span>
+          </div>
+        </div>
+
+        <div class="stat-card accent-violet draggable-card" id="stat-match" draggable="true" data-widget-id="stat-match">
+          <span class="drag-handle" title="Clique e arraste para reposicionar">
+            <i class="bi bi-grip-vertical"></i>
+          </span>
+
+          <div class="stat-icon">
+            <i class="bi bi-cpu-fill"></i>
+          </div>
+
+          <div class="stat-body">
+            <div class="nf nf-stat" data-number-flow-stat>
+              <number-flow class="nf-number stat-value" id="stat-taxa-match" data-stat-number>0</number-flow>
+            </div>
+            <span class="stat-label">Taxa de Match</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- IA Match e Vagas Recomendadas -->
+      <div class="dash-two-col" id="dash-widgets-grid">
+
+        <div class="glass-card dash-card draggable-card" id="card-compatibilidade-ia" draggable="true" data-widget-id="card-compatibilidade-ia">
+          <div class="card-header">
+            <h3><i class="bi bi-cpu"></i> Compatibilidade IA</h3>
+            <span class="badge-ai">Zero-G AI</span>
+            <span class="drag-handle" title="Clique e arraste para reposicionar">
+              <i class="bi bi-grip-vertical"></i>
+            </span>
+          </div>
+
+          <div class="card-body center-content">
+            <div class="match-donut-wrap" id="match-donut-wrap">
+              <svg class="match-donut" viewBox="0 0 120 120" aria-hidden="true">
+                <circle class="donut-bg" cx="60" cy="60" r="52" />
+                <circle
+                  class="donut-progress"
+                  id="donut-progress"
+                  cx="60"
+                  cy="60"
+                  r="52"
+                  stroke-dasharray="0 326.73"
+                  stroke-dashoffset="81.68"
+                />
+              </svg>
+
+              <div class="donut-label">
+                <span class="donut-score" id="donut-score">
+                  <number-flow class="nf-number" id="flow-donut-score" data-stat-number>0</number-flow>
                 </span>
-              </label>
+                <span class="donut-sub">match médio</span>
+              </div>
             </div>
 
-            <div class="badge-auto-stats">
-              <i class="bi bi-lightning-charge-fill"></i>
-              <span><strong>Métricas Atualizadas Automaticamente:</strong> Os números são atualizados em tempo real com animação <em>NumberFlow</em> sempre que você se candidata a novas vagas.</span>
+            <p class="match-tip" id="match-tip">
+              Candidate-se a vagas para ver sua compatibilidade com IA.
+            </p>
+          </div>
+        </div>
+
+        <div class="glass-card dash-card draggable-card" id="card-top-vagas" draggable="true" data-widget-id="card-top-vagas">
+          <div class="card-header">
+            <h3><i class="bi bi-stars"></i> Top Recomendações</h3>
+            <a href="#" class="card-link" data-section="recomendadas">Ver todas</a>
+            <span class="drag-handle" title="Clique e arraste para reposicionar">
+              <i class="bi bi-grip-vertical"></i>
+            </span>
+          </div>
+
+          <div class="card-body" id="top-vagas-list">
+            <div class="loading-placeholder">
+              <i class="bi bi-arrow-repeat spin"></i>
+              Carregando recomendações...
             </div>
           </div>
         </div>
 
-        <div class="edit-dash-actions">
-          <button type="button" class="btn btn-secondary btn-sm" id="btn-reset-dash-order">
-            <i class="bi bi-arrow-counterclockwise"></i> Restaurar Layout Padrão
+      </div>
+
+      <!-- Atividade recente -->
+      <div class="glass-card dash-card full-width draggable-card" id="card-timeline" draggable="true" data-widget-id="card-timeline">
+        <div class="card-header">
+          <h3><i class="bi bi-clock-history"></i> Atividade Recente</h3>
+          <span class="drag-handle" title="Clique e arraste para reposicionar">
+            <i class="bi bi-grip-vertical"></i>
+          </span>
+        </div>
+
+        <div class="card-body" id="timeline-recente">
+          <div class="loading-placeholder">
+            <i class="bi bi-arrow-repeat spin"></i>
+            Carregando atividade...
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Seção: Minhas Candidaturas -->
+    <section class="dash-section" id="section-candidaturas">
+      <div class="section-toolbar">
+        <div class="section-filters">
+          <button class="filter-btn active" data-filter="todos">Todas</button>
+          <button class="filter-btn" data-filter="pendente">Pendente</button>
+          <button class="filter-btn" data-filter="em_analise">Em Análise</button>
+          <button class="filter-btn" data-filter="aprovado">Aprovado</button>
+          <button class="filter-btn" data-filter="reprovado">Reprovado</button>
+        </div>
+      </div>
+
+      <div class="candidaturas-grid" id="candidaturas-grid">
+        <div class="loading-placeholder full">
+          <i class="bi bi-arrow-repeat spin"></i>
+          Carregando candidaturas...
+        </div>
+      </div>
+    </section>
+
+    <!-- Seção: Vagas Recomendadas -->
+    <section class="dash-section" id="section-recomendadas">
+      <div class="section-toolbar">
+        <div class="section-filters">
+          <button class="filter-btn active" data-rec-filter="todos">Todos</button>
+          <button class="filter-btn" data-rec-filter="presencial">Presencial</button>
+          <button class="filter-btn" data-rec-filter="remoto">Remoto</button>
+          <button class="filter-btn" data-rec-filter="hibrido">Híbrido</button>
+        </div>
+
+        <span class="filter-count" id="rec-count">0 vagas</span>
+      </div>
+
+      <div class="vagas-grid" id="vagas-recomendadas-grid">
+        <div class="loading-placeholder full">
+          <i class="bi bi-arrow-repeat spin"></i>
+          Calculando compatibilidade com IA...
+        </div>
+      </div>
+    </section>
+
+    <!-- Seção: Perfil -->
+    <section class="dash-section" id="section-perfil">
+      <div class="perfil-layout">
+
+        <div class="glass-card perfil-card">
+          <div class="perfil-avatar-wrap">
+            <div class="perfil-avatar-lg" aria-hidden="true">
+              <i class="bi bi-person-fill"></i>
+            </div>
+
+            <h2 class="perfil-nome" id="perfil-nome">—</h2>
+            <span class="perfil-nivel-tag" id="perfil-nivel-tag">
+              Estagiário
+            </span>
+          </div>
+
+          <div class="perfil-info-list" id="perfil-info-list">
+            <!-- Preenchido via JS -->
+          </div>
+
+          <div class="perfil-links" id="perfil-links"></div>
+        </div>
+
+        <div class="glass-card perfil-area-card">
+          <div class="card-header">
+            <h3><i class="bi bi-cpu"></i> Área de Interesse</h3>
+          </div>
+
+          <div class="card-body">
+            <p class="perfil-area" id="perfil-area">—</p>
+            <p class="perfil-hint">
+              Sua área de interesse é usada pela IA para recomendar vagas
+              e calcular seu Score de Compatibilidade.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Seção: Configurações -->
+    <section class="dash-section" id="section-configuracoes">
+
+      <div class="glass-card dash-card settings-card">
+        <div class="card-header">
+          <h3><i class="bi bi-palette2"></i> Aparência</h3>
+        </div>
+
+        <div class="card-body settings-theme-row">
+          <div>
+            <strong>Tema da página</strong>
+            <p class="settings-theme-description">
+              Escolha a paleta que prefere para o painel.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            class="theme-toggle-button"
+            id="btn-theme-toggle"
+            aria-pressed="false"
+          >
+            <img
+              src="/static/img/moon.png"
+              class="theme-icon theme-icon--moon"
+              alt="Lua"
+              width="18"
+              height="18"
+              style="vertical-align:middle;margin-right:6px;"
+            >
+
+            <img
+              src="/static/img/sun.svg"
+              class="theme-icon theme-icon--sun"
+              alt="Sol"
+              width="18"
+              height="18"
+              hidden
+              style="vertical-align:middle;margin-right:6px;"
+            >
+
+            <span>Ativar modo escuro</span>
           </button>
         </div>
       </div>
-    </div>
-  </section>
 
-</main>
+      <!-- Editar dashboards -->
+      <div class="glass-card dash-card edit-dashboards-card" id="card-editar-dashboards">
 
-<!-- ── Modal: Candidatura ─────────────────────────────────────────────────── -->
-<div class="modal-overlay" id="modal-candidatura" hidden>
-  <div class="modal-box glass-card" role="dialog" aria-modal="true" aria-labelledby="modal-cand-title">
-    <div class="modal-header">
-      <h3 id="modal-cand-title"><i class="bi bi-send"></i> Candidatar-se</h3>
-      <button class="modal-close" id="modal-cand-close" aria-label="Fechar">
-        <i class="bi bi-x-lg"></i>
-      </button>
-    </div>
-    <div class="modal-body">
-      <div class="modal-vaga-info" id="modal-vaga-info"></div>
-      <div class="field-group">
-        <label class="field-label" for="cand-mensagem">
-          <i class="bi bi-chat-text"></i> Mensagem para o recrutador
-          <span class="field-optional">(opcional)</span>
-        </label>
-        <textarea
-          class="field-input"
-          id="cand-mensagem"
-          name="mensagem"
-          rows="4"
-          placeholder="Conte um pouco sobre sua motivação para esta vaga..."
-          maxlength="1000"
-        ></textarea>
+        <div class="card-header">
+          <h3><i class="bi bi-kanban"></i> Editar dashboards</h3>
+          <span class="drag-instruction-badge">
+            <i class="bi bi-arrows-move"></i>
+            Arrastar e Soltar ativado no painel
+          </span>
+        </div>
+
+        <div class="card-body">
+          <p style="color: var(--text-secondary); font-size: 0.875rem; margin-top: 0; line-height: 1.5;">
+            Personalize a visualização do seu painel: selecione quais cartões
+            de métricas devem ser exibidos e alterne entre a grade tradicional
+            e o modo carrossel interativo. As métricas são sincronizadas
+            automaticamente via NumberFlow conforme você se candidata a vagas.
+          </p>
+
+          <div class="edit-dash-grid">
+
+            <!-- Componentes visíveis -->
+            <div class="edit-dash-block">
+              <div class="edit-dash-block-title">
+                <i class="bi bi-toggles"></i>
+                Escolher Componentes do Dashboard
+              </div>
+
+              <div class="edit-dash-toggles">
+
+                <label class="edit-dash-toggle-item">
+                  <span class="edit-dash-toggle-label">
+                    <i class="bi bi-send-fill" style="color: #20b479;"></i>
+                    Candidaturas
+                  </span>
+                  <span class="edit-dash-switch">
+                    <input type="checkbox" id="toggle-stat-candidaturas" checked data-target-widget="stat-candidaturas">
+                    <span class="edit-dash-slider"></span>
+                  </span>
+                </label>
+
+                <label class="edit-dash-toggle-item">
+                  <span class="edit-dash-toggle-label">
+                    <i class="bi bi-check-circle-fill" style="color: #20b479;"></i>
+                    Aprovações
+                  </span>
+                  <span class="edit-dash-switch">
+                    <input type="checkbox" id="toggle-stat-aprovadas" checked data-target-widget="stat-aprovadas">
+                    <span class="edit-dash-slider"></span>
+                  </span>
+                </label>
+
+                <label class="edit-dash-toggle-item">
+                  <span class="edit-dash-toggle-label">
+                    <i class="bi bi-hourglass-split" style="color: #639c9e;"></i>
+                    Em Análise
+                  </span>
+                  <span class="edit-dash-switch">
+                    <input type="checkbox" id="toggle-stat-em-analise" checked data-target-widget="stat-em-analise">
+                    <span class="edit-dash-slider"></span>
+                  </span>
+                </label>
+
+                <label class="edit-dash-toggle-item">
+                  <span class="edit-dash-toggle-label">
+                    <i class="bi bi-cpu-fill" style="color: #9d87ba;"></i>
+                    Taxa de Match
+                  </span>
+                  <span class="edit-dash-switch">
+                    <input type="checkbox" id="toggle-stat-match" checked data-target-widget="stat-match">
+                    <span class="edit-dash-slider"></span>
+                  </span>
+                </label>
+
+                <label class="edit-dash-toggle-item">
+                  <span class="edit-dash-toggle-label">
+                    <i class="bi bi-pie-chart-fill" style="color: #20b479;"></i>
+                    Compatibilidade IA (Donut)
+                  </span>
+                  <span class="edit-dash-switch">
+                    <input type="checkbox" id="toggle-card-compatibilidade-ia" checked data-target-widget="card-compatibilidade-ia">
+                    <span class="edit-dash-slider"></span>
+                  </span>
+                </label>
+
+                <label class="edit-dash-toggle-item">
+                  <span class="edit-dash-toggle-label">
+                    <i class="bi bi-stars" style="color: #20b479;"></i>
+                    Top Recomendações
+                  </span>
+                  <span class="edit-dash-switch">
+                    <input type="checkbox" id="toggle-card-top-vagas" checked data-target-widget="card-top-vagas">
+                    <span class="edit-dash-slider"></span>
+                  </span>
+                </label>
+
+                <label class="edit-dash-toggle-item">
+                  <span class="edit-dash-toggle-label">
+                    <i class="bi bi-activity" style="color: #20b479;"></i>
+                    Atividade Recente
+                  </span>
+                  <span class="edit-dash-switch">
+                    <input type="checkbox" id="toggle-card-timeline" checked data-target-widget="card-timeline">
+                    <span class="edit-dash-slider"></span>
+                  </span>
+                </label>
+
+              </div>
+            </div>
+
+            <!-- Modelo de apresentação -->
+            <div class="edit-dash-block">
+              <div class="edit-dash-block-title">
+                <i class="bi bi-view-stacked"></i>
+                Apresentação dos Dashboards
+              </div>
+
+              <p style="font-size: 0.8125rem; color: var(--text-secondary); margin: 4px 0 10px; line-height: 1.4;">
+                Selecione o modelo visual para exibir seus indicadores.
+                As opções são mantidas salvas para o seu perfil no front-end.
+              </p>
+
+              <div class="edit-dash-mode-selector">
+
+                <div class="edit-dash-mode-card active" id="mode-opt-grid" data-mode="grid">
+                  <div class="edit-dash-mode-header">
+                    <span>
+                      <i class="bi bi-grid-fill" style="color:#20b479;margin-right:6px;"></i>
+                      Grade Modular
+                    </span>
+                    <i class="bi bi-check-circle-fill mode-check" style="color:#20b479;"></i>
+                  </div>
+
+                  <span class="edit-dash-mode-desc">
+                    Exibição clássica em blocos com recurso de arrastar e soltar.
+                  </span>
+                </div>
+
+                <div class="edit-dash-mode-card" id="mode-opt-carousel" data-mode="carousel">
+                  <div class="edit-dash-mode-header">
+                    <span>
+                      <i class="bi bi-collection-play-fill" style="color:#20b479;margin-right:6px;"></i>
+                      Modo Carrossel
+                    </span>
+                    <i class="bi bi-circle mode-check"></i>
+                  </div>
+
+                  <span class="edit-dash-mode-desc">
+                    Apresentação fluida em slides com setas e paginação.
+                  </span>
+                </div>
+
+              </div>
+
+              <div class="carousel-suboptions" id="carousel-suboptions" style="display: none;">
+                <span class="carousel-suboptions-title">
+                  <i class="bi bi-sliders"></i>
+                  Modelo do Carrossel
+                </span>
+
+                <div class="carousel-model-chips">
+                  <button type="button" class="carousel-chip active" data-carousel-model="panoramic">
+                    <i class="bi bi-columns-gap"></i>
+                    Panorâmico (Múltiplos Cards)
+                  </button>
+
+                  <button type="button" class="carousel-chip" data-carousel-model="spotlight">
+                    <i class="bi bi-card-heading"></i>
+                    Destaque (1 por Slide)
+                  </button>
+                </div>
+
+                <label class="edit-dash-toggle-item" style="margin-top:4px;">
+                  <span class="edit-dash-toggle-label">
+                    <i class="bi bi-play-circle" style="color: #20b479;"></i>
+                    Transição Automática
+                  </span>
+
+                  <span class="edit-dash-switch">
+                    <input type="checkbox" id="toggle-carousel-autoplay">
+                    <span class="edit-dash-slider"></span>
+                  </span>
+                </label>
+              </div>
+
+              <div class="badge-auto-stats">
+                <i class="bi bi-lightning-charge-fill"></i>
+                <span>
+                  <strong>Métricas Atualizadas Automaticamente:</strong>
+                  Os números são atualizados em tempo real com animação
+                  <em>NumberFlow</em> sempre que você se candidata a novas vagas.
+                </span>
+              </div>
+
+            </div>
+
+          </div>
+
+          <div class="edit-dash-actions">
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-reset-dash-order">
+              <i class="bi bi-arrow-counterclockwise"></i>
+              Restaurar Layout Padrão
+            </button>
+          </div>
+
+        </div>
       </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" id="btn-cand-cancel">Cancelar</button>
-      <button class="btn btn-primary" id="btn-cand-confirm">
-        <i class="bi bi-send-fill"></i> Confirmar Candidatura
-      </button>
+
+    </section>
+
+  </main>
+
+  <!-- Modal: Candidatura -->
+  <div class="modal-overlay" id="modal-candidatura" hidden>
+    <div class="modal-box glass-card" role="dialog" aria-modal="true" aria-labelledby="modal-cand-title">
+
+      <div class="modal-header">
+        <h3 id="modal-cand-title">
+          <i class="bi bi-send"></i>
+          Candidatar-se
+        </h3>
+
+        <button class="modal-close" id="modal-cand-close" aria-label="Fechar">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="modal-vaga-info" id="modal-vaga-info"></div>
+
+        <div class="field-group">
+          <label class="field-label" for="cand-mensagem">
+            <i class="bi bi-chat-text"></i>
+            Mensagem para o recrutador
+            <span class="field-optional">(opcional)</span>
+          </label>
+
+          <textarea
+            class="field-input"
+            id="cand-mensagem"
+            name="mensagem"
+            rows="4"
+            placeholder="Conte um pouco sobre sua motivação para esta vaga..."
+            maxlength="1000"
+          ></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-ghost" id="btn-cand-cancel">
+          Cancelar
+        </button>
+
+        <button class="btn btn-primary" id="btn-cand-confirm">
+          <i class="bi bi-send-fill"></i>
+          Confirmar Candidatura
+        </button>
+      </div>
+
     </div>
   </div>
-</div>
 
+  <!-- Toast de notificações -->
+  <div class="toast-container" id="toast-container" aria-live="polite"></div>
 
+  <script type="module" src="https://esm.sh/number-flow"></script>
+  <script src="/static/js/dashboard.js?v=6"></script>
 
-<!-- Toast de Notificações -->
-<div class="toast-container" id="toast-container" aria-live="polite"></div>
-
-<script type="module" src="https://esm.sh/number-flow"></script>
-<script src="./static/js/dashboard.js?v=6"></script>
 </body>
 </html>
