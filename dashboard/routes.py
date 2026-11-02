@@ -3,6 +3,8 @@ from mysql.connector import Error
 
 from database.connection import conectar
 from usuarios.routes import obter_usuario_autenticado
+from pydantic import BaseModel, Field
+from mysql.connector import IntegrityError
 
 
 router = APIRouter(
@@ -596,6 +598,213 @@ def listar_vagas_recomendadas(
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Não foi possível consultar as vagas."
+        ) from erro
+
+    finally:
+        if cursor is not None:
+            cursor.close()
+
+        if conexao is not None:
+            conexao.close()
+
+
+# ============================================================
+# ENVIAR CANDIDATURA PARA UMA VAGA
+# POST /dashboard/api/candidato/candidatar
+# ============================================================
+
+class NovaCandidatura(BaseModel):
+    id_vaga: int = Field(gt=0)
+
+
+@router.post(
+    "/candidato/candidatar",
+    status_code=status.HTTP_201_CREATED
+)
+def candidatar_a_vaga(
+    dados: NovaCandidatura,
+    token: dict = Depends(obter_usuario_autenticado)
+):
+    conexao = None
+    cursor = None
+
+    try:
+        id_usuario = int(token["sub"])
+
+        conexao = conectar()
+        cursor = conexao.cursor(dictionary=True)
+
+        # 1. Verifica a conta autenticada.
+        cursor.execute(
+            """
+            SELECT tipo_usuario, ativo, deletado_em
+            FROM usuarios
+            WHERE id_usuario = %s
+            """,
+            (id_usuario,)
+        )
+
+        usuario = cursor.fetchone()
+
+        if (
+            not usuario
+            or not usuario["ativo"]
+            or usuario["deletado_em"] is not None
+        ):
+            raise HTTPException(
+                status_code=401,
+                detail="Conta inexistente ou indisponível."
+            )
+
+        if usuario["tipo_usuario"] != "Candidato":
+            raise HTTPException(
+                status_code=403,
+                detail="Apenas candidatos podem se inscrever."
+            )
+
+        # 2. Identifica o candidato.
+        # O bloqueio ajuda a impedir inscrições
+        # simultâneas duplicadas do mesmo candidato.
+        cursor.execute(
+            """
+            SELECT id_candidato
+            FROM candidatos
+            WHERE id_usuario = %s
+            FOR UPDATE
+            """,
+            (id_usuario,)
+        )
+
+        candidato = cursor.fetchone()
+
+        if not candidato:
+            raise HTTPException(
+                status_code=404,
+                detail="Perfil de candidato não encontrado."
+            )
+
+        id_candidato = candidato["id_candidato"]
+
+        # 3. Verifica a vaga.
+        cursor.execute(
+            """
+            SELECT
+                id_vaga,
+                titulo,
+                status,
+                prazo_encerramento
+            FROM vagas
+            WHERE id_vaga = %s
+            FOR UPDATE
+            """,
+            (dados.id_vaga,)
+        )
+
+        vaga = cursor.fetchone()
+
+        if not vaga:
+            raise HTTPException(
+                status_code=404,
+                detail="Vaga não encontrada."
+            )
+
+        # 4. Confirma disponibilidade.
+        cursor.execute(
+            """
+            SELECT
+                status = 'Aberta'
+                AND (
+                    prazo_encerramento IS NULL
+                    OR prazo_encerramento >= CURDATE()
+                ) AS disponivel
+            FROM vagas
+            WHERE id_vaga = %s
+            """,
+            (dados.id_vaga,)
+        )
+
+        disponivel = cursor.fetchone()
+
+        if not disponivel["disponivel"]:
+            raise HTTPException(
+                status_code=409,
+                detail="Esta vaga não está disponível."
+            )
+
+        # 5. Impede candidatura duplicada.
+        cursor.execute(
+            """
+            SELECT id_candidatura
+            FROM candidaturas
+            WHERE id_candidato = %s
+              AND id_vaga = %s
+            """,
+            (id_candidato, dados.id_vaga)
+        )
+
+        existente = cursor.fetchone()
+
+        if existente:
+            raise HTTPException(
+                status_code=409,
+                detail="Você já se candidatou a esta vaga."
+            )
+
+        # 6. Registra a candidatura.
+        cursor.execute(
+            """
+            INSERT INTO candidaturas (
+                id_candidato,
+                id_vaga,
+                status
+            )
+            VALUES (%s, %s, 'Pendente')
+            """,
+            (id_candidato, dados.id_vaga)
+        )
+
+        id_candidatura = cursor.lastrowid
+
+        conexao.commit()
+
+        return {
+            "mensagem": "Candidatura realizada com sucesso!",
+            "id_candidatura": id_candidatura,
+            "id_vaga": dados.id_vaga,
+            "vaga_titulo": vaga["titulo"],
+            "status": "Pendente"
+        }
+
+    except HTTPException:
+        if conexao is not None:
+            conexao.rollback()
+        raise
+
+    except (ValueError, TypeError, KeyError):
+        if conexao is not None:
+            conexao.rollback()
+
+        raise HTTPException(
+            status_code=401,
+            detail="Identificação de usuário inválida."
+        )
+
+    except IntegrityError as erro:
+        if conexao is not None:
+            conexao.rollback()
+
+        raise HTTPException(
+            status_code=409,
+            detail="Não foi possível registrar a candidatura por conflito de dados."
+        ) from erro
+
+    except (Error, RuntimeError) as erro:
+        if conexao is not None:
+            conexao.rollback()
+
+        raise HTTPException(
+            status_code=503,
+            detail="Não foi possível registrar a candidatura."
         ) from erro
 
     finally:
