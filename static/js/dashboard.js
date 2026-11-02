@@ -136,7 +136,7 @@ const API = {
 };
 
 // Ainda não temos a API POST para candidaturas.
-const CANDIDATURAS_HABILITADAS = false;
+const CANDIDATURAS_HABILITADAS = true;
 
 // ============================================================
 // ESTADO DA APLICAÇÃO
@@ -1766,8 +1766,7 @@ function initCandidaturaModal() {
       await apiFetch(
         API.candidatar,
         {
-          vaga_id: _pendingVagaId,
-          mensagem: mensagem || null
+          id_vaga: _pendingVagaId,
         },
         'POST'
       );
