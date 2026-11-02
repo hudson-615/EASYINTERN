@@ -989,10 +989,7 @@ async function loadCandidatoStats() {
       stats.total_candidaturas
     );
 
-    setText(
-      'stat-taxa-match',
-      `${stats.taxa_match ?? 0}%`
-    );
+    setText('stat-taxa-match', '—');
 
     setText(
       'header-nivel',
@@ -1137,6 +1134,7 @@ async function loadCandidaturas() {
       const media = soma / avaliadas.length;
 
       animateDonut(media);
+      setText('stat-taxa-match', `${Math.round(media)}%`);
 
       if (dica) {
         dica.textContent =
@@ -1144,6 +1142,7 @@ async function loadCandidaturas() {
       }
     } else {
       animateDonut(null);
+      setText('stat-taxa-match', '—');
 
       if (dica) {
         dica.textContent =
