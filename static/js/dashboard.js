@@ -135,7 +135,7 @@ const API = {
     `/dashboard/api/empresa/candidaturas/${id}/status`
 };
 
-// Ainda não temos a API POST para candidaturas.
+// API POST de candidaturas implementada e habilitada.
 const CANDIDATURAS_HABILITADAS = true;
 
 // ============================================================
@@ -1756,10 +1756,6 @@ function initCandidaturaModal() {
     if (!_pendingVagaId) return;
 
     confirmar.disabled = true;
-
-    const mensagem = document
-      .getElementById('cand-mensagem')
-      ?.value?.trim();
 
     try {
       await apiFetch(
