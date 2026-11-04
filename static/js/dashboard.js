@@ -135,8 +135,8 @@ const API = {
     `/dashboard/api/empresa/candidaturas/${id}/status`
 };
 
-// Ainda não temos a API POST para candidaturas.
-const CANDIDATURAS_HABILITADAS = false;
+// API POST de candidaturas implementada e habilitada.
+const CANDIDATURAS_HABILITADAS = true;
 
 // ============================================================
 // ESTADO DA APLICAÇÃO
@@ -989,10 +989,7 @@ async function loadCandidatoStats() {
       stats.total_candidaturas
     );
 
-    setText(
-      'stat-taxa-match',
-      `${stats.taxa_match ?? 0}%`
-    );
+    setText('stat-taxa-match', '—');
 
     setText(
       'header-nivel',
@@ -1137,6 +1134,7 @@ async function loadCandidaturas() {
       const media = soma / avaliadas.length;
 
       animateDonut(media);
+      setText('stat-taxa-match', `${Math.round(media)}%`);
 
       if (dica) {
         dica.textContent =
@@ -1144,6 +1142,7 @@ async function loadCandidaturas() {
       }
     } else {
       animateDonut(null);
+      setText('stat-taxa-match', '—');
 
       if (dica) {
         dica.textContent =
@@ -1758,16 +1757,11 @@ function initCandidaturaModal() {
 
     confirmar.disabled = true;
 
-    const mensagem = document
-      .getElementById('cand-mensagem')
-      ?.value?.trim();
-
     try {
       await apiFetch(
         API.candidatar,
         {
-          vaga_id: _pendingVagaId,
-          mensagem: mensagem || null
+          id_vaga: _pendingVagaId,
         },
         'POST'
       );
