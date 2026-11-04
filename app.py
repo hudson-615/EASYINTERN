@@ -69,6 +69,14 @@ def pagina_dashboard_candidato(request: Request):
     )
 
 
+@app.get("/dashboard/empresa", response_class=HTMLResponse)
+def pagina_dashboard_empresa(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="recrutador_painel.html"
+    )
+
+
 @app.get("/teste-banco")
 def teste_banco():
     conexao = conectar()
