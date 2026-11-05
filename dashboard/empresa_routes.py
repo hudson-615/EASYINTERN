@@ -593,3 +593,408 @@ def publicar_vaga_empresa(
 
         if conexao is not None:
             conexao.close()
+
+# ============================================================
+# CONSULTAR DETALHES DE UMA VAGA DA EMPRESA
+# GET /dashboard/api/empresa/vagas/{id_vaga}
+# ============================================================
+
+@router.get("/vagas/{id_vaga}")
+def detalhes_vaga_empresa(
+    id_vaga: int,
+    token: dict = Depends(obter_usuario_autenticado)
+):
+    conexao = None
+    cursor = None
+
+    try:
+        try:
+            id_usuario = int(token["sub"])
+        except (ValueError, TypeError, KeyError) as erro:
+            raise HTTPException(
+                status_code=401,
+                detail="Identificação de usuário inválida."
+            ) from erro
+
+        conexao = conectar()
+        cursor = conexao.cursor(dictionary=True)
+
+        # Identifica a empresa autenticada.
+        cursor.execute(
+            """
+            SELECT
+                u.tipo_usuario,
+                u.ativo,
+                u.deletado_em,
+                e.id_empresa
+            FROM usuarios AS u
+            LEFT JOIN empresas AS e
+                ON e.id_usuario = u.id_usuario
+            WHERE u.id_usuario = %s
+            """,
+            (id_usuario,)
+        )
+
+        empresa = cursor.fetchone()
+
+        if (
+            not empresa
+            or not empresa["ativo"]
+            or empresa["deletado_em"] is not None
+        ):
+            raise HTTPException(
+                status_code=401,
+                detail="Conta inexistente ou indisponível."
+            )
+
+        if empresa["tipo_usuario"] != "Empresa":
+            raise HTTPException(
+                status_code=403,
+                detail="Acesso permitido apenas para empresas."
+            )
+
+        if empresa["id_empresa"] is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Perfil empresarial não encontrado."
+            )
+
+        # Só busca vagas pertencentes à empresa autenticada.
+        cursor.execute(
+            """
+            SELECT
+                id_vaga,
+                titulo,
+                descricao,
+                beneficios,
+                nivel,
+                modalidade,
+                cidade,
+                uf,
+                bolsa,
+                prazo_encerramento,
+                status
+            FROM vagas
+            WHERE id_vaga = %s
+              AND id_empresa = %s
+            """,
+            (id_vaga, empresa["id_empresa"])
+        )
+
+        vaga = cursor.fetchone()
+
+        if not vaga:
+            raise HTTPException(
+                status_code=404,
+                detail="Vaga não encontrada."
+            )
+
+        cursor.execute(
+            """
+            SELECT t.nome
+            FROM vaga_tags AS vt
+            JOIN tags_conhecimento AS t
+                ON t.id_tag = vt.id_tag
+            WHERE vt.id_vaga = %s
+            ORDER BY t.nome
+            """,
+            (id_vaga,)
+        )
+
+        tags = [item["nome"] for item in cursor.fetchall()]
+
+        descricao = vaga["descricao"] or ""
+        requisitos = ""
+
+        separador = "\n\nRequisitos / Habilidades:\n"
+
+        if separador in descricao:
+            descricao, _, requisitos = descricao.rpartition(
+                separador
+            )
+
+        return {
+            "id": vaga["id_vaga"],
+            "titulo": vaga["titulo"],
+            "descricao": descricao,
+            "requisitos": requisitos,
+            "beneficios": vaga["beneficios"],
+            "nivel": (vaga["nivel"] or "").lower(),
+            "modalidade": vaga["modalidade"],
+            "cidade": vaga["cidade"],
+            "estado": vaga["uf"],
+            "salario_min": (
+                float(vaga["bolsa"])
+                if vaga["bolsa"] is not None
+                else None
+            ),
+            "prazo_encerramento": (
+                vaga["prazo_encerramento"].isoformat()
+                if vaga["prazo_encerramento"]
+                else None
+            ),
+            "status": vaga["status"],
+            "tags": ", ".join(tags)
+        }
+
+    except HTTPException:
+        raise
+
+    except (Error, RuntimeError) as erro:
+        raise HTTPException(
+            status_code=503,
+            detail="Não foi possível consultar a vaga."
+        ) from erro
+
+    finally:
+        if cursor is not None:
+            cursor.close()
+
+        if conexao is not None:
+            conexao.close()
+
+# ============================================================
+# EDITAR VAGA DA EMPRESA
+# PATCH /dashboard/api/empresa/vagas/{id_vaga}
+# ============================================================
+
+@router.patch("/vagas/{id_vaga}")
+def editar_vaga_empresa(
+    id_vaga: int,
+    dados: NovaVaga,
+    token: dict = Depends(obter_usuario_autenticado)
+):
+    conexao = None
+    cursor = None
+
+    try:
+        try:
+            id_usuario = int(token["sub"])
+        except (ValueError, TypeError, KeyError) as erro:
+            raise HTTPException(
+                status_code=401,
+                detail="Identificação de usuário inválida."
+            ) from erro
+
+        if id_vaga <= 0:
+            raise HTTPException(
+                status_code=404,
+                detail="Vaga não encontrada."
+            )
+
+        # Prepara e valida as tags antes da transação.
+        tags = []
+        nomes_encontrados = set()
+
+        if dados.tags:
+            for nome in dados.tags.split(","):
+                nome = nome.strip()
+
+                if not nome:
+                    continue
+
+                if len(nome) > 50:
+                    raise HTTPException(
+                        status_code=422,
+                        detail="Cada habilidade deve ter no máximo 50 caracteres."
+                    )
+
+                chave = nome.casefold()
+
+                if chave not in nomes_encontrados:
+                    nomes_encontrados.add(chave)
+                    tags.append(nome)
+
+        if len(tags) > 20:
+            raise HTTPException(
+                status_code=422,
+                detail="Informe no máximo 20 habilidades."
+            )
+
+        titulo = dados.titulo.strip()
+        descricao = dados.descricao.strip()
+
+        if len(titulo) < 3 or len(descricao) < 10:
+            raise HTTPException(
+                status_code=422,
+                detail="Título ou descrição muito curtos."
+            )
+
+        # Preserva os requisitos dentro da descrição.
+        if dados.requisitos and dados.requisitos.strip():
+            descricao += (
+                "\n\nRequisitos / Habilidades:\n"
+                + dados.requisitos.strip()
+            )
+
+        cidade = dados.cidade.strip() if dados.cidade else None
+        estado = dados.estado.strip().upper() if dados.estado else None
+
+        if estado and len(estado) != 2:
+            raise HTTPException(
+                status_code=422,
+                detail="A UF deve conter 2 caracteres."
+            )
+
+        modalidades = {
+            "presencial": "Presencial",
+            "remoto": "Remoto",
+            "hibrido": "Híbrido"
+        }
+
+        conexao = conectar()
+        conexao.start_transaction()
+        cursor = conexao.cursor(dictionary=True)
+
+        # Identifica a empresa autenticada.
+        cursor.execute(
+            """
+            SELECT
+                u.tipo_usuario,
+                u.ativo,
+                u.deletado_em,
+                e.id_empresa
+            FROM usuarios AS u
+            LEFT JOIN empresas AS e
+                ON e.id_usuario = u.id_usuario
+            WHERE u.id_usuario = %s
+            """,
+            (id_usuario,)
+        )
+
+        empresa = cursor.fetchone()
+
+        if (
+            not empresa
+            or not empresa["ativo"]
+            or empresa["deletado_em"] is not None
+        ):
+            raise HTTPException(
+                status_code=401,
+                detail="Conta inexistente ou indisponível."
+            )
+
+        if empresa["tipo_usuario"] != "Empresa":
+            raise HTTPException(
+                status_code=403,
+                detail="Acesso permitido apenas para empresas."
+            )
+
+        if empresa["id_empresa"] is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Perfil empresarial não encontrado."
+            )
+
+        # Bloqueia a vaga e verifica sua propriedade.
+        cursor.execute(
+            """
+            SELECT id_vaga
+            FROM vagas
+            WHERE id_vaga = %s
+              AND id_empresa = %s
+            FOR UPDATE
+            """,
+            (id_vaga, empresa["id_empresa"])
+        )
+
+        if not cursor.fetchone():
+            raise HTTPException(
+                status_code=404,
+                detail="Vaga não encontrada."
+            )
+
+        # Atualiza apenas os campos permitidos.
+        # O status da vaga permanece inalterado.
+        cursor.execute(
+            """
+            UPDATE vagas
+            SET
+                titulo = %s,
+                nivel = %s,
+                descricao = %s,
+                beneficios = %s,
+                modalidade = %s,
+                cidade = %s,
+                uf = %s,
+                bolsa = %s,
+                prazo_encerramento = %s
+            WHERE id_vaga = %s
+              AND id_empresa = %s
+            """,
+            (
+                titulo,
+                dados.nivel,
+                descricao,
+                dados.beneficios,
+                modalidades[dados.modalidade],
+                cidade,
+                estado,
+                dados.salario_min,
+                dados.prazo_encerramento,
+                id_vaga,
+                empresa["id_empresa"]
+            )
+        )
+
+        # Substitui apenas as associações de tags da vaga.
+        cursor.execute(
+            """
+            DELETE FROM vaga_tags
+            WHERE id_vaga = %s
+            """,
+            (id_vaga,)
+        )
+
+        for nome in tags:
+            cursor.execute(
+                """
+                INSERT INTO tags_conhecimento (
+                    nome, categoria
+                )
+                VALUES (%s, 'Hard Skill')
+                ON DUPLICATE KEY UPDATE
+                    id_tag = LAST_INSERT_ID(id_tag)
+                """,
+                (nome,)
+            )
+
+            id_tag = cursor.lastrowid
+
+            cursor.execute(
+                """
+                INSERT INTO vaga_tags (
+                    id_vaga, id_tag, obrigatorio, peso
+                )
+                VALUES (%s, %s, 0, 1)
+                """,
+                (id_vaga, id_tag)
+            )
+
+        conexao.commit()
+
+        return {
+            "mensagem": "Vaga atualizada com sucesso!",
+            "id_vaga": id_vaga
+        }
+
+    except HTTPException:
+        if conexao is not None:
+            conexao.rollback()
+        raise
+
+    except (Error, RuntimeError) as erro:
+        if conexao is not None:
+            conexao.rollback()
+
+        raise HTTPException(
+            status_code=503,
+            detail="Não foi possível atualizar a vaga."
+        ) from erro
+
+    finally:
+        if cursor is not None:
+            cursor.close()
+
+        if conexao is not None:
+            conexao.close()

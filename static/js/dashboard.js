@@ -799,10 +799,17 @@ function initNavigation() {
   document
     .querySelectorAll('.nav-item[data-section]')
     .forEach(item => {
-      item.addEventListener('click', evento => {
-        evento.preventDefault();
-        navigateTo(item.dataset.section);
-      });
+
+item.addEventListener('click', evento => {
+  evento.preventDefault();
+
+  if (item.dataset.section === 'nova-vaga') {
+    prepararNovaVaga();
+  }
+
+  navigateTo(item.dataset.section);
+});
+
     });
 
   document
@@ -824,17 +831,20 @@ function initNavigation() {
       navigateTo('perfil');
     });
 
-  [
-    'btn-nova-vaga-header',
-    'btn-nova-vaga-card',
-    'btn-nova-vaga-section'
-  ].forEach(id => {
-    document
-      .getElementById(id)
-      ?.addEventListener('click', () => {
-        navigateTo('nova-vaga');
-      });
-  });
+
+[
+  'btn-nova-vaga-header',
+  'btn-nova-vaga-card',
+  'btn-nova-vaga-section'
+].forEach(id => {
+  document
+    .getElementById(id)
+    ?.addEventListener('click', () => {
+      prepararNovaVaga();
+      navigateTo('nova-vaga');
+    });
+});
+
 }
 
 // ============================================================
@@ -1919,19 +1929,41 @@ function renderVagasEmpresaTable(vagas) {
               ${Number(vaga.total_candidatos) || 0}
             </td>
 
-            <td>
-              <button
-                class="btn btn-primary btn-sm"
-                data-abrir-ranking="${Number(vaga.id)}"
-              >
-                Ver Ranking
-              </button>
-            </td>
+
+<td>
+  <button
+    type="button"
+    class="btn btn-secondary btn-sm"
+    data-editar-vaga="${Number(vaga.id)}"
+  >
+    <i class="bi bi-pencil-square"></i>
+    Editar
+  </button>
+
+  <button
+    type="button"
+    class="btn btn-primary btn-sm"
+    data-abrir-ranking="${Number(vaga.id)}"
+  >
+    Ver Ranking
+  </button>
+</td>
+
           </tr>
         `).join('')}
       </tbody>
     </table>
   `;
+
+container
+  .querySelectorAll('[data-editar-vaga]')
+  .forEach(botao => {
+    botao.addEventListener('click', () => {
+      const id = Number(botao.dataset.editarVaga);
+      abrirEdicaoVaga(id);
+    });
+  });
+
 
   container
     .querySelectorAll('[data-abrir-ranking]')
@@ -2005,8 +2037,19 @@ function renderVagasEmpresaGrid(filtro = 'todas') {
         </span>
       </div>
 
+
       <div class="vaga-card-footer">
         <button
+          type="button"
+          class="btn btn-secondary btn-sm"
+          data-editar-vaga="${Number(vaga.id)}"
+        >
+          <i class="bi bi-pencil-square"></i>
+          Editar
+        </button>
+
+        <button
+          type="button"
           class="btn btn-primary btn-sm"
           data-ranking="${Number(vaga.id)}"
         >
@@ -2015,8 +2058,19 @@ function renderVagasEmpresaGrid(filtro = 'todas') {
         </button>
       </div>
 
+
     </div>
   `).join('');
+
+  grid
+    .querySelectorAll('[data-editar-vaga]')
+    .forEach(botao => {
+      botao.addEventListener('click', () => {
+        const id = Number(botao.dataset.editarVaga);
+        abrirEdicaoVaga(id);
+      });
+    });
+
 
   grid
     .querySelectorAll('[data-ranking]')
@@ -2327,6 +2381,105 @@ function initCandidatoModal() {
 // ============================================================
 // CRIAÇÃO DE VAGAS — EMPRESA
 // ============================================================
+let vagaEmEdicaoId = null;
+
+function prepararNovaVaga() {
+  vagaEmEdicaoId = null;
+
+  const formulario = document.getElementById(
+    'form-nova-vaga'
+  );
+
+  formulario?.reset();
+
+  const titulo = document.querySelector(
+    '#section-nova-vaga .card-header h3'
+  );
+
+  if (titulo) {
+    titulo.textContent = 'Publicar Nova Vaga';
+  }
+
+  const botao = document.getElementById(
+    'btn-publicar-vaga'
+  );
+
+  if (botao) {
+    botao.innerHTML =
+      '<i class="bi bi-send-fill"></i> Publicar Vaga';
+    botao.disabled = false;
+  }
+
+  const feedback = document.getElementById(
+    'form-vaga-feedback'
+  );
+
+  if (feedback) feedback.hidden = true;
+}
+
+async function abrirEdicaoVaga(id) {
+  try {
+    const vaga = await apiFetch(
+      `/dashboard/api/empresa/vagas/${id}`
+    );
+
+    const preencher = (campo, valor) => {
+      const elemento = document.getElementById(campo);
+      if (elemento) elemento.value = valor ?? '';
+    };
+
+    preencher('vaga-titulo', vaga.titulo);
+    preencher('vaga-descricao', vaga.descricao);
+    preencher('vaga-requisitos', vaga.requisitos);
+    preencher('vaga-beneficios', vaga.beneficios);
+    preencher('vaga-tags', vaga.tags);
+    preencher('vaga-nivel', vaga.nivel);
+
+    preencher(
+      'vaga-modalidade',
+      (vaga.modalidade || '').toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+    );
+
+    preencher('vaga-cidade', vaga.cidade);
+    preencher('vaga-estado', vaga.estado);
+    preencher('vaga-salario-min', vaga.salario_min);
+    preencher('vaga-prazo', vaga.prazo_encerramento);
+
+    vagaEmEdicaoId = id;
+
+    const titulo = document.querySelector(
+      '#section-nova-vaga .card-header h3'
+    );
+
+    if (titulo) {
+      titulo.textContent = 'Editar Vaga';
+    }
+
+    const botao = document.getElementById(
+      'btn-publicar-vaga'
+    );
+
+    if (botao) {
+      botao.textContent = 'Salvar Alterações';
+    }
+
+    const feedback = document.getElementById(
+      'form-vaga-feedback'
+    );
+
+    if (feedback) feedback.hidden = true;
+
+    navigateTo('nova-vaga');
+
+  } catch (erro) {
+    showToast(
+      erro.message || 'Não foi possível carregar a vaga.',
+      'error'
+    );
+  }
+}
 
 function initFormNovaVaga() {
   const formulario = document.getElementById(
@@ -2337,11 +2490,35 @@ function initFormNovaVaga() {
     'form-vaga-feedback'
   );
 
+
   document
     .getElementById('btn-cancelar-vaga')
     ?.addEventListener('click', () => {
+      vagaEmEdicaoId = null;
+      formulario?.reset();
+
+      const titulo = document.querySelector(
+        '#section-nova-vaga .card-header h3'
+      );
+
+      if (titulo) {
+        titulo.textContent = 'Publicar Nova Vaga';
+      }
+
+      const botao = document.getElementById(
+        'btn-publicar-vaga'
+      );
+
+      if (botao) {
+        botao.innerHTML =
+          '<i class="bi bi-send-fill"></i> Publicar Vaga';
+      }
+
+      if (feedback) feedback.hidden = true;
+
       navigateTo('vagas');
     });
+
 
   formulario?.addEventListener('submit', async evento => {
     evento.preventDefault();
@@ -2394,19 +2571,27 @@ function initFormNovaVaga() {
         bolsa ? Number(bolsa) : null
     };
 
+
     try {
-      await apiFetch(
-        API.criar_vaga,
-        dados,
-        'POST'
-      );
+      const editando = vagaEmEdicaoId !== null;
+
+      const endpoint = editando
+        ? `/dashboard/api/empresa/vagas/${vagaEmEdicaoId}`
+        : API.criar_vaga;
+
+      const metodo = editando ? 'PATCH' : 'POST';
+
+      await apiFetch(endpoint, dados, metodo);
 
       showToast(
-        'Vaga publicada com sucesso!',
+        editando
+          ? 'Vaga atualizada com sucesso!'
+          : 'Vaga publicada com sucesso!',
         'success'
       );
 
-      formulario.reset();
+
+      prepararNovaVaga();
 
       await loadEmpresaStats();
       await loadEmpresaVagas();
