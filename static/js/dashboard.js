@@ -1899,13 +1899,21 @@ function renderVagasEmpresaTable(vagas) {
               ${modalidadePill(vaga.modalidade)}
             </td>
 
+
             <td>
-              ${statusBadge(
+              ${escHtml(
                 vaga.status === 'aberta'
-                  ? 'aprovado'
-                  : 'reprovado'
+                  ? 'Aberta'
+                  : vaga.status === 'encerrada'
+                    ? 'Encerrada'
+                    : vaga.status === 'pausada'
+                      ? 'Pausada'
+                      : vaga.status === 'cancelada'
+                        ? 'Cancelada'
+                        : 'Desconhecido'
               )}
             </td>
+
 
             <td>
               ${Number(vaga.total_candidatos) || 0}
@@ -2349,9 +2357,30 @@ function initFormNovaVaga() {
       document.getElementById(id)?.value?.trim() || '';
 
     const bolsa = valor('vaga-salario-min');
+    const prazo = valor('vaga-prazo');
+    const agora = new Date();
+    const hoje = [
+      agora.getFullYear(),
+      String(agora.getMonth() + 1).padStart(2, '0'),
+      String(agora.getDate()).padStart(2, '0')
+    ].join('-');
+
+    if (!prazo || prazo < hoje) {
+      if (feedback) {
+        feedback.hidden = false;
+        feedback.className = 'form-feedback error';
+        feedback.textContent =
+          'Selecione uma data de encerramento válida.';
+      }
+
+      if (botao) botao.disabled = false;
+      return;
+    }
+
 
     const dados = {
       titulo: valor('vaga-titulo'),
+      prazo_encerramento: prazo,
       descricao: valor('vaga-descricao'),
       requisitos: valor('vaga-requisitos') || null,
       beneficios: valor('vaga-beneficios') || null,
@@ -2384,18 +2413,32 @@ function initFormNovaVaga() {
 
       navigateTo('vagas');
 
+
     } catch (erro) {
+      let mensagem = erro.message;
+
+      if (erro.status === 422) {
+        mensagem = mensagem
+          .replaceAll(
+            'String should have at least 3 characters',
+            'O título deve ter pelo menos 3 caracteres.'
+          )
+          .replaceAll(
+            'String should have at least 10 characters',
+            'A descrição deve ter pelo menos 10 caracteres.'
+          );
+      }
+
       if (feedback) {
         feedback.hidden = false;
         feedback.className = 'form-feedback error';
-        feedback.textContent = erro.message;
+        feedback.textContent = mensagem;
       }
     } finally {
       if (botao) botao.disabled = false;
     }
   });
 }
-
 async function fecharVaga(vagaId) {
   if (!confirm(
     'Tem certeza que deseja encerrar esta vaga?'
