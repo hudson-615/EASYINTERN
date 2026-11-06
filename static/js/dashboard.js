@@ -1943,6 +1943,28 @@ function renderVagasEmpresaTable(vagas) {
   ${vaga.status === 'aberta' ? `
     <button
       type="button"
+      class="btn btn-secondary btn-sm"
+      data-pausar-vaga="${Number(vaga.id)}"
+    >
+      <i class="bi bi-pause-circle"></i>
+      Pausar
+    </button>
+  ` : ''}
+
+  ${vaga.status === 'pausada' ? `
+    <button
+      type="button"
+      class="btn btn-primary btn-sm"
+      data-reabrir-vaga="${Number(vaga.id)}"
+    >
+      <i class="bi bi-arrow-clockwise"></i>
+      Reabrir
+    </button>
+  ` : ''}
+
+  ${vaga.status === 'aberta' ? `
+    <button
+      type="button"
       class="btn btn-danger btn-sm"
       data-encerrar-vaga="${Number(vaga.id)}"
     >
@@ -1974,6 +1996,47 @@ container
       abrirEdicaoVaga(id);
     });
   });
+
+
+  container
+    .querySelectorAll('[data-pausar-vaga]')
+    .forEach(botao => {
+      botao.addEventListener('click', async () => {
+        const id = Number(botao.dataset.pausarVaga);
+
+        if (!Number.isInteger(id) || id <= 0) return;
+
+        botao.disabled = true;
+
+        try {
+          await pausarVaga(id);
+        } finally {
+          if (botao.isConnected) {
+            botao.disabled = false;
+          }
+        }
+      });
+    });
+
+  container
+    .querySelectorAll('[data-reabrir-vaga]')
+    .forEach(botao => {
+      botao.addEventListener('click', async () => {
+        const id = Number(botao.dataset.reabrirVaga);
+
+        if (!Number.isInteger(id) || id <= 0) return;
+
+        botao.disabled = true;
+
+        try {
+          await reabrirVaga(id);
+        } finally {
+          if (botao.isConnected) {
+            botao.disabled = false;
+          }
+        }
+      });
+    });
 
 
   container
@@ -2083,6 +2146,28 @@ function renderVagasEmpresaGrid(filtro = 'todas') {
         ${vaga.status === 'aberta' ? `
           <button
             type="button"
+            class="btn btn-secondary btn-sm"
+            data-pausar-vaga="${Number(vaga.id)}"
+          >
+            <i class="bi bi-pause-circle"></i>
+            Pausar
+          </button>
+        ` : ''}
+
+        ${vaga.status === 'pausada' ? `
+          <button
+            type="button"
+            class="btn btn-primary btn-sm"
+            data-reabrir-vaga="${Number(vaga.id)}"
+          >
+            <i class="bi bi-arrow-clockwise"></i>
+            Reabrir
+          </button>
+        ` : ''}
+
+        ${vaga.status === 'aberta' ? `
+          <button
+            type="button"
             class="btn btn-danger btn-sm"
             data-encerrar-vaga="${Number(vaga.id)}"
           >
@@ -2111,6 +2196,47 @@ function renderVagasEmpresaGrid(filtro = 'todas') {
       botao.addEventListener('click', () => {
         const id = Number(botao.dataset.editarVaga);
         abrirEdicaoVaga(id);
+      });
+    });
+
+
+  grid
+    .querySelectorAll('[data-pausar-vaga]')
+    .forEach(botao => {
+      botao.addEventListener('click', async () => {
+        const id = Number(botao.dataset.pausarVaga);
+
+        if (!Number.isInteger(id) || id <= 0) return;
+
+        botao.disabled = true;
+
+        try {
+          await pausarVaga(id);
+        } finally {
+          if (botao.isConnected) {
+            botao.disabled = false;
+          }
+        }
+      });
+    });
+
+  grid
+    .querySelectorAll('[data-reabrir-vaga]')
+    .forEach(botao => {
+      botao.addEventListener('click', async () => {
+        const id = Number(botao.dataset.reabrirVaga);
+
+        if (!Number.isInteger(id) || id <= 0) return;
+
+        botao.disabled = true;
+
+        try {
+          await reabrirVaga(id);
+        } finally {
+          if (botao.isConnected) {
+            botao.disabled = false;
+          }
+        }
       });
     });
 
@@ -2688,6 +2814,55 @@ function initFormNovaVaga() {
     }
   });
 }
+
+async function pausarVaga(vagaId) {
+  if (!confirm(
+    'Deseja pausar esta vaga? Ela deixará de receber novas candidaturas.'
+  )) {
+    return;
+  }
+
+  try {
+    await apiFetch(
+      `/dashboard/api/empresa/vagas/${vagaId}/pausar`,
+      null,
+      'PATCH'
+    );
+
+    showToast('Vaga pausada com sucesso!', 'success');
+
+    await loadEmpresaStats();
+    await loadEmpresaVagas();
+
+  } catch (erro) {
+    showToast(erro.message, 'error');
+  }
+}
+
+async function reabrirVaga(vagaId) {
+  if (!confirm(
+    'Deseja reabrir esta vaga? Ela poderá receber novas candidaturas.'
+  )) {
+    return;
+  }
+
+  try {
+    await apiFetch(
+      `/dashboard/api/empresa/vagas/${vagaId}/reabrir`,
+      null,
+      'PATCH'
+    );
+
+    showToast('Vaga reaberta com sucesso!', 'success');
+
+    await loadEmpresaStats();
+    await loadEmpresaVagas();
+
+  } catch (erro) {
+    showToast(erro.message, 'error');
+  }
+}
+
 async function fecharVaga(vagaId) {
   if (!confirm(
     'Deseja encerrar esta vaga? Ela deixará de receber novas candidaturas, mas o histórico será preservado.'
