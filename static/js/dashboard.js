@@ -1940,6 +1940,17 @@ function renderVagasEmpresaTable(vagas) {
     Editar
   </button>
 
+  ${vaga.status === 'aberta' ? `
+    <button
+      type="button"
+      class="btn btn-danger btn-sm"
+      data-encerrar-vaga="${Number(vaga.id)}"
+    >
+      <i class="bi bi-x-circle"></i>
+      Encerrar
+    </button>
+  ` : ''}
+
   <button
     type="button"
     class="btn btn-primary btn-sm"
@@ -1963,6 +1974,27 @@ container
       abrirEdicaoVaga(id);
     });
   });
+
+
+  container
+    .querySelectorAll('[data-encerrar-vaga]')
+    .forEach(botao => {
+      botao.addEventListener('click', async () => {
+        const id = Number(botao.dataset.encerrarVaga);
+
+        if (!Number.isInteger(id) || id <= 0) return;
+
+        botao.disabled = true;
+
+        try {
+          await fecharVaga(id);
+        } finally {
+          if (botao.isConnected) {
+            botao.disabled = false;
+          }
+        }
+      });
+    });
 
 
   container
@@ -2048,6 +2080,17 @@ function renderVagasEmpresaGrid(filtro = 'todas') {
           Editar
         </button>
 
+        ${vaga.status === 'aberta' ? `
+          <button
+            type="button"
+            class="btn btn-danger btn-sm"
+            data-encerrar-vaga="${Number(vaga.id)}"
+          >
+            <i class="bi bi-x-circle"></i>
+            Encerrar
+          </button>
+        ` : ''}
+
         <button
           type="button"
           class="btn btn-primary btn-sm"
@@ -2068,6 +2111,27 @@ function renderVagasEmpresaGrid(filtro = 'todas') {
       botao.addEventListener('click', () => {
         const id = Number(botao.dataset.editarVaga);
         abrirEdicaoVaga(id);
+      });
+    });
+
+
+  grid
+    .querySelectorAll('[data-encerrar-vaga]')
+    .forEach(botao => {
+      botao.addEventListener('click', async () => {
+        const id = Number(botao.dataset.encerrarVaga);
+
+        if (!Number.isInteger(id) || id <= 0) return;
+
+        botao.disabled = true;
+
+        try {
+          await fecharVaga(id);
+        } finally {
+          if (botao.isConnected) {
+            botao.disabled = false;
+          }
+        }
       });
     });
 
@@ -2626,16 +2690,16 @@ function initFormNovaVaga() {
 }
 async function fecharVaga(vagaId) {
   if (!confirm(
-    'Tem certeza que deseja encerrar esta vaga?'
+    'Deseja encerrar esta vaga? Ela deixará de receber novas candidaturas, mas o histórico será preservado.'
   )) {
     return;
   }
 
   try {
     await apiFetch(
-      API.fechar_vaga(vagaId),
+      `/dashboard/api/empresa/vagas/${vagaId}/encerrar`,
       null,
-      'DELETE'
+      'PATCH'
     );
 
     showToast('Vaga encerrada.', 'success');

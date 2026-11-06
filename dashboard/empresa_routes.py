@@ -998,3 +998,153 @@ def editar_vaga_empresa(
 
         if conexao is not None:
             conexao.close()
+
+# ============================================================
+# PATCH /dashboard/api/empresa/vagas/{id_vaga}/encerrar
+# ============================================================
+
+@router.patch("/vagas/{id_vaga}/encerrar")
+def encerrar_vaga_empresa(
+    id_vaga: int,
+    token: dict = Depends(obter_usuario_autenticado)
+):
+    conexao = None
+    cursor = None
+
+    try:
+        try:
+            id_usuario = int(token["sub"])
+        except (ValueError, TypeError, KeyError) as erro:
+            raise HTTPException(
+                status_code=401,
+                detail="Identificação de usuário inválida."
+            ) from erro
+
+        if id_vaga <= 0:
+            raise HTTPException(
+                status_code=404,
+                detail="Vaga não encontrada."
+            )
+
+        conexao = conectar()
+        conexao.start_transaction()
+        cursor = conexao.cursor(dictionary=True)
+
+        # Verifica se o usuário possui uma empresa ativa.
+        cursor.execute(
+            """
+            SELECT
+                u.tipo_usuario,
+                u.ativo,
+                u.deletado_em,
+                e.id_empresa
+            FROM usuarios AS u
+            LEFT JOIN empresas AS e
+                ON e.id_usuario = u.id_usuario
+            WHERE u.id_usuario = %s
+            """,
+            (id_usuario,)
+        )
+
+        empresa = cursor.fetchone()
+
+        if (
+            not empresa
+            or not empresa["ativo"]
+            or empresa["deletado_em"] is not None
+        ):
+            raise HTTPException(
+                status_code=401,
+                detail="Conta inexistente ou indisponível."
+            )
+
+        if empresa["tipo_usuario"] != "Empresa":
+            raise HTTPException(
+                status_code=403,
+                detail="Acesso permitido apenas para empresas."
+            )
+
+        if empresa["id_empresa"] is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Perfil empresarial não encontrado."
+            )
+
+        # Bloqueia o registro e verifica a propriedade da vaga.
+        cursor.execute(
+            """
+            SELECT id_vaga, status
+            FROM vagas
+            WHERE id_vaga = %s
+              AND id_empresa = %s
+            FOR UPDATE
+            """,
+            (id_vaga, empresa["id_empresa"])
+        )
+
+        vaga = cursor.fetchone()
+
+        if not vaga:
+            raise HTTPException(
+                status_code=404,
+                detail="Vaga não encontrada."
+            )
+
+        if vaga["status"] == "Encerrada":
+            raise HTTPException(
+                status_code=409,
+                detail="Esta vaga já está encerrada."
+            )
+
+        if vaga["status"] != "Aberta":
+            raise HTTPException(
+                status_code=409,
+                detail="Somente vagas abertas podem ser encerradas."
+            )
+
+        # Encerramento lógico: não exclui a vaga.
+        cursor.execute(
+            """
+            UPDATE vagas
+            SET status = 'Encerrada'
+            WHERE id_vaga = %s
+              AND id_empresa = %s
+              AND status = 'Aberta'
+            """,
+            (id_vaga, empresa["id_empresa"])
+        )
+
+        if cursor.rowcount != 1:
+            raise HTTPException(
+                status_code=409,
+                detail="Não foi possível encerrar a vaga."
+            )
+
+        conexao.commit()
+
+        return {
+            "mensagem": "Vaga encerrada com sucesso!",
+            "id_vaga": id_vaga,
+            "status": "Encerrada"
+        }
+
+    except HTTPException:
+        if conexao is not None:
+            conexao.rollback()
+        raise
+
+    except (Error, RuntimeError) as erro:
+        if conexao is not None:
+            conexao.rollback()
+
+        raise HTTPException(
+            status_code=503,
+            detail="Não foi possível encerrar a vaga."
+        ) from erro
+
+    finally:
+        if cursor is not None:
+            cursor.close()
+
+        if conexao is not None:
+            conexao.close()
