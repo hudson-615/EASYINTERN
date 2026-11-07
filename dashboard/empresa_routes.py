@@ -87,6 +87,11 @@ def estatisticas_empresa(
                 e.razao_social,
                 e.nome_fantasia,
                 e.setor,
+                e.cnpj,
+                e.cidade,
+                e.uf,
+                e.descricao,
+                u.email,
                 u.tipo_usuario,
                 u.ativo,
                 u.deletado_em
@@ -184,6 +189,11 @@ def estatisticas_empresa(
         return {
             "empresa": nome_empresa,
             "setor": empresa["setor"],
+            "cnpj": empresa["cnpj"],
+            "email": empresa["email"],
+            "cidade": empresa["cidade"],
+            "uf": empresa["uf"],
+            "descricao": empresa["descricao"],
             "total_vagas": int(
                 indicadores_vagas["total_vagas"]
             ),

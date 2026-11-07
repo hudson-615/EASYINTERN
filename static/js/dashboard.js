@@ -1829,6 +1829,69 @@ async function loadEmpresaStats() {
         `${stats.empresa} · ${stats.setor || 'Recrutamento'}`;
     }
 
+    // Perfil empresarial com dados reais do MySQL.
+    setText(
+      'empresa-perfil-nome',
+      stats.empresa || 'Empresa não informada'
+    );
+
+    setText(
+      'empresa-perfil-setor',
+      stats.setor || 'Setor não informado'
+    );
+
+    setText(
+      'empresa-perfil-descricao',
+      stats.descricao || 'Descrição não cadastrada.'
+    );
+
+    const listaInfo = document.getElementById(
+      'empresa-info-list'
+    );
+
+    if (listaInfo) {
+      listaInfo.replaceChildren();
+
+      const adicionarInfo = (icone, texto) => {
+        const item = document.createElement('div');
+        item.className = 'perfil-info-item';
+
+        const simbolo = document.createElement('i');
+        simbolo.className = `bi ${icone}`;
+        simbolo.setAttribute('aria-hidden', 'true');
+
+        item.appendChild(simbolo);
+        item.appendChild(document.createTextNode(texto));
+
+        listaInfo.appendChild(item);
+      };
+
+      adicionarInfo(
+        'bi-card-heading',
+        `CNPJ: ${stats.cnpj || 'Não informado'}`
+      );
+
+      adicionarInfo(
+        'bi-envelope-fill',
+        stats.email || 'E-mail não informado'
+      );
+
+      const localizacao = [
+        stats.cidade,
+        stats.uf
+      ].filter(Boolean).join(', ');
+
+      adicionarInfo(
+        'bi-geo-alt-fill',
+        localizacao || 'Localização não informada'
+      );
+
+      adicionarInfo(
+        'bi-briefcase-fill',
+        `${stats.total_vagas} vagas publicadas`
+      );
+    }
+
   } catch (erro) {
     console.warn(
       'Erro nas estatísticas da empresa:',
