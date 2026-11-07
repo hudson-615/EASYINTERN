@@ -1462,3 +1462,160 @@ def reabrir_vaga_empresa(
 
         if conexao is not None:
             conexao.close()
+
+# ============================================================
+# GET /dashboard/api/empresa/candidatos/{id_vaga}
+# ============================================================
+
+@router.get("/candidatos/{id_vaga}")
+def listar_candidatos_vaga_empresa(
+    id_vaga: int,
+    token: dict = Depends(obter_usuario_autenticado)
+):
+    conexao = None
+    cursor = None
+
+    try:
+        try:
+            id_usuario = int(token["sub"])
+        except (ValueError, TypeError, KeyError) as erro:
+            raise HTTPException(
+                status_code=401,
+                detail="Identificação de usuário inválida."
+            ) from erro
+
+        if id_vaga <= 0:
+            raise HTTPException(
+                status_code=404,
+                detail="Vaga não encontrada."
+            )
+
+        conexao = conectar()
+        cursor = conexao.cursor(dictionary=True)
+
+        # Confirma que a conta é uma empresa ativa.
+        cursor.execute(
+            """
+            SELECT
+                u.tipo_usuario,
+                u.ativo,
+                u.deletado_em,
+                e.id_empresa
+            FROM usuarios AS u
+            LEFT JOIN empresas AS e
+                ON e.id_usuario = u.id_usuario
+            WHERE u.id_usuario = %s
+            """,
+            (id_usuario,)
+        )
+
+        empresa = cursor.fetchone()
+
+        if (
+            not empresa
+            or not empresa["ativo"]
+            or empresa["deletado_em"] is not None
+        ):
+            raise HTTPException(
+                status_code=401,
+                detail="Conta inexistente ou indisponível."
+            )
+
+        if empresa["tipo_usuario"] != "Empresa":
+            raise HTTPException(
+                status_code=403,
+                detail="Acesso permitido apenas para empresas."
+            )
+
+        if empresa["id_empresa"] is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Perfil empresarial não encontrado."
+            )
+
+        # A vaga precisa pertencer à empresa autenticada.
+        cursor.execute(
+            """
+            SELECT id_vaga
+            FROM vagas
+            WHERE id_vaga = %s
+              AND id_empresa = %s
+            """,
+            (id_vaga, empresa["id_empresa"])
+        )
+
+        if not cursor.fetchone():
+            raise HTTPException(
+                status_code=404,
+                detail="Vaga não encontrada."
+            )
+
+        # Consulta somente inscrições da vaga autorizada.
+        cursor.execute(
+            """
+            SELECT
+                ca.id_candidatura,
+                ca.id_candidato,
+                ca.status,
+                ca.data_candidatura,
+                c.nome_completo,
+                c.nivel_carreira,
+                c.cidade,
+                c.uf
+            FROM candidaturas AS ca
+            INNER JOIN candidatos AS c
+                ON c.id_candidato = ca.id_candidato
+            INNER JOIN vagas AS v
+                ON v.id_vaga = ca.id_vaga
+            WHERE ca.id_vaga = %s
+              AND v.id_empresa = %s
+            ORDER BY
+                ca.data_candidatura DESC,
+                ca.id_candidatura DESC
+            """,
+            (id_vaga, empresa["id_empresa"])
+        )
+
+        registros = cursor.fetchall()
+
+        candidatos = []
+
+        for registro in registros:
+            data = registro["data_candidatura"]
+
+            candidatos.append({
+                "candidatura_id": registro["id_candidatura"],
+                "candidato_id": registro["id_candidato"],
+                "nome": registro["nome_completo"],
+                "area_interesse": None,
+                "nivel_carreira": registro["nivel_carreira"],
+                "cidade": registro["cidade"],
+                "uf": registro["uf"],
+                "status": (
+                    registro["status"].lower()
+                    if registro["status"]
+                    else "pendente"
+                ),
+                "data_candidatura": (
+                    data.isoformat() if data else None
+                ),
+                "match": None
+            })
+
+        return candidatos
+
+    except HTTPException:
+        raise
+
+    except (Error, RuntimeError) as erro:
+        raise HTTPException(
+            status_code=503,
+            detail="Não foi possível listar os candidatos."
+        ) from erro
+
+    finally:
+        if cursor is not None:
+            cursor.close()
+
+        if conexao is not None:
+            conexao.close()
