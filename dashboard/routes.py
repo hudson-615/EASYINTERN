@@ -315,7 +315,7 @@ def listar_candidaturas_candidato(
         mapa_status = {
             "Pendente": "pendente",
             "Em Análise": "em_analise",
-            "Entrevista": "em_analise",
+            "Entrevista": "entrevista",
             "Aprovado": "aprovado",
             "Reprovado": "reprovado"
         }
