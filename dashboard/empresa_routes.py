@@ -53,6 +53,15 @@ class NovaVaga(BaseModel):
 
         return valor
 
+class AtualizarStatusCandidatura(BaseModel):
+    status: Literal[
+        "pendente",
+        "em_analise",
+        "entrevista",
+        "aprovado",
+        "reprovado"
+    ]
+
 
 @router.get("/stats")
 def estatisticas_empresa(
@@ -1591,11 +1600,15 @@ def listar_candidatos_vaga_empresa(
                 "nivel_carreira": registro["nivel_carreira"],
                 "cidade": registro["cidade"],
                 "uf": registro["uf"],
+
                 "status": (
-                    registro["status"].lower()
-                    if registro["status"]
-                    else "pendente"
+                        "em_analise"
+                        if registro["status"] == "Em Análise"
+                        else registro["status"].lower()
+                        if registro["status"]
+                        else "pendente"
                 ),
+
                 "data_candidatura": (
                     data.isoformat() if data else None
                 ),
@@ -1611,6 +1624,164 @@ def listar_candidatos_vaga_empresa(
         raise HTTPException(
             status_code=503,
             detail="Não foi possível listar os candidatos."
+        ) from erro
+
+    finally:
+        if cursor is not None:
+            cursor.close()
+
+        if conexao is not None:
+            conexao.close()
+
+# ============================================================
+# PATCH /dashboard/api/empresa/candidaturas/{id}/status
+# ============================================================
+
+@router.patch("/candidaturas/{id_candidatura}/status")
+def atualizar_status_candidatura_empresa(
+    id_candidatura: int,
+    dados: AtualizarStatusCandidatura,
+    token: dict = Depends(obter_usuario_autenticado)
+):
+    conexao = None
+    cursor = None
+
+    mapa_status = {
+        "pendente": "Pendente",
+        "em_analise": "Em Análise",
+        "entrevista": "Entrevista",
+        "aprovado": "Aprovado",
+        "reprovado": "Reprovado"
+    }
+
+    try:
+        try:
+            id_usuario = int(token["sub"])
+        except (ValueError, TypeError, KeyError) as erro:
+            raise HTTPException(
+                status_code=401,
+                detail="Identificação de usuário inválida."
+            ) from erro
+
+        if id_candidatura <= 0:
+            raise HTTPException(
+                status_code=404,
+                detail="Candidatura não encontrada."
+            )
+
+        conexao = conectar()
+        cursor = conexao.cursor(dictionary=True)
+
+        # Verifica a conta empresarial autenticada.
+        cursor.execute(
+            """
+            SELECT
+                u.tipo_usuario,
+                u.ativo,
+                u.deletado_em,
+                e.id_empresa
+            FROM usuarios AS u
+            LEFT JOIN empresas AS e
+                ON e.id_usuario = u.id_usuario
+            WHERE u.id_usuario = %s
+            """,
+            (id_usuario,)
+        )
+
+        empresa = cursor.fetchone()
+
+        if (
+            not empresa
+            or not empresa["ativo"]
+            or empresa["deletado_em"] is not None
+        ):
+            raise HTTPException(
+                status_code=401,
+                detail="Conta inexistente ou indisponível."
+            )
+
+        if empresa["tipo_usuario"] != "Empresa":
+            raise HTTPException(
+                status_code=403,
+                detail="Acesso permitido apenas para empresas."
+            )
+
+        if empresa["id_empresa"] is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Perfil empresarial não encontrado."
+            )
+
+        # Confirma a propriedade da candidatura.
+        # FOR UPDATE protege a linha durante a atualização.
+        cursor.execute(
+            """
+            SELECT
+                ca.id_candidatura,
+                ca.id_vaga,
+                ca.status
+            FROM candidaturas AS ca
+            INNER JOIN vagas AS v
+                ON v.id_vaga = ca.id_vaga
+            WHERE ca.id_candidatura = %s
+              AND v.id_empresa = %s
+            FOR UPDATE
+            """,
+            (id_candidatura, empresa["id_empresa"])
+        )
+
+        candidatura = cursor.fetchone()
+
+        if not candidatura:
+            raise HTTPException(
+                status_code=404,
+                detail="Candidatura não encontrada."
+            )
+
+        novo_status = mapa_status[dados.status]
+
+        # Atualização idempotente: repetir o mesmo
+        # status não modifica a candidatura.
+        if candidatura["status"] == novo_status:
+            conexao.commit()
+
+            return {
+                "mensagem": "A candidatura já possui esse status.",
+                "id_candidatura": id_candidatura,
+                "id_vaga": candidatura["id_vaga"],
+                "status": dados.status
+            }
+
+        cursor.execute(
+            """
+            UPDATE candidaturas
+            SET status = %s
+            WHERE id_candidatura = %s
+            """,
+            (novo_status, id_candidatura)
+        )
+
+        conexao.commit()
+
+        return {
+            "mensagem": "Status atualizado com sucesso!",
+            "id_candidatura": id_candidatura,
+            "id_vaga": candidatura["id_vaga"],
+            "status": dados.status
+        }
+
+    except HTTPException:
+        if conexao is not None:
+            conexao.rollback()
+        raise
+
+    except (Error, RuntimeError) as erro:
+        if conexao is not None:
+            conexao.rollback()
+
+        raise HTTPException(
+            status_code=503,
+            detail="Não foi possível atualizar o status."
         ) from erro
 
     finally:
