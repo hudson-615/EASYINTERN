@@ -12,6 +12,8 @@ from usuarios.routes import obter_usuario_autenticado
 
 from datetime import date
 
+import json
+
 
 router = APIRouter(
     prefix="/dashboard/api/empresa",
@@ -1752,6 +1754,10 @@ def atualizar_status_candidatura_empresa(
                 "status": dados.status
             }
 
+
+        status_anterior = candidatura["status"]
+
+        # Atualiza o status da candidatura autorizada.
         cursor.execute(
             """
             UPDATE candidaturas
@@ -1761,7 +1767,39 @@ def atualizar_status_candidatura_empresa(
             (novo_status, id_candidatura)
         )
 
+        # Registra a mudança na auditoria.
+        # Não armazenamos dados pessoais desnecessários.
+        cursor.execute(
+            """
+            INSERT INTO auditoria (
+                id_usuario,
+                acao,
+                tabela,
+                registro_id,
+                dados_antes,
+                dados_depois
+            )
+            VALUES (%s, %s, %s, %s, %s, %s)
+            """,
+            (
+                id_usuario,
+                "ALTERAR_STATUS_CANDIDATURA",
+                "candidaturas",
+                id_candidatura,
+                json.dumps(
+                    {"status": status_anterior},
+                    ensure_ascii=False
+                ),
+                json.dumps(
+                    {"status": novo_status},
+                    ensure_ascii=False
+                )
+            )
+        )
+
+        # Confirma atualização e histórico juntos.
         conexao.commit()
+
 
         return {
             "mensagem": "Status atualizado com sucesso!",
