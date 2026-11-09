@@ -226,3 +226,19 @@ class CandidatoPerfilAtualizacao(BaseModel):
             return None
 
         return valor.strip() or None
+
+class CandidatoHabilidadeCadastro(BaseModel):
+    id_tag: int = Field(gt=0)
+
+    nivel: Literal[
+        "Básico",
+        "Intermediário",
+        "Avançado"
+    ] = "Básico"
+
+class CandidatoHabilidadeAtualizacao(BaseModel):
+    nivel: Literal[
+        "Básico",
+        "Intermediário",
+        "Avançado"
+    ]
