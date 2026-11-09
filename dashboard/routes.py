@@ -5,6 +5,7 @@ from database.connection import conectar
 from usuarios.routes import obter_usuario_autenticado
 from pydantic import BaseModel, Field
 from mysql.connector import IntegrityError
+from usuarios.schemas import CandidatoPerfilAtualizacao
 
 
 router = APIRouter(
@@ -812,4 +813,247 @@ def candidatar_a_vaga(
             cursor.close()
 
         if conexao is not None:
+            conexao.close()
+
+# ============================================================
+# PERFIL DO CANDIDATO
+# GET /dashboard/api/candidato/perfil
+# ============================================================
+
+@router.get("/candidato/perfil")
+def consultar_perfil_candidato(
+    token: dict = Depends(obter_usuario_autenticado)
+):
+    conexao = None
+    cursor = None
+
+    try:
+        id_usuario = int(token["sub"])
+
+        conexao = conectar()
+        cursor = conexao.cursor(dictionary=True)
+
+        # Confirma que a conta existe e está ativa.
+        cursor.execute(
+            """
+            SELECT tipo_usuario, ativo, deletado_em
+            FROM usuarios
+            WHERE id_usuario = %s
+            """,
+            (id_usuario,)
+        )
+
+        usuario = cursor.fetchone()
+
+        if (
+            not usuario
+            or not usuario["ativo"]
+            or usuario["deletado_em"] is not None
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Conta inexistente ou indisponível."
+            )
+
+        if usuario["tipo_usuario"] != "Candidato":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Acesso permitido apenas para candidatos."
+            )
+
+        # Busca somente o perfil do usuário autenticado.
+        cursor.execute(
+            """
+            SELECT
+                id_candidato,
+                nome_completo,
+                nivel_carreira,
+                telefone,
+                cidade,
+                uf,
+                linkedin_url,
+                github_url,
+                biografia
+            FROM candidatos
+            WHERE id_usuario = %s
+            """,
+            (id_usuario,)
+        )
+
+        candidato = cursor.fetchone()
+
+        if not candidato:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Perfil de candidato não encontrado."
+            )
+
+        return candidato
+
+    except HTTPException:
+        raise
+
+    except (ValueError, TypeError, KeyError) as erro:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Identificação de usuário inválida."
+        ) from erro
+
+    except Error as erro:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erro ao consultar perfil do candidato."
+        ) from erro
+
+    finally:
+        if cursor:
+            cursor.close()
+
+        if conexao:
+            conexao.close()
+
+# ============================================================
+# ATUALIZAR PERFIL DO CANDIDATO
+# PATCH /dashboard/api/candidato/perfil
+# ============================================================
+
+@router.patch("/candidato/perfil")
+def atualizar_perfil_candidato(
+    dados: CandidatoPerfilAtualizacao,
+    token: dict = Depends(obter_usuario_autenticado)
+):
+    conexao = None
+    cursor = None
+
+    try:
+        id_usuario = int(token["sub"])
+
+        conexao = conectar()
+        cursor = conexao.cursor(dictionary=True)
+
+        # Verifica a conta autenticada.
+        cursor.execute(
+            """
+            SELECT tipo_usuario, ativo, deletado_em
+            FROM usuarios
+            WHERE id_usuario = %s
+            """,
+            (id_usuario,)
+        )
+
+        usuario = cursor.fetchone()
+
+        if (
+            not usuario
+            or not usuario["ativo"]
+            or usuario["deletado_em"] is not None
+        ):
+            raise HTTPException(
+                status_code=401,
+                detail="Conta inexistente ou indisponível."
+            )
+
+        if usuario["tipo_usuario"] != "Candidato":
+            raise HTTPException(
+                status_code=403,
+                detail="Acesso permitido apenas para candidatos."
+            )
+
+        # Confirma a existência do perfil.
+        cursor.execute(
+            """
+            SELECT id_candidato
+            FROM candidatos
+            WHERE id_usuario = %s
+            """,
+            (id_usuario,)
+        )
+
+        candidato = cursor.fetchone()
+
+        if not candidato:
+            raise HTTPException(
+                status_code=404,
+                detail="Perfil de candidato não encontrado."
+            )
+
+        # Considera somente os campos enviados.
+        alteracoes = dados.model_dump(exclude_unset=True)
+
+        if not alteracoes:
+            raise HTTPException(
+                status_code=400,
+                detail="Nenhum campo enviado para atualização."
+            )
+
+        # Campos permitidos, definidos pelo servidor.
+        campos_permitidos = {
+            "nome_completo",
+            "telefone",
+            "cidade",
+            "uf",
+            "nivel_carreira",
+            "linkedin_url",
+            "github_url",
+            "biografia"
+        }
+
+        if not set(alteracoes).issubset(campos_permitidos):
+            raise HTTPException(
+                status_code=400,
+                detail="Campo não permitido."
+            )
+
+        # Monta o UPDATE usando apenas nomes
+        # de colunas autorizados pelo servidor.
+        colunas = ", ".join(
+            f"{campo} = %s"
+            for campo in alteracoes
+        )
+
+        valores = list(alteracoes.values())
+        valores.append(id_usuario)
+
+        cursor.execute(
+            f"""
+            UPDATE candidatos
+            SET {colunas}
+            WHERE id_usuario = %s
+            """,
+            tuple(valores)
+        )
+
+        conexao.commit()
+
+        return {
+            "mensagem": "Perfil atualizado com sucesso.",
+            "id_candidato": candidato["id_candidato"]
+        }
+
+    except HTTPException:
+        if conexao:
+            conexao.rollback()
+        raise
+
+    except (ValueError, TypeError, KeyError) as erro:
+        if conexao:
+            conexao.rollback()
+        raise HTTPException(
+            status_code=401,
+            detail="Identificação de usuário inválida."
+        ) from erro
+
+    except Error as erro:
+        if conexao:
+            conexao.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail="Erro ao atualizar perfil."
+        ) from erro
+
+    finally:
+        if cursor:
+            cursor.close()
+
+        if conexao:
             conexao.close()
