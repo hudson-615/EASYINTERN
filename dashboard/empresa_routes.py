@@ -2,7 +2,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Literal
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from mysql.connector import Error
 from pydantic import BaseModel, Field, field_validator
 
@@ -347,6 +347,198 @@ def listar_vagas_empresa(
             })
 
         return vagas
+
+    except HTTPException:
+        raise
+
+    except (ValueError, TypeError, KeyError) as erro:
+        raise HTTPException(
+            status_code=401,
+            detail="Identificação de usuário inválida."
+        ) from erro
+
+    except (Error, RuntimeError) as erro:
+        raise HTTPException(
+            status_code=503,
+            detail="Não foi possível consultar as vagas."
+        ) from erro
+
+    finally:
+        if cursor is not None:
+            cursor.close()
+
+        if conexao is not None:
+            conexao.close()
+
+# ============================================================
+# LISTAR VAGAS EMPRESARIAIS COM PAGINACAO E FILTROS
+# GET /dashboard/api/empresa/vagas/paginadas
+# ============================================================
+
+@router.get("/vagas/paginadas")
+def listar_vagas_empresa_paginadas(
+    pagina: int = Query(default=1, ge=1),
+    limite: int = Query(default=10, ge=1, le=100),
+    status_vaga: Literal[
+        "aberta", "pausada", "encerrada"
+    ] | None = Query(default=None, alias="status"),
+    modalidade: Literal[
+        "presencial", "remoto", "hibrido"
+    ] | None = Query(default=None),
+    token: dict = Depends(obter_usuario_autenticado)
+):
+    conexao = None
+    cursor = None
+
+    try:
+        id_usuario = int(token["sub"])
+
+        conexao = conectar()
+        cursor = conexao.cursor(dictionary=True)
+
+        # Verifica se o usuario esta ativo.
+        cursor.execute(
+            """
+            SELECT tipo_usuario, ativo, deletado_em
+            FROM usuarios
+            WHERE id_usuario = %s
+            """,
+            (id_usuario,)
+        )
+
+        usuario = cursor.fetchone()
+
+        if (
+            not usuario
+            or not usuario["ativo"]
+            or usuario["deletado_em"] is not None
+        ):
+            raise HTTPException(
+                status_code=401,
+                detail="Conta inexistente ou indisponível."
+            )
+
+        if usuario["tipo_usuario"] != "Empresa":
+            raise HTTPException(
+                status_code=403,
+                detail="Acesso permitido apenas para empresas."
+            )
+
+        # Identifica a empresa autenticada.
+        cursor.execute(
+            """
+            SELECT id_empresa
+            FROM empresas
+            WHERE id_usuario = %s
+            """,
+            (id_usuario,)
+        )
+
+        empresa = cursor.fetchone()
+
+        if not empresa:
+            raise HTTPException(
+                status_code=404,
+                detail="Perfil empresarial não encontrado."
+            )
+
+        id_empresa = empresa["id_empresa"]
+
+        # Considera vagas abertas com prazo vencido
+        # como encerradas na listagem.
+        status_calculado = """
+            CASE
+                WHEN LOWER(v.status) = 'aberta'
+                 AND v.prazo_encerramento IS NOT NULL
+                 AND v.prazo_encerramento < CURDATE()
+                THEN 'encerrada'
+                ELSE LOWER(v.status)
+            END
+        """
+
+        filtros = ["v.id_empresa = %s"]
+        parametros = [id_empresa]
+
+        if status_vaga is not None:
+            filtros.append(
+                f"({status_calculado}) = %s"
+            )
+            parametros.append(status_vaga)
+
+        if modalidade is not None:
+            filtros.append(
+                "LOWER(v.modalidade) = %s"
+            )
+            parametros.append(modalidade)
+
+        condicoes = " AND ".join(filtros)
+
+        # Calcula o total de vagas filtradas.
+        cursor.execute(
+            f"""
+            SELECT COUNT(*) AS total
+            FROM vagas AS v
+            WHERE {condicoes}
+            """,
+            tuple(parametros)
+        )
+
+        total = int(cursor.fetchone()["total"])
+        total_paginas = (
+            (total + limite - 1) // limite
+        )
+
+        offset = (pagina - 1) * limite
+
+        # Consulta apenas a pagina solicitada.
+        cursor.execute(
+            f"""
+            SELECT
+                v.id_vaga AS id,
+                v.titulo,
+                v.nivel,
+                v.modalidade,
+                ({status_calculado}) AS status_exibicao,
+                (
+                    SELECT COUNT(*)
+                    FROM candidaturas AS c
+                    WHERE c.id_vaga = v.id_vaga
+                ) AS total_candidatos
+            FROM vagas AS v
+            WHERE {condicoes}
+            ORDER BY
+                v.criado_em DESC,
+                v.id_vaga DESC
+            LIMIT %s OFFSET %s
+            """,
+            tuple(parametros + [limite, offset])
+        )
+
+        registros = cursor.fetchall()
+
+        vagas = []
+
+        for vaga in registros:
+            vagas.append({
+                "id": vaga["id"],
+                "titulo": vaga["titulo"],
+                "nivel": (
+                    vaga["nivel"] or ""
+                ).lower(),
+                "modalidade": vaga["modalidade"],
+                "status": vaga["status_exibicao"],
+                "total_candidatos": int(
+                    vaga["total_candidatos"]
+                )
+            })
+
+        return {
+            "vagas": vagas,
+            "pagina": pagina,
+            "limite": limite,
+            "total": total,
+            "total_paginas": total_paginas
+        }
 
     except HTTPException:
         raise
