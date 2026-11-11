@@ -73,8 +73,13 @@ def estatisticas_empresa(
     cursor = None
 
     try:
-        # Identifica o usuário por meio do JWT.
-        id_usuario = int(token["sub"])
+        try:
+            id_usuario = int(token["sub"])
+        except (ValueError, TypeError, KeyError) as erro:
+            raise HTTPException(
+                status_code=401,
+                detail="Identificação de usuário inválida."
+            ) from erro
 
         conexao = conectar()
         cursor = conexao.cursor(dictionary=True)
@@ -213,8 +218,8 @@ def estatisticas_empresa(
 
     except (ValueError, TypeError, KeyError) as erro:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Identificação de usuário inválida."
+            status_code=500,
+            detail="Ocorreu um erro interno ao processar a solicitação."
         ) from erro
 
     except (Error, RuntimeError) as erro:
@@ -244,7 +249,13 @@ def listar_vagas_empresa(
     cursor = None
 
     try:
-        id_usuario = int(token["sub"])
+        try:
+            id_usuario = int(token["sub"])
+        except (ValueError, TypeError, KeyError) as erro:
+            raise HTTPException(
+                status_code=401,
+                detail="Identificação de usuário inválida."
+            ) from erro
 
         conexao = conectar()
         cursor = conexao.cursor(dictionary=True)
@@ -353,8 +364,8 @@ def listar_vagas_empresa(
 
     except (ValueError, TypeError, KeyError) as erro:
         raise HTTPException(
-            status_code=401,
-            detail="Identificação de usuário inválida."
+            status_code=500,
+            detail="Ocorreu um erro interno ao processar a solicitação."
         ) from erro
 
     except (Error, RuntimeError) as erro:
@@ -391,7 +402,13 @@ def listar_vagas_empresa_paginadas(
     cursor = None
 
     try:
-        id_usuario = int(token["sub"])
+        try:
+            id_usuario = int(token["sub"])
+        except (ValueError, TypeError, KeyError) as erro:
+            raise HTTPException(
+                status_code=401,
+                detail="Identificação de usuário inválida."
+            ) from erro
 
         conexao = conectar()
         cursor = conexao.cursor(dictionary=True)
@@ -545,8 +562,8 @@ def listar_vagas_empresa_paginadas(
 
     except (ValueError, TypeError, KeyError) as erro:
         raise HTTPException(
-            status_code=401,
-            detail="Identificação de usuário inválida."
+            status_code=500,
+            detail="Ocorreu um erro interno ao processar a solicitação."
         ) from erro
 
     except (Error, RuntimeError) as erro:
