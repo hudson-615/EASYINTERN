@@ -77,3 +77,63 @@ def test_remocao_de_formacao_inexistente():
     assert erro.value.status_code == 404
     conexao.rollback.assert_called_once()
     conexao.commit.assert_not_called()
+
+def test_atualizar_formacao():
+    from dashboard.formacoes_routes import (
+        FormacaoAtualizacao,
+        atualizar_formacao,
+    )
+
+    conexao, cursor = preparar([
+        USUARIO,
+        {
+            "status": "Cursando",
+            "semestre_atual": 2,
+            "ano_conclusao": None,
+        },
+    ])
+
+    with patch("dashboard.formacoes_routes.conectar", return_value=conexao):
+        resultado = atualizar_formacao(
+            id_formacao=3,
+            dados=FormacaoAtualizacao(semestre_atual=3),
+            token=TOKEN,
+        )
+
+    assert resultado["id_formacao"] == 3
+    assert "UPDATE candidato_formacao" in cursor.execute.call_args.args[0]
+    assert cursor.execute.call_args.args[1] == (3, 7, 3)
+    conexao.commit.assert_called_once()
+
+
+def test_bloquear_edicao_de_formacao_alheia():
+    from dashboard.formacoes_routes import (
+        FormacaoAtualizacao,
+        atualizar_formacao,
+    )
+
+    conexao, cursor = preparar([USUARIO, None])
+
+    with patch("dashboard.formacoes_routes.conectar", return_value=conexao):
+        with pytest.raises(HTTPException) as erro:
+            atualizar_formacao(
+                id_formacao=3,
+                dados=FormacaoAtualizacao(semestre_atual=4),
+                token=TOKEN,
+            )
+
+    assert erro.value.status_code == 404
+    conexao.rollback.assert_called_once()
+    conexao.commit.assert_not_called()
+
+
+def test_remover_formacao_propria():
+    conexao, cursor = preparar([USUARIO])
+    cursor.rowcount = 1
+
+    with patch("dashboard.formacoes_routes.conectar", return_value=conexao):
+        resultado = remover_formacao(id_formacao=3, token=TOKEN)
+
+    assert resultado["id_formacao"] == 3
+    assert cursor.execute.call_args.args[1] == (7, 3)
+    conexao.commit.assert_called_once()
