@@ -117,6 +117,7 @@ const API = {
   me: '/api/auth/me',
 
   stats_cand: '/dashboard/api/candidato/stats',
+  perfil_cand: '/dashboard/api/candidato/perfil',
   candidaturas: '/dashboard/api/candidato/candidaturas',
   recomendadas: '/dashboard/api/candidato/vagas-recomendadas',
   candidatar: '/dashboard/api/candidato/candidatar',
@@ -956,6 +957,7 @@ function animateDonut(score) {
 
 async function loadCandidatoDashboard() {
   await loadCandidatoStats();
+  await carregarPerfilCandidato();
   await loadCandidaturas();
   await loadVagasRecomendadas();
 }
@@ -3157,3 +3159,324 @@ document.addEventListener(
   'DOMContentLoaded',
   init
 );
+
+// ============================================================
+// PERFIL EDITÁVEL DO CANDIDATO
+// GET e PATCH /dashboard/api/candidato/perfil
+// ============================================================
+
+let perfilCandidatoAtual = null;
+let salvandoPerfilCandidato = false;
+
+function campoPerfil(id) {
+  return document.getElementById(id);
+}
+
+function feedbackPerfil(mensagem, erro = false) {
+  const feedback = campoPerfil('perfil-feedback');
+
+  if (!feedback) return;
+
+  feedback.textContent = mensagem;
+  feedback.style.color = erro
+    ? '#ef6464'
+    : '#20b479';
+}
+
+// Preenche o formulário com os dados do banco.
+function preencherFormularioPerfil(perfil) {
+  const campos = {
+    'edit-nome': perfil.nome_completo,
+    'edit-telefone': perfil.telefone,
+    'edit-cidade': perfil.cidade,
+    'edit-uf': perfil.uf,
+    'edit-nivel': perfil.nivel_carreira,
+    'edit-linkedin': perfil.linkedin_url,
+    'edit-github': perfil.github_url,
+    'edit-biografia': perfil.biografia
+  };
+
+  Object.entries(campos).forEach(([id, valor]) => {
+    const elemento = campoPerfil(id);
+
+    if (elemento) {
+      elemento.value = valor ?? '';
+    }
+  });
+}
+
+// Atualiza a visualização do perfil.
+function exibirDadosPerfil(perfil) {
+  setText(
+    'perfil-nome',
+    perfil.nome_completo || 'Nome não informado'
+  );
+
+  const nivel = perfil.nivel_carreira || 'Não informado';
+
+  setText('perfil-nivel-tag', nivel);
+  setText('header-nivel', nivel);
+
+  const links = campoPerfil('perfil-links');
+
+  if (links) {
+    links.replaceChildren();
+
+    const adicionarLink = (url, nome, icone) => {
+      if (!url) return;
+
+      let destino;
+
+      try {
+        destino = new URL(url);
+      } catch {
+        return;
+      }
+
+      if (!['http:', 'https:'].includes(destino.protocol)) {
+        return;
+      }
+
+      const link = document.createElement('a');
+      link.className = 'perfil-link-btn';
+      link.href = destino.href;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+
+      const simbolo = document.createElement('i');
+      simbolo.className = `bi ${icone}`;
+
+      link.appendChild(simbolo);
+      link.appendChild(document.createTextNode(` ${nome}`));
+
+      links.appendChild(link);
+    };
+
+    adicionarLink(
+      perfil.linkedin_url,
+      'LinkedIn',
+      'bi-linkedin'
+    );
+
+    adicionarLink(
+      perfil.github_url,
+      'GitHub',
+      'bi-github'
+    );
+  }
+}
+
+// Consulta o perfil autenticado no banco.
+async function carregarPerfilCandidato() {
+  const perfil = await apiFetch(API.perfil_cand);
+
+  if (!perfil || !perfil.id_candidato) {
+    throw new Error('Não foi possível carregar o perfil.');
+  }
+
+  perfilCandidatoAtual = perfil;
+
+  exibirDadosPerfil(perfil);
+
+  return perfil;
+}
+
+// Abre o formulário de edição.
+async function abrirEdicaoPerfil() {
+  const botao = campoPerfil('btn-editar-perfil');
+  const formulario = campoPerfil('form-editar-perfil');
+
+  if (!botao || !formulario) return;
+
+  botao.disabled = true;
+  feedbackPerfil('Carregando informações...');
+
+  try {
+    const perfil = await carregarPerfilCandidato();
+
+    preencherFormularioPerfil(perfil);
+
+    formulario.hidden = false;
+    botao.hidden = true;
+
+    feedbackPerfil('');
+  } catch (erro) {
+    feedbackPerfil(
+      erro.message || 'Erro ao carregar o perfil.',
+      true
+    );
+  } finally {
+    botao.disabled = false;
+  }
+}
+
+// Fecha o formulário sem salvar.
+function cancelarEdicaoPerfil() {
+  const formulario = campoPerfil('form-editar-perfil');
+  const botao = campoPerfil('btn-editar-perfil');
+
+  if (salvandoPerfilCandidato) return;
+
+  if (formulario) formulario.hidden = true;
+  if (botao) botao.hidden = false;
+
+  feedbackPerfil('');
+}
+
+// Monta os dados para a API PATCH.
+function coletarDadosPerfil() {
+  const valor = (id) =>
+    campoPerfil(id)?.value.trim() ?? '';
+
+  const nome = valor('edit-nome');
+  const nivel = valor('edit-nivel');
+
+  if (nome.length < 3) {
+    throw new Error(
+      'Informe um nome com pelo menos 3 caracteres.'
+    );
+  }
+
+  const uf = valor('edit-uf').toUpperCase();
+
+  if (uf && !/^[A-Z]{2}$/.test(uf)) {
+    throw new Error('Informe uma UF válida.');
+  }
+
+  const dados = {
+    nome_completo: nome,
+    telefone: valor('edit-telefone') || null,
+    cidade: valor('edit-cidade') || null,
+    uf: uf || null,
+    nivel_carreira: nivel || null,
+    linkedin_url: valor('edit-linkedin') || null,
+    github_url: valor('edit-github') || null,
+    biografia: valor('edit-biografia') || null
+  };
+
+  // Envia apenas os campos que mudaram.
+  if (perfilCandidatoAtual) {
+    Object.keys(dados).forEach((campo) => {
+      const anterior = perfilCandidatoAtual[campo] ?? null;
+      const novo = dados[campo];
+
+      if (anterior === novo) {
+        delete dados[campo];
+      }
+    });
+  }
+
+  return dados;
+}
+
+// Envia as alterações para o MySQL.
+async function salvarEdicaoPerfil(evento) {
+  evento.preventDefault();
+
+  if (salvandoPerfilCandidato) return;
+
+  const formulario = campoPerfil('form-editar-perfil');
+  const botaoSalvar = campoPerfil('btn-salvar-perfil');
+
+  if (!formulario?.reportValidity()) return;
+
+  let dados;
+
+  try {
+    dados = coletarDadosPerfil();
+  } catch (erro) {
+    feedbackPerfil(erro.message, true);
+    return;
+  }
+
+  if (Object.keys(dados).length === 0) {
+    feedbackPerfil('Nenhuma alteração foi realizada.');
+    return;
+  }
+
+  salvandoPerfilCandidato = true;
+
+  if (botaoSalvar) {
+    botaoSalvar.disabled = true;
+    botaoSalvar.textContent = 'Salvando...';
+  }
+
+  feedbackPerfil('Salvando alterações...');
+
+  try {
+    await apiFetch(
+      API.perfil_cand,
+      dados,
+      'PATCH'
+    );
+
+    // Busca os valores realmente salvos no banco.
+    await carregarPerfilCandidato();
+
+    // Recarrega indicadores e informações do dashboard.
+    await loadCandidatoStats();
+
+    // Garante os dados atuais do perfil após os indicadores.
+    exibirDadosPerfil(perfilCandidatoAtual);
+
+    formulario.hidden = true;
+
+    const botaoEditar = campoPerfil('btn-editar-perfil');
+    if (botaoEditar) botaoEditar.hidden = false;
+
+    feedbackPerfil('');
+
+    showToast('Perfil atualizado com sucesso!');
+  } catch (erro) {
+    feedbackPerfil(
+      erro.message || 'Erro ao salvar o perfil.',
+      true
+    );
+  } finally {
+    salvandoPerfilCandidato = false;
+
+    if (botaoSalvar) {
+      botaoSalvar.disabled = false;
+      botaoSalvar.textContent = 'Salvar alterações';
+    }
+  }
+}
+
+// Registra os eventos do formulário.
+function iniciarEdicaoPerfilCandidato() {
+  if (document.body.dataset.panel !== 'candidato') {
+    return;
+  }
+
+  const botaoEditar = campoPerfil('btn-editar-perfil');
+  const botaoCancelar = campoPerfil('btn-cancelar-perfil');
+  const formulario = campoPerfil('form-editar-perfil');
+
+  if (!botaoEditar || !botaoCancelar || !formulario) {
+    return;
+  }
+
+  botaoEditar.addEventListener(
+    'click',
+    abrirEdicaoPerfil
+  );
+
+  botaoCancelar.addEventListener(
+    'click',
+    cancelarEdicaoPerfil
+  );
+
+  formulario.addEventListener(
+    'submit',
+    salvarEdicaoPerfil
+  );
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener(
+    'DOMContentLoaded',
+    iniciarEdicaoPerfilCandidato
+  );
+} else {
+  iniciarEdicaoPerfilCandidato();
+}
