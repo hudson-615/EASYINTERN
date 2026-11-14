@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from datetime import date
+from typing import Annotated
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from mysql.connector import Error
 
 from database.connection import conectar
@@ -131,25 +133,22 @@ def estatisticas_candidato(
 
         indicadores = cursor.fetchone()
 
-        # Consulta a média existente na view do banco.
-        # A fórmula da view será revisada na etapa da IA.
+        # AVG ignora NULL. Sem avaliacao = None; score real 0 = 0.0.
+        # Nao depender do COALESCE(..., 0) presente na view antiga.
         cursor.execute(
             """
-            SELECT score_medio
-            FROM vw_dashboard_candidato
-            WHERE id_candidato = %s
+            SELECT ROUND(AVG(ia.match_score), 2) AS score_medio
+            FROM candidaturas AS ca
+            LEFT JOIN avaliacoes_ia AS ia
+                ON ia.id_candidatura = ca.id_candidatura
+            WHERE ca.id_candidato = %s
             """,
             (id_candidato,)
         )
 
         resultado_match = cursor.fetchone()
-
-        taxa_match = 0.0
-
-        if resultado_match:
-            taxa_match = float(
-                resultado_match["score_medio"] or 0
-            )
+        valor_medio = resultado_match.get("score_medio") if resultado_match else None
+        taxa_match = float(valor_medio) if valor_medio is not None else None
 
         nivel = (
             "junior"
@@ -207,7 +206,12 @@ def estatisticas_candidato(
 
 @router.get("/candidato/candidaturas")
 def listar_candidaturas_candidato(
-    token: dict = Depends(obter_usuario_autenticado)
+    token: dict = Depends(obter_usuario_autenticado),
+    situacao: str | None = Query(None, pattern="^(pendente|em_analise|entrevista|aprovado|reprovado)$"),
+    data_inicio: date | None = None,
+    data_fim: date | None = None,
+    pagina: int = Query(1, ge=1),
+    limite: int = Query(20, ge=1, le=100),
 ):
     conexao = None
     cursor = None
@@ -271,9 +275,36 @@ def listar_candidaturas_candidato(
 
         id_candidato = candidato["id_candidato"]
 
+        # Consulta com filtros opcionais e parâmetros SQL seguros.
+        if data_inicio and data_fim and data_inicio > data_fim:
+            raise HTTPException(status_code=422, detail="Intervalo de datas inválido.")
+
+        status_sql = {
+            "pendente": "Pendente",
+            "em_analise": "Em Análise",
+            "entrevista": "Entrevista",
+            "aprovado": "Aprovado",
+            "reprovado": "Reprovado",
+        }
+        condicoes = ["ca.id_candidato = %s"]
+        parametros = [id_candidato]
+        if situacao:
+            if situacao not in status_sql:
+                raise HTTPException(status_code=422, detail="Situação inválida.")
+            condicoes.append("ca.status = %s")
+            parametros.append(status_sql[situacao])
+        if data_inicio:
+            condicoes.append("ca.data_candidatura >= %s")
+            parametros.append(data_inicio)
+        if data_fim:
+            condicoes.append("ca.data_candidatura < DATE_ADD(%s, INTERVAL 1 DAY)")
+            parametros.append(data_fim)
+        onde = " AND ".join(condicoes)
+        parametros.extend([limite, (pagina - 1) * limite])
+
         # Consulta as candidaturas reais do MySQL.
         cursor.execute(
-            """
+            f"""
             SELECT
                 ca.id_candidatura AS id,
                 ca.status,
@@ -303,13 +334,14 @@ def listar_candidaturas_candidato(
             LEFT JOIN avaliacoes_ia AS ia
                 ON ia.id_candidatura = ca.id_candidatura
 
-            WHERE ca.id_candidato = %s
+            WHERE {onde}
 
             ORDER BY
                 ca.data_candidatura DESC,
                 ca.id_candidatura DESC
+            LIMIT %s OFFSET %s
             """,
-            (id_candidato,)
+            tuple(parametros)
         )
 
         registros = cursor.fetchall()
@@ -338,12 +370,10 @@ def listar_candidaturas_candidato(
             )
 
             score = (
-                float(registro["match_score"])
+                max(0.0, min(100.0, float(registro["match_score"])))
                 if avaliacao_disponivel
-                else 0.0
+                else None
             )
-
-            score = max(0.0, min(100.0, score))
 
             if not avaliacao_disponivel:
                 cor = "#6b7280"
@@ -418,202 +448,217 @@ def listar_candidaturas_candidato(
 
 @router.get("/candidato/vagas-recomendadas")
 def listar_vagas_recomendadas(
-    token: dict = Depends(obter_usuario_autenticado)
+    token: dict = Depends(obter_usuario_autenticado),
+    busca: Annotated[str | None, Query(max_length=120)] = None,
+    cidade: Annotated[str | None, Query(max_length=100)] = None,
+    uf: Annotated[str | None, Query(min_length=2, max_length=2)] = None,
+    modalidade: Annotated[str | None, Query(pattern="^(presencial|remoto|hibrido)$")] = None,
+    nivel: Annotated[str | None, Query(pattern="^(estagio|junior|pleno)$")] = None,
+    bolsa_min: Annotated[float | None, Query(ge=0)] = None,
+    bolsa_max: Annotated[float | None, Query(ge=0)] = None,
+    tag: Annotated[str | None, Query(max_length=50)] = None,
+    ordenar: Annotated[str, Query(pattern="^(recentes|antigas|bolsa_maior|bolsa_menor)$")] = "recentes",
+    pagina: Annotated[int, Query(ge=1)] = 1,
+    limite: Annotated[int, Query(ge=1, le=100)] = 50,
 ):
+    """Compatibilidade: retorna array, como o dashboard.js atual espera."""
+    return _consultar_vagas_candidato(
+        token=token, busca=busca, cidade=cidade, uf=uf,
+        modalidade=modalidade, nivel=nivel, bolsa_min=bolsa_min,
+        bolsa_max=bolsa_max, tag=tag, ordenar=ordenar,
+        pagina=pagina, limite=limite, com_metadados=False,
+    )
+
+
+@router.get("/candidato/vagas")
+def listar_vagas_candidato(
+    token: dict = Depends(obter_usuario_autenticado),
+    busca: Annotated[str | None, Query(max_length=120)] = None,
+    cidade: Annotated[str | None, Query(max_length=100)] = None,
+    uf: Annotated[str | None, Query(min_length=2, max_length=2)] = None,
+    modalidade: Annotated[str | None, Query(pattern="^(presencial|remoto|hibrido)$")] = None,
+    nivel: Annotated[str | None, Query(pattern="^(estagio|junior|pleno)$")] = None,
+    bolsa_min: Annotated[float | None, Query(ge=0)] = None,
+    bolsa_max: Annotated[float | None, Query(ge=0)] = None,
+    tag: Annotated[str | None, Query(max_length=50)] = None,
+    ordenar: Annotated[str, Query(pattern="^(recentes|antigas|bolsa_maior|bolsa_menor)$")] = "recentes",
+    pagina: Annotated[int, Query(ge=1)] = 1,
+    limite: Annotated[int, Query(ge=1, le=100)] = 20,
+):
+    """API paginada para o frontend: items, total, pagina e tem_proxima."""
+    return _consultar_vagas_candidato(
+        token=token, busca=busca, cidade=cidade, uf=uf,
+        modalidade=modalidade, nivel=nivel, bolsa_min=bolsa_min,
+        bolsa_max=bolsa_max, tag=tag, ordenar=ordenar,
+        pagina=pagina, limite=limite, com_metadados=True,
+    )
+
+
+def _consultar_vagas_candidato(
+    *, token: dict, busca: str | None, cidade: str | None,
+    uf: str | None, modalidade: str | None, nivel: str | None,
+    bolsa_min: float | None, bolsa_max: float | None, tag: str | None,
+    ordenar: str, pagina: int, limite: int, com_metadados: bool,
+):
+    """M-09/M-10/M-12: filtros parametrizados, ordenação segura e paginação."""
+    # As validações Query cobrem chamadas HTTP; as abaixo protegem chamadas diretas.
+    if pagina < 1 or not 1 <= limite <= 100:
+        raise HTTPException(422, "Paginação inválida.")
+    if bolsa_min is not None and bolsa_min < 0:
+        raise HTTPException(422, "Bolsa mínima inválida.")
+    if bolsa_max is not None and bolsa_max < 0:
+        raise HTTPException(422, "Bolsa máxima inválida.")
+    if bolsa_min is not None and bolsa_max is not None and bolsa_min > bolsa_max:
+        raise HTTPException(422, "Faixa de bolsa inválida.")
+
+    modalidades = {"presencial": "Presencial", "remoto": "Remoto", "hibrido": "Híbrido"}
+    niveis = {"estagio": "Estagiário", "junior": "Júnior", "pleno": "Pleno"}
+    ordenacoes = {
+        "recentes": "v.criado_em DESC, v.id_vaga DESC",
+        "antigas": "v.criado_em ASC, v.id_vaga ASC",
+        "bolsa_maior": "(v.bolsa IS NULL), v.bolsa DESC, v.id_vaga DESC",
+        "bolsa_menor": "(v.bolsa IS NULL), v.bolsa ASC, v.id_vaga DESC",
+    }
+    if modalidade is not None and modalidade not in modalidades:
+        raise HTTPException(422, "Modalidade inválida.")
+    if nivel is not None and nivel not in niveis:
+        raise HTTPException(422, "Nível inválido.")
+    if ordenar not in ordenacoes:
+        raise HTTPException(422, "Ordenação inválida.")
+    if uf is not None and (len(uf.strip()) != 2 or not uf.strip().isalpha()):
+        raise HTTPException(422, "UF inválida.")
+
     conexao = None
     cursor = None
-
     try:
-        # Obtém o ID do usuário autenticado.
         id_usuario = int(token["sub"])
-
         conexao = conectar()
         cursor = conexao.cursor(dictionary=True)
-
-        # Verifica se o usuário está ativo
-        # e possui uma conta de candidato.
-        cursor.execute(
-            """
-            SELECT
-                id_usuario,
-                tipo_usuario,
-                ativo,
-                deletado_em
-            FROM usuarios
-            WHERE id_usuario = %s
-            """,
-            (id_usuario,)
-        )
-
+        cursor.execute("""
+            SELECT id_usuario, tipo_usuario, ativo, deletado_em
+            FROM usuarios WHERE id_usuario = %s
+        """, (id_usuario,))
         usuario = cursor.fetchone()
-
-        if (
-            not usuario
-            or not usuario["ativo"]
-            or usuario["deletado_em"] is not None
-        ):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Conta inexistente ou indisponível."
-            )
-
+        if not usuario or not usuario["ativo"] or usuario["deletado_em"] is not None:
+            raise HTTPException(401, "Conta inexistente ou indisponível.")
         if usuario["tipo_usuario"] != "Candidato":
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Acesso permitido apenas para candidatos."
-            )
+            raise HTTPException(403, "Acesso permitido apenas para candidatos.")
 
-        # Busca o perfil do candidato.
-        cursor.execute(
-            """
-            SELECT id_candidato
-            FROM candidatos
-            WHERE id_usuario = %s
-            """,
-            (id_usuario,)
-        )
-
+        cursor.execute("SELECT id_candidato FROM candidatos WHERE id_usuario = %s", (id_usuario,))
         candidato = cursor.fetchone()
-
         if not candidato:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Perfil de candidato não encontrado."
-            )
+            raise HTTPException(404, "Perfil de candidato não encontrado.")
 
-        id_candidato = candidato["id_candidato"]
+        condicoes = [
+            "v.status = 'Aberta'",
+            "u.tipo_usuario = 'Empresa'",
+            "u.ativo = 1",
+            "u.deletado_em IS NULL",
+            "v.prazo_encerramento >= CURDATE()",
+        ]
+        parametros = []
+        if busca and busca.strip():
+            # Cada palavra deve aparecer em título, descrição ou empresa.
+            # ESCAPE impede que % e _ recebidos sejam curingas involuntários.
+            for palavra in busca.strip().split():
+                palavra = palavra.replace("!", "!!").replace("%", "!%").replace("_", "!_")
+                condicoes.append("""(
+                    v.titulo LIKE %s ESCAPE '!'
+                    OR v.descricao LIKE %s ESCAPE '!'
+                    OR e.nome_fantasia LIKE %s ESCAPE '!'
+                    OR e.razao_social LIKE %s ESCAPE '!'
+                )""")
+                parametros.extend([f"%{palavra}%"] * 4)
+        if cidade and cidade.strip():
+            condicoes.append("v.cidade = %s")
+            parametros.append(cidade.strip())
+        if uf:
+            condicoes.append("v.uf = %s")
+            parametros.append(uf.strip().upper())
+        if modalidade:
+            condicoes.append("v.modalidade = %s")
+            parametros.append(modalidades[modalidade])
+        if nivel:
+            condicoes.append("v.nivel = %s")
+            parametros.append(niveis[nivel])
+        if bolsa_min is not None:
+            condicoes.append("v.bolsa >= %s")
+            parametros.append(bolsa_min)
+        if bolsa_max is not None:
+            condicoes.append("v.bolsa <= %s")
+            parametros.append(bolsa_max)
+        if tag and tag.strip():
+            condicoes.append("""EXISTS (
+                SELECT 1 FROM vaga_tags vt
+                JOIN tags_conhecimento t ON t.id_tag = vt.id_tag
+                WHERE vt.id_vaga = v.id_vaga AND t.nome = %s
+            )""")
+            parametros.append(tag.strip())
 
-        # Busca vagas abertas e verifica se
-        # o candidato já se inscreveu em cada uma.
-        cursor.execute(
-            """
-            SELECT
-                v.id_vaga AS id,
-                v.titulo,
-                v.nivel,
-                v.descricao,
-                v.beneficios,
-                v.modalidade,
-                v.cidade,
-                v.uf AS estado,
-                v.bolsa AS salario_min,
-
-                COALESCE(
-                    NULLIF(e.nome_fantasia, ''),
-                    e.razao_social
-                ) AS empresa,
-
-                EXISTS (
-                    SELECT 1
-                    FROM candidaturas AS ca
-                    WHERE ca.id_vaga = v.id_vaga
-                      AND ca.id_candidato = %s
-                ) AS ja_candidatou
-
+        base_sql = """
             FROM vagas AS v
+            JOIN empresas AS e ON e.id_empresa = v.id_empresa
+            JOIN usuarios AS u ON u.id_usuario = e.id_usuario
+            WHERE """ + " AND ".join(condicoes)
+        total = None
+        if com_metadados:
+            cursor.execute("SELECT COUNT(*) AS total " + base_sql, tuple(parametros))
+            contagem = cursor.fetchone()
+            total = int(contagem["total"]) if contagem else 0
 
-            JOIN empresas AS e
-                ON e.id_empresa = v.id_empresa
-
-            JOIN usuarios AS u
-                ON u.id_usuario = e.id_usuario
-
-            WHERE v.status = 'Aberta'
-                AND u.tipo_usuario = 'Empresa'
-                AND u.ativo = 1
-                AND u.deletado_em IS NULL
-              AND (
-                  v.prazo_encerramento IS NULL
-                  OR v.prazo_encerramento >= CURDATE()
-              )
-
-            ORDER BY
-                v.criado_em DESC,
-                v.id_vaga DESC
-
-            LIMIT 50
-            """,
-            (id_candidato,)
-        )
-
+        sql = """
+            SELECT
+                v.id_vaga AS id, v.titulo, v.nivel, v.descricao,
+                v.beneficios, v.modalidade, v.cidade, v.uf AS estado,
+                v.bolsa AS salario_min,
+                COALESCE(NULLIF(e.nome_fantasia, ''), e.razao_social) AS empresa,
+                (SELECT GROUP_CONCAT(t.nome ORDER BY t.nome SEPARATOR ', ')
+                 FROM vaga_tags vt JOIN tags_conhecimento t ON t.id_tag = vt.id_tag
+                 WHERE vt.id_vaga = v.id_vaga) AS tags,
+                EXISTS (
+                    SELECT 1 FROM candidaturas AS ca
+                    WHERE ca.id_vaga = v.id_vaga AND ca.id_candidato = %s
+                ) AS ja_candidatou
+        """ + base_sql + " ORDER BY " + ordenacoes[ordenar] + " LIMIT %s OFFSET %s"
+        cursor.execute(sql, (candidato["id_candidato"], *parametros, limite, (pagina - 1) * limite))
         vagas = cursor.fetchall()
 
-        mapa_modalidade = {
-            "Presencial": "presencial",
-            "Remoto": "remoto",
-            "Híbrido": "hibrido"
-        }
-
+        mapa_modalidade = {"Presencial": "presencial", "Remoto": "remoto", "Híbrido": "hibrido"}
         resultado = []
-
         for vaga in vagas:
-            nivel = (
-                "junior"
-                if vaga["nivel"]
-                and vaga["nivel"].lower() in (
-                    "júnior", "junior"
-                )
-                else "estagio"
+            nivel_vaga = (vaga.get("nivel") or "").lower()
+            nivel_formatado = "junior" if nivel_vaga in ("júnior", "junior") else (
+                "pleno" if nivel_vaga == "pleno" else "estagio"
             )
-
-            salario = (
-                float(vaga["salario_min"])
-                if vaga["salario_min"] is not None
-                else None
-            )
-
             resultado.append({
-                "id": vaga["id"],
-                "titulo": vaga["titulo"],
-                "empresa": vaga["empresa"],
-                "nivel": nivel,
-                "modalidade": mapa_modalidade.get(
-                    vaga["modalidade"],
-                    "presencial"
-                ),
-                "cidade": vaga["cidade"],
-                "estado": vaga["estado"],
-                "salario_min": salario,
-                "descricao": vaga["descricao"],
-                "beneficios": vaga["beneficios"],
-                "requisitos": None,
-                "tags": "",
-                "ja_candidatou": bool(
-                    vaga["ja_candidatou"]
-                ),
-
-                # A IA ainda não foi integrada.
-                # Não inventamos uma pontuação.
-                "match": {
-                    "score": None,
-                    "cor": "#6b7280",
-                    "avaliado": False,
-                    "veredicto": None,
-                    "motivo": None
-                }
+                "id": vaga["id"], "titulo": vaga["titulo"],
+                "empresa": vaga["empresa"], "nivel": nivel_formatado,
+                "modalidade": mapa_modalidade.get(vaga["modalidade"], "presencial"),
+                "cidade": vaga["cidade"], "estado": vaga["estado"],
+                "salario_min": float(vaga["salario_min"]) if vaga["salario_min"] is not None else None,
+                "descricao": vaga["descricao"], "beneficios": vaga["beneficios"],
+                "requisitos": None, "tags": vaga.get("tags") or "",
+                "ja_candidatou": bool(vaga["ja_candidatou"]),
+                "match": {"score": None, "cor": "#6b7280", "avaliado": False,
+                          "veredicto": None, "motivo": None},
             })
 
-        return resultado
-
+        if not com_metadados:
+            return resultado  # Contrato antigo para dashboard.js
+        return {
+            "items": resultado, "total": total, "pagina": pagina, "limite": limite,
+            "total_paginas": (total + limite - 1) // limite,
+            "tem_proxima": pagina * limite < total,
+        }
     except HTTPException:
         raise
-
-    except (ValueError, TypeError, KeyError):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Identificação de usuário inválida."
-        )
-
+    except (ValueError, TypeError, KeyError) as erro:
+        raise HTTPException(401, "Identificação de usuário inválida.") from erro
     except (Error, RuntimeError) as erro:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Não foi possível consultar as vagas."
-        ) from erro
-
+        raise HTTPException(503, "Não foi possível consultar as vagas.") from erro
     finally:
         if cursor is not None:
             cursor.close()
-
         if conexao is not None:
             conexao.close()
 
@@ -1738,5 +1783,82 @@ def remover_habilidade_candidato(
         if cursor is not None:
             cursor.close()
 
+        if conexao is not None:
+            conexao.close()
+
+# ============================================================
+# DETALHES DA VAGA DISPONÍVEL AO CANDIDATO (M-11)
+# GET /dashboard/api/candidato/vagas/{id_vaga}
+# ============================================================
+@router.get("/candidato/vagas/{id_vaga}")
+def detalhar_vaga_candidato(
+    id_vaga: int,
+    token: dict = Depends(obter_usuario_autenticado),
+):
+    if id_vaga <= 0:
+        raise HTTPException(status_code=422, detail="ID de vaga inválido.")
+
+    conexao = None
+    cursor = None
+    try:
+        id_usuario = int(token["sub"])
+        conexao = conectar()
+        cursor = conexao.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT u.tipo_usuario, u.ativo, u.deletado_em, c.id_candidato
+            FROM usuarios AS u
+            LEFT JOIN candidatos AS c ON c.id_usuario = u.id_usuario
+            WHERE u.id_usuario = %s
+        """, (id_usuario,))
+        usuario = cursor.fetchone()
+        if not usuario or not usuario["ativo"] or usuario["deletado_em"] is not None:
+            raise HTTPException(status_code=401, detail="Conta indisponível.")
+        if usuario["tipo_usuario"] != "Candidato":
+            raise HTTPException(status_code=403, detail="Acesso restrito a candidatos.")
+        if usuario["id_candidato"] is None:
+            raise HTTPException(status_code=404, detail="Perfil não encontrado.")
+
+        cursor.execute("""
+            SELECT
+                v.id_vaga AS id, v.titulo, v.descricao, v.beneficios,
+                v.modalidade, v.nivel, v.cidade, v.uf AS estado,
+                v.bolsa AS salario_min, v.prazo_encerramento, v.status,
+                COALESCE(NULLIF(e.nome_fantasia, ''), e.razao_social) AS empresa,
+                (SELECT GROUP_CONCAT(t.nome ORDER BY t.nome SEPARATOR ', ')
+                 FROM vaga_tags vt
+                 JOIN tags_conhecimento t ON t.id_tag = vt.id_tag
+                 WHERE vt.id_vaga = v.id_vaga) AS tags,
+                EXISTS (
+                    SELECT 1 FROM candidaturas ca
+                    WHERE ca.id_vaga = v.id_vaga AND ca.id_candidato = %s
+                ) AS ja_candidatou
+            FROM vagas v
+            JOIN empresas e ON e.id_empresa = v.id_empresa
+            JOIN usuarios ue ON ue.id_usuario = e.id_usuario
+            WHERE v.id_vaga = %s
+              AND v.status = 'Aberta'
+              AND v.prazo_encerramento >= CURDATE()
+              AND ue.tipo_usuario = 'Empresa'
+              AND ue.ativo = 1 AND ue.deletado_em IS NULL
+        """, (usuario["id_candidato"], id_vaga))
+        vaga = cursor.fetchone()
+        if vaga is None:
+            raise HTTPException(status_code=404, detail="Vaga indisponível ou não encontrada.")
+        # Padroniza tipos para respostas JSON, sem alterar registros no banco.
+        if vaga.get("salario_min") is not None:
+            vaga["salario_min"] = float(vaga["salario_min"])
+        if vaga.get("prazo_encerramento") is not None:
+            vaga["prazo_encerramento"] = vaga["prazo_encerramento"].isoformat()
+        vaga["ja_candidatou"] = bool(vaga["ja_candidatou"])
+        return vaga
+    except HTTPException:
+        raise
+    except (ValueError, TypeError, KeyError) as erro:
+        raise HTTPException(status_code=401, detail="Identificação inválida.") from erro
+    except (Error, RuntimeError) as erro:
+        raise HTTPException(status_code=503, detail="Erro ao consultar vaga.") from erro
+    finally:
+        if cursor is not None:
+            cursor.close()
         if conexao is not None:
             conexao.close()
