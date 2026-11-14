@@ -3,6 +3,8 @@ from typing import Literal
 from pydantic import BaseModel, EmailStr, Field, field_validator
 import re
 
+from seguranca.cnpj import validar_cnpj
+
 
 class LoginRequest(BaseModel):
     email: EmailStr
@@ -88,6 +90,7 @@ class EmpresaCadastro(BaseModel):
 
         return valor
 
+
     @field_validator("cnpj", mode="before")
     @classmethod
     def tratar_cnpj(cls, valor):
@@ -95,21 +98,23 @@ class EmpresaCadastro(BaseModel):
             return None
 
         if not isinstance(valor, str):
-            return valor
+            raise ValueError("Informe um CNPJ válido.")
 
-        valor = valor.strip()
+        valor = valor.strip().upper()
 
         if not valor:
             return None
 
-        numeros = re.sub(r"\D", "", valor)
+        if not validar_cnpj(valor):
+            raise ValueError(
+                "CNPJ inválido. Verifique os caracteres e os dígitos verificadores."
+            )
 
-        if len(numeros) != 14:
-            raise ValueError("O CNPJ deve conter 14 números.")
+        caracteres = re.sub(r"[./-]", "", valor)
 
         return (
-            f"{numeros[:2]}.{numeros[2:5]}."
-            f"{numeros[5:8]}/{numeros[8:12]}-{numeros[12:]}"
+            f"{caracteres[:2]}.{caracteres[2:5]}."
+            f"{caracteres[5:8]}/{caracteres[8:12]}-{caracteres[12:]}"
         )
 
     @field_validator("password")

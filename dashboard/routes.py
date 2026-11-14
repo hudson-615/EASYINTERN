@@ -319,7 +319,7 @@ def listar_candidaturas_candidato(
         mapa_status = {
             "Pendente": "pendente",
             "Em Análise": "em_analise",
-            "Entrevista": "em_analise",
+            "Entrevista": "entrevista",
             "Aprovado": "aprovado",
             "Reprovado": "reprovado"
         }
@@ -515,7 +515,13 @@ def listar_vagas_recomendadas(
             JOIN empresas AS e
                 ON e.id_empresa = v.id_empresa
 
+            JOIN usuarios AS u
+                ON u.id_usuario = e.id_usuario
+
             WHERE v.status = 'Aberta'
+                AND u.tipo_usuario = 'Empresa'
+                AND u.ativo = 1
+                AND u.deletado_em IS NULL
               AND (
                   v.prazo_encerramento IS NULL
                   OR v.prazo_encerramento >= CURDATE()
@@ -716,20 +722,27 @@ def candidatar_a_vaga(
         cursor.execute(
             """
             SELECT
-                status = 'Aberta'
+                v.status = 'Aberta'
                 AND (
-                    prazo_encerramento IS NULL
-                    OR prazo_encerramento >= CURDATE()
-                ) AS disponivel
-            FROM vagas
-            WHERE id_vaga = %s
+                    v.prazo_encerramento IS NULL
+                    OR v.prazo_encerramento >= CURDATE()
+                )
+                AND u.tipo_usuario = 'Empresa'
+                AND u.ativo = 1
+                AND u.deletado_em IS NULL AS disponivel
+            FROM vagas AS v
+            JOIN empresas AS e
+                ON e.id_empresa = v.id_empresa
+            JOIN usuarios AS u
+                ON u.id_usuario = e.id_usuario
+            WHERE v.id_vaga = %s
             """,
             (dados.id_vaga,)
         )
 
         disponivel = cursor.fetchone()
 
-        if not disponivel["disponivel"]:
+        if not disponivel or not disponivel["disponivel"]:
             raise HTTPException(
                 status_code=409,
                 detail="Esta vaga não está disponível."

@@ -8,8 +8,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
-  <link rel="stylesheet" href="./static/css/easyintern.css" />
-  <link rel="stylesheet" href="./static/css/dashboard.css?v=6" />
+  <link rel="stylesheet" href="/static/css/easyintern.css" />
+  <link rel="stylesheet" href="/static/css/dashboard.css?v=6" />
 </head>
 <body class="dash-body" data-panel="empresa">
 
@@ -284,6 +284,14 @@
           </div>
         </div>
 
+          <div class="field-group">
+            <label class="field-label" for="vaga-prazo">
+              <i class="bi bi-calendar-event"></i>
+              Prazo de Encerramento *
+            </label>
+            <input type="date" class="field-input" id="vaga-prazo" required />
+          </div>
+
         <div class="form-actions">
           <button type="button" class="btn btn-ghost" id="btn-cancelar-vaga">Cancelar</button>
           <button type="submit" class="btn btn-primary" id="btn-publicar-vaga">
@@ -304,14 +312,13 @@
           <div class="perfil-avatar-lg" aria-hidden="true">
             <i class="bi bi-building"></i>
           </div>
-          <h2 class="perfil-nome" id="empresa-perfil-nome">TechNova Soluções</h2>
-          <span class="perfil-nivel-tag" id="empresa-perfil-setor">Tecnologia & Inovação</span>
+          <h2 class="perfil-nome" id="empresa-perfil-nome">Carregando...</h2>
+          <span class="perfil-nivel-tag" id="empresa-perfil-setor">Carregando...</span>
         </div>
         <div class="perfil-info-list" id="empresa-info-list">
-          <div class="perfil-info-item"><i class="bi bi-card-heading"></i>CNPJ: 12.345.678/0001-90</div>
-          <div class="perfil-info-item"><i class="bi bi-envelope-fill"></i>recrutamento@technova.com</div>
-          <div class="perfil-info-item"><i class="bi bi-geo-alt-fill"></i>São Paulo, SP</div>
-          <div class="perfil-info-item"><i class="bi bi-briefcase-fill"></i>5 vagas publicadas</div>
+              <div class="perfil-info-list" id="empresa-info-list">
+                <div class="perfil-info-item">Carregando informações...</div>
+              </div>
         </div>
       </div>
       <div class="glass-card perfil-area-card">
@@ -319,7 +326,7 @@
           <h3><i class="bi bi-info-circle-fill"></i> Sobre a Empresa</h3>
         </div>
         <div class="card-body">
-          <p class="perfil-area">Empresa focada em transformação digital, engenharia de software e desenvolvimento de novos talentos.</p>
+          <p class="perfil-area" id="empresa-perfil-descricao">Carregando descrição...</p>
           <p class="perfil-hint">As informações da sua organização são integradas às vagas recomendadas para gerar compatibilidade com os candidatos.</p>
         </div>
       </div>
@@ -337,8 +344,8 @@
           <p class="settings-theme-description">Escolha a paleta que prefere para o painel.</p>
         </div>
         <button type="button" class="theme-toggle-button" id="btn-theme-toggle" aria-pressed="false">
-          <img src="./static/img/moon.png" class="theme-icon theme-icon--moon" alt="Lua" width="18" height="18" style="vertical-align:middle;margin-right:6px;">
-          <img src="./static/img/sun.svg" class="theme-icon theme-icon--sun" alt="Sol" width="18" height="18" hidden style="vertical-align:middle;margin-right:6px;">
+          <img src="/static/img/moon.png" class="theme-icon theme-icon--moon" alt="Lua" width="18" height="18" style="vertical-align:middle;margin-right:6px;">
+          <img src="/static/img/sun.svg" class="theme-icon theme-icon--sun" alt="Sol" width="18" height="18" hidden style="vertical-align:middle;margin-right:6px;">
           <span>Ativar modo escuro</span>
         </button>
       </div>
@@ -489,6 +496,7 @@
         <select class="field-input field-select" id="select-status-cand">
           <option value="pendente">Pendente</option>
           <option value="em_analise">Em Análise</option>
+          <option value="entrevista">Entrevista</option>
           <option value="aprovado">Aprovado ✓</option>
           <option value="reprovado">Reprovado ✗</option>
         </select>
@@ -507,6 +515,6 @@
 
 <!-- Maxwell Barvian's NumberFlow custom element -->
 <script type="module" src="https://esm.sh/number-flow"></script>
-<script src="./static/js/dashboard.js?v=6"></script>
+<script src="/static/js/dashboard.js?v=8"></script>
 </body>
 </html>

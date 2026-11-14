@@ -9,6 +9,8 @@ from database.connection import conectar
 from usuarios.routes import router as usuarios_router
 from dados.routes import router as dados_router
 from dashboard.routes import router as dashboard_router
+from dashboard.empresa_routes import router as empresa_router
+
 from dashboard.formacoes_routes import router as formacoes_router
 
 
@@ -42,6 +44,8 @@ templates = Jinja2Templates(
 app.include_router(usuarios_router)
 app.include_router(dados_router)
 app.include_router(dashboard_router)
+app.include_router(empresa_router)
+
 app.include_router(formacoes_router)
 
 @app.get("/")
@@ -64,6 +68,14 @@ def pagina_dashboard_candidato(request: Request):
     return templates.TemplateResponse(
         request=request,
         name="candidato_dashboard.html"
+    )
+
+
+@app.get("/dashboard/empresa", response_class=HTMLResponse)
+def pagina_dashboard_empresa(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="recrutador_painel.html"
     )
 
 
