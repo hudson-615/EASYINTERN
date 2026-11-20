@@ -1,4 +1,4 @@
-﻿from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi import HTTPException
@@ -59,7 +59,7 @@ def test_atualiza_status_e_registra_auditoria():
     conexao, cursor = preparar_conexao({
         "id_candidatura": 10,
         "id_vaga": 20,
-        "status": "Pendente"
+        "status": "Em Análise"
     })
 
     resultado = executar(conexao)
@@ -112,3 +112,68 @@ def test_falha_mysql():
 
     assert erro.value.status_code == 503
     assert "Falha simulada" not in erro.value.detail
+
+
+@pytest.mark.parametrize("atual,novo", [
+    ("Pendente", "em_analise"),
+    ("Pendente", "reprovado"),
+    ("Em Análise", "entrevista"),
+    ("Em Análise", "reprovado"),
+    ("Entrevista", "aprovado"),
+    ("Entrevista", "reprovado"),
+])
+def test_transicao_permitida(atual, novo):
+    conexao, cursor = preparar_conexao({
+        "id_candidatura": 10,
+        "id_vaga": 20,
+        "status": atual,
+    })
+    resposta = executar(conexao, novo)
+    assert resposta["status"] == novo
+    assert cursor.execute.call_count == 4
+    conexao.commit.assert_called_once()
+
+
+@pytest.mark.parametrize("atual,novo", [
+    ("Pendente", "entrevista"),
+    ("Pendente", "aprovado"),
+    ("Em Análise", "pendente"),
+    ("Em Análise", "aprovado"),
+    ("Entrevista", "pendente"),
+    ("Entrevista", "em_analise"),
+    ("Aprovado", "pendente"),
+    ("Aprovado", "reprovado"),
+    ("Reprovado", "pendente"),
+    ("Reprovado", "aprovado"),
+])
+def test_transicao_bloqueada_sem_alterar_banco(atual, novo):
+    conexao, cursor = preparar_conexao({
+        "id_candidatura": 10,
+        "id_vaga": 20,
+        "status": atual,
+    })
+    with pytest.raises(HTTPException) as erro:
+        executar(conexao, novo)
+    assert erro.value.status_code == 409
+    assert cursor.execute.call_count == 2
+    conexao.commit.assert_not_called()
+    conexao.rollback.assert_called_once()
+
+
+@pytest.mark.parametrize("atual,mesmo", [
+    ("Pendente", "pendente"),
+    ("Em Análise", "em_analise"),
+    ("Entrevista", "entrevista"),
+    ("Aprovado", "aprovado"),
+    ("Reprovado", "reprovado"),
+])
+def test_status_repetido_em_qualquer_etapa(atual, mesmo):
+    conexao, cursor = preparar_conexao({
+        "id_candidatura": 10,
+        "id_vaga": 20,
+        "status": atual,
+    })
+    resposta = executar(conexao, mesmo)
+    assert resposta["status"] == mesmo
+    assert cursor.execute.call_count == 2
+    conexao.commit.assert_called_once()
