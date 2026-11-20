@@ -5,7 +5,11 @@ from database.connection import conectar
 from usuarios.routes import obter_usuario_autenticado
 from pydantic import BaseModel, Field
 from mysql.connector import IntegrityError
-
+from usuarios.schemas import (
+    CandidatoPerfilAtualizacao,
+    CandidatoHabilidadeCadastro,
+    CandidatoHabilidadeAtualizacao,
+)
 
 router = APIRouter(
     prefix="/dashboard/api",
@@ -818,6 +822,916 @@ def candidatar_a_vaga(
         raise HTTPException(
             status_code=503,
             detail="Não foi possível registrar a candidatura."
+        ) from erro
+
+    finally:
+        if cursor is not None:
+            cursor.close()
+
+        if conexao is not None:
+            conexao.close()
+
+# ============================================================
+# PERFIL DO CANDIDATO
+# GET /dashboard/api/candidato/perfil
+# ============================================================
+
+@router.get("/candidato/perfil")
+def consultar_perfil_candidato(
+    token: dict = Depends(obter_usuario_autenticado)
+):
+    conexao = None
+    cursor = None
+
+    try:
+        id_usuario = int(token["sub"])
+
+        conexao = conectar()
+        cursor = conexao.cursor(dictionary=True)
+
+        # Confirma que a conta existe e está ativa.
+        cursor.execute(
+            """
+            SELECT tipo_usuario, ativo, deletado_em
+            FROM usuarios
+            WHERE id_usuario = %s
+            """,
+            (id_usuario,)
+        )
+
+        usuario = cursor.fetchone()
+
+        if (
+            not usuario
+            or not usuario["ativo"]
+            or usuario["deletado_em"] is not None
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Conta inexistente ou indisponível."
+            )
+
+        if usuario["tipo_usuario"] != "Candidato":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Acesso permitido apenas para candidatos."
+            )
+
+        # Busca somente o perfil do usuário autenticado.
+        cursor.execute(
+            """
+            SELECT
+                id_candidato,
+                nome_completo,
+                nivel_carreira,
+                telefone,
+                cidade,
+                uf,
+                linkedin_url,
+                github_url,
+                biografia
+            FROM candidatos
+            WHERE id_usuario = %s
+            """,
+            (id_usuario,)
+        )
+
+        candidato = cursor.fetchone()
+
+        if not candidato:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Perfil de candidato não encontrado."
+            )
+
+        return candidato
+
+    except HTTPException:
+        raise
+
+    except (ValueError, TypeError, KeyError) as erro:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Identificação de usuário inválida."
+        ) from erro
+
+    except Error as erro:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erro ao consultar perfil do candidato."
+        ) from erro
+
+    finally:
+        if cursor:
+            cursor.close()
+
+        if conexao:
+            conexao.close()
+
+# ============================================================
+# ATUALIZAR PERFIL DO CANDIDATO
+# PATCH /dashboard/api/candidato/perfil
+# ============================================================
+
+@router.patch("/candidato/perfil")
+def atualizar_perfil_candidato(
+    dados: CandidatoPerfilAtualizacao,
+    token: dict = Depends(obter_usuario_autenticado)
+):
+    conexao = None
+    cursor = None
+
+    try:
+        id_usuario = int(token["sub"])
+
+        conexao = conectar()
+        cursor = conexao.cursor(dictionary=True)
+
+        # Verifica a conta autenticada.
+        cursor.execute(
+            """
+            SELECT tipo_usuario, ativo, deletado_em
+            FROM usuarios
+            WHERE id_usuario = %s
+            """,
+            (id_usuario,)
+        )
+
+        usuario = cursor.fetchone()
+
+        if (
+            not usuario
+            or not usuario["ativo"]
+            or usuario["deletado_em"] is not None
+        ):
+            raise HTTPException(
+                status_code=401,
+                detail="Conta inexistente ou indisponível."
+            )
+
+        if usuario["tipo_usuario"] != "Candidato":
+            raise HTTPException(
+                status_code=403,
+                detail="Acesso permitido apenas para candidatos."
+            )
+
+        # Confirma a existência do perfil.
+        cursor.execute(
+            """
+            SELECT id_candidato
+            FROM candidatos
+            WHERE id_usuario = %s
+            """,
+            (id_usuario,)
+        )
+
+        candidato = cursor.fetchone()
+
+        if not candidato:
+            raise HTTPException(
+                status_code=404,
+                detail="Perfil de candidato não encontrado."
+            )
+
+        # Considera somente os campos enviados.
+        alteracoes = dados.model_dump(exclude_unset=True)
+
+        if not alteracoes:
+            raise HTTPException(
+                status_code=400,
+                detail="Nenhum campo enviado para atualização."
+            )
+
+        # Campos permitidos, definidos pelo servidor.
+        campos_permitidos = {
+            "nome_completo",
+            "telefone",
+            "cidade",
+            "uf",
+            "nivel_carreira",
+            "linkedin_url",
+            "github_url",
+            "biografia"
+        }
+
+        if not set(alteracoes).issubset(campos_permitidos):
+            raise HTTPException(
+                status_code=400,
+                detail="Campo não permitido."
+            )
+
+        # Monta o UPDATE usando apenas nomes
+        # de colunas autorizados pelo servidor.
+        colunas = ", ".join(
+            f"{campo} = %s"
+            for campo in alteracoes
+        )
+
+        valores = list(alteracoes.values())
+        valores.append(id_usuario)
+
+        cursor.execute(
+            f"""
+            UPDATE candidatos
+            SET {colunas}
+            WHERE id_usuario = %s
+            """,
+            tuple(valores)
+        )
+
+        conexao.commit()
+
+        return {
+            "mensagem": "Perfil atualizado com sucesso.",
+            "id_candidato": candidato["id_candidato"]
+        }
+
+    except HTTPException:
+        if conexao:
+            conexao.rollback()
+        raise
+
+    except (ValueError, TypeError, KeyError) as erro:
+        if conexao:
+            conexao.rollback()
+        raise HTTPException(
+            status_code=401,
+            detail="Identificação de usuário inválida."
+        ) from erro
+
+    except Error as erro:
+        if conexao:
+            conexao.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail="Erro ao atualizar perfil."
+        ) from erro
+
+    finally:
+        if cursor:
+            cursor.close()
+
+        if conexao:
+            conexao.close()
+
+
+# ============================================================
+# CATÁLOGO DE HABILIDADES
+# GET /dashboard/api/habilidades/catalogo
+# ============================================================
+
+@router.get("/habilidades/catalogo")
+def listar_catalogo_habilidades(
+    token: dict = Depends(obter_usuario_autenticado)
+):
+    conexao = None
+    cursor = None
+
+    try:
+        id_usuario = int(token["sub"])
+
+        conexao = conectar()
+        cursor = conexao.cursor(dictionary=True)
+
+        # Verifica a conta do usuário autenticado.
+        cursor.execute(
+            """
+            SELECT tipo_usuario, ativo, deletado_em
+            FROM usuarios
+            WHERE id_usuario = %s
+            """,
+            (id_usuario,)
+        )
+
+        usuario = cursor.fetchone()
+
+        if (
+            not usuario
+            or not usuario["ativo"]
+            or usuario["deletado_em"] is not None
+        ):
+            raise HTTPException(
+                status_code=401,
+                detail="Conta inexistente ou indisponível."
+            )
+
+        if usuario["tipo_usuario"] != "Candidato":
+            raise HTTPException(
+                status_code=403,
+                detail="Acesso permitido apenas para candidatos."
+            )
+
+        cursor.execute(
+            """
+            SELECT id_tag, nome, categoria
+            FROM tags_conhecimento
+            ORDER BY categoria, nome
+            """
+        )
+
+        habilidades = cursor.fetchall()
+
+        return {
+            "total": len(habilidades),
+            "habilidades": habilidades
+        }
+
+    except HTTPException:
+        raise
+
+    except (ValueError, TypeError, KeyError) as erro:
+        raise HTTPException(
+            status_code=401,
+            detail="Identificação de usuário inválida."
+        ) from erro
+
+    except Error as erro:
+        raise HTTPException(
+            status_code=500,
+            detail="Erro ao consultar catálogo de habilidades."
+        ) from erro
+
+    finally:
+        if cursor is not None:
+            cursor.close()
+
+        if conexao is not None:
+            conexao.close()
+
+# ============================================================
+# HABILIDADES DO CANDIDATO
+# GET /dashboard/api/candidato/habilidades
+# ============================================================
+
+@router.get("/candidato/habilidades")
+def listar_habilidades_candidato(
+    token: dict = Depends(obter_usuario_autenticado)
+):
+    conexao = None
+    cursor = None
+
+    try:
+        id_usuario = int(token["sub"])
+
+        conexao = conectar()
+        cursor = conexao.cursor(dictionary=True)
+
+        # Confirma a conta e o tipo de usuário.
+        cursor.execute(
+            """
+            SELECT tipo_usuario, ativo, deletado_em
+            FROM usuarios
+            WHERE id_usuario = %s
+            """,
+            (id_usuario,)
+        )
+
+        usuario = cursor.fetchone()
+
+        if (
+            not usuario
+            or not usuario["ativo"]
+            or usuario["deletado_em"] is not None
+        ):
+            raise HTTPException(
+                status_code=401,
+                detail="Conta inexistente ou indisponível."
+            )
+
+        if usuario["tipo_usuario"] != "Candidato":
+            raise HTTPException(
+                status_code=403,
+                detail="Acesso permitido apenas para candidatos."
+            )
+
+        # Localiza o candidato pelo JWT.
+        cursor.execute(
+            """
+            SELECT id_candidato
+            FROM candidatos
+            WHERE id_usuario = %s
+            """,
+            (id_usuario,)
+        )
+
+        candidato = cursor.fetchone()
+
+        if not candidato:
+            raise HTTPException(
+                status_code=404,
+                detail="Perfil de candidato não encontrado."
+            )
+
+        id_candidato = candidato["id_candidato"]
+
+        # Busca as habilidades do próprio candidato.
+        cursor.execute(
+            """
+            SELECT
+                t.id_tag,
+                t.nome,
+                t.categoria,
+                ct.nivel
+            FROM candidato_tags AS ct
+            JOIN tags_conhecimento AS t
+                ON t.id_tag = ct.id_tag
+            WHERE ct.id_candidato = %s
+            ORDER BY t.categoria, t.nome
+            """,
+            (id_candidato,)
+        )
+
+        habilidades = cursor.fetchall()
+
+        return {
+            "id_candidato": id_candidato,
+            "total": len(habilidades),
+            "habilidades": habilidades
+        }
+
+    except HTTPException:
+        raise
+
+    except (ValueError, TypeError, KeyError) as erro:
+        raise HTTPException(
+            status_code=401,
+            detail="Identificação de usuário inválida."
+        ) from erro
+
+    except Error as erro:
+        raise HTTPException(
+            status_code=500,
+            detail="Erro ao consultar habilidades do candidato."
+        ) from erro
+
+    finally:
+        if cursor is not None:
+            cursor.close()
+
+        if conexao is not None:
+            conexao.close()
+
+# ============================================================
+# CADASTRAR HABILIDADE DO CANDIDATO
+# POST /dashboard/api/candidato/habilidades
+# ============================================================
+
+@router.post(
+    "/candidato/habilidades",
+    status_code=status.HTTP_201_CREATED
+)
+def cadastrar_habilidade_candidato(
+    dados: CandidatoHabilidadeCadastro,
+    token: dict = Depends(obter_usuario_autenticado)
+):
+    conexao = None
+    cursor = None
+
+    try:
+        id_usuario = int(token["sub"])
+
+        conexao = conectar()
+        cursor = conexao.cursor(dictionary=True)
+
+        # Confirma a identidade e as permissões.
+        cursor.execute(
+            """
+            SELECT tipo_usuario, ativo, deletado_em
+            FROM usuarios
+            WHERE id_usuario = %s
+            """,
+            (id_usuario,)
+        )
+
+        usuario = cursor.fetchone()
+
+        if (
+            not usuario
+            or not usuario["ativo"]
+            or usuario["deletado_em"] is not None
+        ):
+            raise HTTPException(
+                status_code=401,
+                detail="Conta inexistente ou indisponível."
+            )
+
+        if usuario["tipo_usuario"] != "Candidato":
+            raise HTTPException(
+                status_code=403,
+                detail="Acesso permitido apenas para candidatos."
+            )
+
+        # Identifica o candidato autenticado.
+        cursor.execute(
+            """
+            SELECT id_candidato
+            FROM candidatos
+            WHERE id_usuario = %s
+            """,
+            (id_usuario,)
+        )
+
+        candidato = cursor.fetchone()
+
+        if not candidato:
+            raise HTTPException(
+                status_code=404,
+                detail="Perfil de candidato não encontrado."
+            )
+
+        id_candidato = candidato["id_candidato"]
+
+        # Confirma que a habilidade existe no catálogo.
+        cursor.execute(
+            """
+            SELECT id_tag, nome, categoria
+            FROM tags_conhecimento
+            WHERE id_tag = %s
+            """,
+            (dados.id_tag,)
+        )
+
+        habilidade = cursor.fetchone()
+
+        if not habilidade:
+            raise HTTPException(
+                status_code=404,
+                detail="Habilidade não encontrada no catálogo."
+            )
+
+        # Verifica se o candidato já cadastrou a habilidade.
+        cursor.execute(
+            """
+            SELECT id_tag
+            FROM candidato_tags
+            WHERE id_candidato = %s
+              AND id_tag = %s
+            """,
+            (id_candidato, dados.id_tag)
+        )
+
+        if cursor.fetchone():
+            raise HTTPException(
+                status_code=409,
+                detail="Esta habilidade já está cadastrada."
+            )
+
+        # Grava a habilidade vinculada ao candidato.
+        cursor.execute(
+            """
+            INSERT INTO candidato_tags (
+                id_candidato,
+                id_tag,
+                nivel
+            )
+            VALUES (%s, %s, %s)
+            """,
+            (
+                id_candidato,
+                dados.id_tag,
+                dados.nivel
+            )
+        )
+
+        conexao.commit()
+
+        return {
+            "mensagem": "Habilidade cadastrada com sucesso.",
+            "habilidade": {
+                "id_tag": habilidade["id_tag"],
+                "nome": habilidade["nome"],
+                "categoria": habilidade["categoria"],
+                "nivel": dados.nivel
+            }
+        }
+
+    except HTTPException:
+        if conexao is not None:
+            conexao.rollback()
+        raise
+
+    except (ValueError, TypeError, KeyError) as erro:
+        if conexao is not None:
+            conexao.rollback()
+
+        raise HTTPException(
+            status_code=401,
+            detail="Identificação de usuário inválida."
+        ) from erro
+
+    except IntegrityError as erro:
+        if conexao is not None:
+            conexao.rollback()
+
+        if erro.errno == 1062:
+            raise HTTPException(
+                status_code=409,
+                detail="Esta habilidade já está cadastrada."
+            ) from erro
+
+        raise HTTPException(
+            status_code=500,
+            detail="Erro de integridade ao cadastrar habilidade."
+        ) from erro
+
+    except Error as erro:
+        if conexao is not None:
+            conexao.rollback()
+
+        raise HTTPException(
+            status_code=500,
+            detail="Erro ao cadastrar habilidade."
+        ) from erro
+
+    finally:
+        if cursor is not None:
+            cursor.close()
+
+        if conexao is not None:
+            conexao.close()
+
+# ============================================================
+# ATUALIZAR NÍVEL DA HABILIDADE DO CANDIDATO
+# PATCH /dashboard/api/candidato/habilidades/{id_tag}
+# ============================================================
+
+@router.patch("/candidato/habilidades/{id_tag}")
+def atualizar_nivel_habilidade_candidato(
+    id_tag: int,
+    dados: CandidatoHabilidadeAtualizacao,
+    token: dict = Depends(obter_usuario_autenticado)
+):
+    conexao = None
+    cursor = None
+
+    try:
+        id_usuario = int(token["sub"])
+
+        conexao = conectar()
+        cursor = conexao.cursor(dictionary=True)
+
+        cursor.execute(
+            """
+            SELECT
+                c.id_candidato,
+                u.tipo_usuario,
+                u.ativo,
+                u.deletado_em
+            FROM usuarios AS u
+            LEFT JOIN candidatos AS c
+                ON c.id_usuario = u.id_usuario
+            WHERE u.id_usuario = %s
+            """,
+            (id_usuario,)
+        )
+
+        usuario = cursor.fetchone()
+
+        if (
+            not usuario
+            or not usuario["ativo"]
+            or usuario["deletado_em"] is not None
+        ):
+            raise HTTPException(
+                status_code=401,
+                detail="Conta inexistente ou indisponível."
+            )
+
+        if usuario["tipo_usuario"] != "Candidato":
+            raise HTTPException(
+                status_code=403,
+                detail="Acesso permitido apenas para candidatos."
+            )
+
+        if usuario["id_candidato"] is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Perfil de candidato não encontrado."
+            )
+
+        id_candidato = usuario["id_candidato"]
+
+        cursor.execute(
+            """
+            SELECT
+                ct.id_tag,
+                ct.nivel,
+                t.nome
+            FROM candidato_tags AS ct
+            JOIN tags_conhecimento AS t
+                ON t.id_tag = ct.id_tag
+            WHERE ct.id_candidato = %s
+              AND ct.id_tag = %s
+            FOR UPDATE
+            """,
+            (id_candidato, id_tag)
+        )
+
+        habilidade = cursor.fetchone()
+
+        if not habilidade:
+            raise HTTPException(
+                status_code=404,
+                detail="Habilidade não cadastrada no perfil."
+            )
+
+        if habilidade["nivel"] == dados.nivel:
+            return {
+                "mensagem": "A habilidade já possui este nível.",
+                "id_tag": id_tag,
+                "nome": habilidade["nome"],
+                "nivel": dados.nivel
+            }
+
+        cursor.execute(
+            """
+            UPDATE candidato_tags
+            SET nivel = %s
+            WHERE id_candidato = %s
+              AND id_tag = %s
+            """,
+            (
+                dados.nivel,
+                id_candidato,
+                id_tag
+            )
+        )
+
+        conexao.commit()
+
+        return {
+            "mensagem": "Nível atualizado com sucesso.",
+            "id_tag": id_tag,
+            "nome": habilidade["nome"],
+            "nivel": dados.nivel
+        }
+
+    except HTTPException:
+        if conexao is not None:
+            conexao.rollback()
+        raise
+
+    except (ValueError, TypeError, KeyError) as erro:
+        if conexao is not None:
+            conexao.rollback()
+        raise HTTPException(
+            status_code=401,
+            detail="Identificação de usuário inválida."
+        ) from erro
+
+    except Error as erro:
+        if conexao is not None:
+            conexao.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail="Erro ao atualizar nível da habilidade."
+        ) from erro
+
+    finally:
+        if cursor is not None:
+            cursor.close()
+
+        if conexao is not None:
+            conexao.close()
+
+# ============================================================
+# REMOVER HABILIDADE DO CANDIDATO
+# DELETE /dashboard/api/candidato/habilidades/{id_tag}
+# ============================================================
+
+@router.delete("/candidato/habilidades/{id_tag}")
+def remover_habilidade_candidato(
+    id_tag: int,
+    token: dict = Depends(obter_usuario_autenticado)
+):
+    conexao = None
+    cursor = None
+
+    try:
+        if id_tag <= 0:
+            raise HTTPException(
+                status_code=422,
+                detail="ID da habilidade inválido."
+            )
+
+        id_usuario = int(token["sub"])
+
+        conexao = conectar()
+        cursor = conexao.cursor(dictionary=True)
+
+        # Verifica se a conta está ativa e é de candidato.
+        cursor.execute(
+            """
+            SELECT
+                c.id_candidato,
+                u.tipo_usuario,
+                u.ativo,
+                u.deletado_em
+            FROM usuarios AS u
+            LEFT JOIN candidatos AS c
+                ON c.id_usuario = u.id_usuario
+            WHERE u.id_usuario = %s
+            """,
+            (id_usuario,)
+        )
+
+        usuario = cursor.fetchone()
+
+        if (
+            not usuario
+            or not usuario["ativo"]
+            or usuario["deletado_em"] is not None
+        ):
+            raise HTTPException(
+                status_code=401,
+                detail="Conta inexistente ou indisponível."
+            )
+
+        if usuario["tipo_usuario"] != "Candidato":
+            raise HTTPException(
+                status_code=403,
+                detail="Acesso permitido apenas para candidatos."
+            )
+
+        if usuario["id_candidato"] is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Perfil de candidato não encontrado."
+            )
+
+        id_candidato = usuario["id_candidato"]
+
+        # Localiza a habilidade somente no perfil autenticado.
+        cursor.execute(
+            """
+            SELECT
+                ct.id_tag,
+                t.nome,
+                ct.nivel
+            FROM candidato_tags AS ct
+            JOIN tags_conhecimento AS t
+                ON t.id_tag = ct.id_tag
+            WHERE ct.id_candidato = %s
+              AND ct.id_tag = %s
+            FOR UPDATE
+            """,
+            (id_candidato, id_tag)
+        )
+
+        habilidade = cursor.fetchone()
+
+        if not habilidade:
+            raise HTTPException(
+                status_code=404,
+                detail="Habilidade não cadastrada no perfil."
+            )
+
+        # Remove apenas o vínculo entre candidato e habilidade.
+        cursor.execute(
+            """
+            DELETE FROM candidato_tags
+            WHERE id_candidato = %s
+              AND id_tag = %s
+            """,
+            (id_candidato, id_tag)
+        )
+
+        if cursor.rowcount != 1:
+            raise HTTPException(
+                status_code=409,
+                detail="Não foi possível confirmar a remoção."
+            )
+
+        conexao.commit()
+
+        return {
+            "mensagem": "Habilidade removida com sucesso.",
+            "id_tag": id_tag,
+            "nome": habilidade["nome"],
+            "nivel_anterior": habilidade["nivel"]
+        }
+
+    except HTTPException:
+        if conexao is not None:
+            conexao.rollback()
+        raise
+
+    except (ValueError, TypeError, KeyError) as erro:
+        if conexao is not None:
+            conexao.rollback()
+
+        raise HTTPException(
+            status_code=401,
+            detail="Identificação de usuário inválida."
+        ) from erro
+
+    except Error as erro:
+        if conexao is not None:
+            conexao.rollback()
+
+        raise HTTPException(
+            status_code=500,
+            detail="Erro ao remover habilidade."
         ) from erro
 
     finally:

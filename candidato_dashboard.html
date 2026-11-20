@@ -1,6 +1,6 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -13,6 +13,63 @@
 
   <link rel="stylesheet" href="/static/css/easyintern.css" />
   <link rel="stylesheet" href="/static/css/dashboard.css?v=6" />
+
+  <style>
+    /* Formulário editável do candidato */
+    #form-editar-perfil[hidden],
+    #btn-editar-perfil[hidden] {
+      display: none !important;
+    }
+
+    #form-editar-perfil {
+      margin-top: 24px;
+    }
+
+    #form-editar-perfil .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    #form-editar-perfil label {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    #form-editar-perfil input,
+    #form-editar-perfil select,
+    #form-editar-perfil textarea {
+      display: block;
+      width: 100%;
+      min-height: 44px;
+      padding: 11px 14px;
+      border: 1px solid var(--border-color, #ccc);
+      border-radius: 10px;
+      background: var(--bg-card, #fff);
+      color: var(--text-primary, #222);
+      font: inherit;
+      box-sizing: border-box;
+    }
+
+    #form-editar-perfil textarea {
+      min-height: 110px;
+      resize: vertical;
+    }
+
+    #form-editar-perfil input:focus,
+    #form-editar-perfil select:focus,
+    #form-editar-perfil textarea:focus {
+      outline: 2px solid #20b479;
+      outline-offset: 1px;
+      border-color: #20b479;
+    }
+
+    #form-editar-perfil .btn {
+      min-height: 42px;
+    }
+  </style>
 </head>
 
 <body class="dash-body" data-panel="candidato">
@@ -112,11 +169,9 @@
           <span class="drag-handle" title="Clique e arraste para reposicionar">
             <i class="bi bi-grip-vertical"></i>
           </span>
-
           <div class="stat-icon">
             <i class="bi bi-send-fill"></i>
           </div>
-
           <div class="stat-body">
             <div class="nf nf-stat" data-number-flow-stat>
               <number-flow class="nf-number stat-value" id="stat-total-c" data-stat-number>0</number-flow>
@@ -129,11 +184,9 @@
           <span class="drag-handle" title="Clique e arraste para reposicionar">
             <i class="bi bi-grip-vertical"></i>
           </span>
-
           <div class="stat-icon">
             <i class="bi bi-check-circle-fill"></i>
           </div>
-
           <div class="stat-body">
             <div class="nf nf-stat" data-number-flow-stat>
               <number-flow class="nf-number stat-value" id="stat-aprovadas-v" data-stat-number>0</number-flow>
@@ -146,11 +199,9 @@
           <span class="drag-handle" title="Clique e arraste para reposicionar">
             <i class="bi bi-grip-vertical"></i>
           </span>
-
           <div class="stat-icon">
             <i class="bi bi-hourglass-split"></i>
           </div>
-
           <div class="stat-body">
             <div class="nf nf-stat" data-number-flow-stat>
               <number-flow class="nf-number stat-value" id="stat-analise-v" data-stat-number>0</number-flow>
@@ -163,11 +214,9 @@
           <span class="drag-handle" title="Clique e arraste para reposicionar">
             <i class="bi bi-grip-vertical"></i>
           </span>
-
           <div class="stat-icon">
             <i class="bi bi-cpu-fill"></i>
           </div>
-
           <div class="stat-body">
             <div class="nf nf-stat" data-number-flow-stat>
               <number-flow class="nf-number stat-value" id="stat-taxa-match" data-stat-number>0</number-flow>
@@ -175,7 +224,6 @@
             <span class="stat-label">Taxa de Match</span>
           </div>
         </div>
-
       </div>
 
       <!-- IA Match e Vagas Recomendadas -->
@@ -227,7 +275,6 @@
               <i class="bi bi-grip-vertical"></i>
             </span>
           </div>
-
           <div class="card-body" id="top-vagas-list">
             <div class="loading-placeholder">
               <i class="bi bi-arrow-repeat spin"></i>
@@ -235,7 +282,6 @@
             </div>
           </div>
         </div>
-
       </div>
 
       <!-- Atividade recente -->
@@ -246,7 +292,6 @@
             <i class="bi bi-grip-vertical"></i>
           </span>
         </div>
-
         <div class="card-body" id="timeline-recente">
           <div class="loading-placeholder">
             <i class="bi bi-arrow-repeat spin"></i>
@@ -254,7 +299,6 @@
           </div>
         </div>
       </div>
-
     </section>
 
     <!-- Seção: Minhas Candidaturas -->
@@ -287,7 +331,6 @@
           <button class="filter-btn" data-rec-filter="remoto">Remoto</button>
           <button class="filter-btn" data-rec-filter="hibrido">Híbrido</button>
         </div>
-
         <span class="filter-count" id="rec-count">0 vagas</span>
       </div>
 
@@ -301,14 +344,13 @@
 
     <!-- Seção: Perfil -->
     <section class="dash-section" id="section-perfil">
-      <div class="perfil-layout">
 
+      <div class="perfil-layout">
         <div class="glass-card perfil-card">
           <div class="perfil-avatar-wrap">
             <div class="perfil-avatar-lg" aria-hidden="true">
               <i class="bi bi-person-fill"></i>
             </div>
-
             <h2 class="perfil-nome" id="perfil-nome">—</h2>
             <span class="perfil-nivel-tag" id="perfil-nivel-tag">
               Estagiário
@@ -326,7 +368,6 @@
           <div class="card-header">
             <h3><i class="bi bi-cpu"></i> Área de Interesse</h3>
           </div>
-
           <div class="card-body">
             <p class="perfil-area" id="perfil-area">—</p>
             <p class="perfil-hint">
@@ -335,7 +376,135 @@
             </p>
           </div>
         </div>
+      </div>
 
+      <!-- Edição do perfil do candidato -->
+      <div class="glass-card" style="margin-top: 24px; padding: 24px;">
+        <div class="card-header">
+          <h3>
+            <i class="bi bi-person-gear"></i>
+            Meus Dados
+          </h3>
+        </div>
+
+        <div class="card-body">
+          <button
+            type="button"
+            class="btn btn-primary"
+            id="btn-editar-perfil"
+          >
+            <i class="bi bi-pencil-square"></i>
+            Editar perfil
+          </button>
+
+          <form
+            id="form-editar-perfil"
+            hidden
+            style="margin-top: 20px;"
+          >
+            <div class="form-group">
+              <label for="edit-nome">Nome completo</label>
+              <input
+                id="edit-nome"
+                type="text"
+                maxlength="150"
+                minlength="3"
+                required
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="edit-telefone">Telefone</label>
+              <input
+                id="edit-telefone"
+                type="tel"
+                maxlength="20"
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="edit-cidade">Cidade</label>
+              <input
+                id="edit-cidade"
+                type="text"
+                maxlength="100"
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="edit-uf">Estado (UF)</label>
+              <input
+                id="edit-uf"
+                type="text"
+                maxlength="2"
+                placeholder="SP"
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="edit-nivel">Nível de carreira</label>
+              <select id="edit-nivel">
+                <option value="">Não informado</option>
+                <option value="Estagiário">Estagiário</option>
+                <option value="Júnior">Júnior</option>
+                <option value="Pleno">Pleno</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="edit-linkedin">LinkedIn</label>
+              <input
+                id="edit-linkedin"
+                type="url"
+                maxlength="255"
+                placeholder="https://linkedin.com/in/..."
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="edit-github">GitHub</label>
+              <input
+                id="edit-github"
+                type="url"
+                maxlength="255"
+                placeholder="https://github.com/..."
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="edit-biografia">Biografia</label>
+              <textarea
+                id="edit-biografia"
+                rows="4"
+                maxlength="2000"
+              ></textarea>
+            </div>
+
+            <p
+              id="perfil-feedback"
+              role="status"
+              aria-live="polite"
+            ></p>
+
+            <div style="display:flex;gap:12px;flex-wrap:wrap;">
+              <button
+                type="submit"
+                class="btn btn-primary"
+                id="btn-salvar-perfil"
+              >
+                Salvar alterações
+              </button>
+
+              <button
+                type="button"
+                class="btn btn-ghost"
+                id="btn-cancelar-perfil"
+              >
+                Cancelar
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </section>
 
@@ -369,7 +538,6 @@
               height="18"
               style="vertical-align:middle;margin-right:6px;"
             >
-
             <img
               src="/static/img/sun.svg"
               class="theme-icon theme-icon--sun"
@@ -379,7 +547,6 @@
               hidden
               style="vertical-align:middle;margin-right:6px;"
             >
-
             <span>Ativar modo escuro</span>
           </button>
         </div>
@@ -387,7 +554,6 @@
 
       <!-- Editar dashboards -->
       <div class="glass-card dash-card edit-dashboards-card" id="card-editar-dashboards">
-
         <div class="card-header">
           <h3><i class="bi bi-kanban"></i> Editar dashboards</h3>
           <span class="drag-instruction-badge">
@@ -405,7 +571,6 @@
           </p>
 
           <div class="edit-dash-grid">
-
             <!-- Componentes visíveis -->
             <div class="edit-dash-block">
               <div class="edit-dash-block-title">
@@ -414,7 +579,6 @@
               </div>
 
               <div class="edit-dash-toggles">
-
                 <label class="edit-dash-toggle-item">
                   <span class="edit-dash-toggle-label">
                     <i class="bi bi-send-fill" style="color: #20b479;"></i>
@@ -491,7 +655,6 @@
                     <span class="edit-dash-slider"></span>
                   </span>
                 </label>
-
               </div>
             </div>
 
@@ -508,7 +671,6 @@
               </p>
 
               <div class="edit-dash-mode-selector">
-
                 <div class="edit-dash-mode-card active" id="mode-opt-grid" data-mode="grid">
                   <div class="edit-dash-mode-header">
                     <span>
@@ -517,7 +679,6 @@
                     </span>
                     <i class="bi bi-check-circle-fill mode-check" style="color:#20b479;"></i>
                   </div>
-
                   <span class="edit-dash-mode-desc">
                     Exibição clássica em blocos com recurso de arrastar e soltar.
                   </span>
@@ -531,12 +692,10 @@
                     </span>
                     <i class="bi bi-circle mode-check"></i>
                   </div>
-
                   <span class="edit-dash-mode-desc">
                     Apresentação fluida em slides com setas e paginação.
                   </span>
                 </div>
-
               </div>
 
               <div class="carousel-suboptions" id="carousel-suboptions" style="display: none;">
@@ -550,7 +709,6 @@
                     <i class="bi bi-columns-gap"></i>
                     Panorâmico (Múltiplos Cards)
                   </button>
-
                   <button type="button" class="carousel-chip" data-carousel-model="spotlight">
                     <i class="bi bi-card-heading"></i>
                     Destaque (1 por Slide)
@@ -562,7 +720,6 @@
                     <i class="bi bi-play-circle" style="color: #20b479;"></i>
                     Transição Automática
                   </span>
-
                   <span class="edit-dash-switch">
                     <input type="checkbox" id="toggle-carousel-autoplay">
                     <span class="edit-dash-slider"></span>
@@ -578,9 +735,7 @@
                   <em>NumberFlow</em> sempre que você se candidata a novas vagas.
                 </span>
               </div>
-
             </div>
-
           </div>
 
           <div class="edit-dash-actions">
@@ -589,24 +744,19 @@
               Restaurar Layout Padrão
             </button>
           </div>
-
         </div>
       </div>
-
     </section>
-
   </main>
 
   <!-- Modal: Candidatura -->
   <div class="modal-overlay" id="modal-candidatura" hidden>
     <div class="modal-box glass-card" role="dialog" aria-modal="true" aria-labelledby="modal-cand-title">
-
       <div class="modal-header">
         <h3 id="modal-cand-title">
           <i class="bi bi-send"></i>
           Candidatar-se
         </h3>
-
         <button class="modal-close" id="modal-cand-close" aria-label="Fechar">
           <i class="bi bi-x-lg"></i>
         </button>
@@ -620,13 +770,11 @@
         <button class="btn btn-ghost" id="btn-cand-cancel">
           Cancelar
         </button>
-
         <button class="btn btn-primary" id="btn-cand-confirm">
           <i class="bi bi-send-fill"></i>
           Confirmar Candidatura
         </button>
       </div>
-
     </div>
   </div>
 
@@ -634,8 +782,6 @@
   <div class="toast-container" id="toast-container" aria-live="polite"></div>
 
   <script type="module" src="https://esm.sh/number-flow"></script>
-  <script src="/static/js/dashboard.js?v=7"></script>
-
-
+  <script src="/static/js/dashboard.js?v=8"></script>
 </body>
 </html>
