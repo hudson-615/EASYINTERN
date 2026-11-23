@@ -20,6 +20,49 @@ router = APIRouter(
     tags=["Dashboard Empresa"]
 )
 
+# MARCO_P2_HABILIDADES_V1
+class HabilidadeVaga(BaseModel):
+    nome: str = Field(min_length=1, max_length=50)
+    obrigatorio: bool = False
+    peso: int = Field(default=1, ge=1, le=5)
+
+    @field_validator("nome")
+    @classmethod
+    def validar_nome(cls, valor: str):
+        valor = valor.strip()
+        if not valor:
+            raise ValueError("Habilidade vazia.")
+        return valor
+
+
+def preparar_habilidades(dados: "NovaVaga") -> list[dict]:
+    if dados.habilidades is not None:
+        if dados.tags and dados.tags.strip():
+            raise HTTPException(422, "Envie habilidades ou tags, não ambos.")
+        itens = [
+            {"nome": h.nome, "obrigatorio": h.obrigatorio, "peso": h.peso}
+            for h in dados.habilidades
+        ]
+    else:
+        itens = []
+        for nome in (dados.tags or "").split(","):
+            nome = nome.strip()
+            if not nome:
+                continue
+            if len(nome) > 50:
+                raise HTTPException(422, "Cada habilidade deve ter no máximo 50 caracteres.")
+            itens.append({"nome": nome, "obrigatorio": False, "peso": 1})
+    encontrados = set()
+    for item in itens:
+        chave = item["nome"].casefold()
+        if chave in encontrados:
+            raise HTTPException(422, "Habilidades duplicadas não são permitidas.")
+        encontrados.add(chave)
+    if len(itens) > 20:
+        raise HTTPException(422, "Informe no máximo 20 habilidades.")
+    return itens
+
+
 class NovaVaga(BaseModel):
     titulo: str = Field(min_length=3, max_length=150)
     descricao: str = Field(min_length=10)
@@ -29,6 +72,7 @@ class NovaVaga(BaseModel):
     requisitos: str | None = None
     beneficios: str | None = None
     tags: str | None = None
+    habilidades: list[HabilidadeVaga] | None = None
     cidade: str | None = Field(default=None, max_length=100)
     estado: str | None = Field(default=None, max_length=2)
     salario_min: Decimal | None = Field(default=None, ge=0, max_digits=10, decimal_places=2)
@@ -63,6 +107,81 @@ class AtualizarStatusCandidatura(BaseModel):
         "aprovado",
         "reprovado"
     ]
+
+
+# MARCO_P2_PERFIL_EMPRESA_V1
+class EdicaoPerfilEmpresa(BaseModel):
+    nome_fantasia: str = Field(min_length=2, max_length=150)
+    setor: str | None = Field(default=None, max_length=100)
+    cidade: str | None = Field(default=None, max_length=100)
+    uf: str | None = Field(default=None, max_length=2)
+    descricao: str | None = Field(default=None, max_length=2000)
+
+    @field_validator("nome_fantasia", "setor", "cidade", "uf", "descricao")
+    @classmethod
+    def normalizar(cls, valor):
+        if valor is None:
+            return None
+        return valor.strip() or None
+
+    @field_validator("uf")
+    @classmethod
+    def validar_uf(cls, valor):
+        if valor is not None and (len(valor) != 2 or not valor.isalpha()):
+            raise ValueError("A UF precisa ter duas letras.")
+        return valor.upper() if valor else None
+
+
+@router.patch("/perfil")
+def editar_perfil_empresa(
+    dados: EdicaoPerfilEmpresa,
+    token: dict = Depends(obter_usuario_autenticado)
+):
+    try:
+        id_usuario = int(token["sub"])
+    except (KeyError, TypeError, ValueError) as erro:
+        raise HTTPException(status_code=401, detail="Identificação inválida.") from erro
+
+    conexao = None
+    cursor = None
+    try:
+        conexao = conectar()
+        cursor = conexao.cursor(dictionary=True)
+        cursor.execute(
+            """SELECT u.tipo_usuario, u.ativo, u.deletado_em, e.id_empresa
+               FROM usuarios u
+               LEFT JOIN empresas e ON e.id_usuario = u.id_usuario
+               WHERE u.id_usuario = %s FOR UPDATE""",
+            (id_usuario,)
+        )
+        empresa = cursor.fetchone()
+        if not empresa or not empresa["ativo"] or empresa["deletado_em"] is not None:
+            raise HTTPException(401, "Conta inexistente ou indisponível.")
+        if empresa["tipo_usuario"] != "Empresa":
+            raise HTTPException(403, "Acesso permitido apenas para empresas.")
+        if empresa["id_empresa"] is None:
+            raise HTTPException(404, "Perfil empresarial não encontrado.")
+        cursor.execute(
+            """UPDATE empresas SET nome_fantasia=%s, setor=%s, cidade=%s,
+               uf=%s, descricao=%s WHERE id_empresa=%s AND id_usuario=%s""",
+            (dados.nome_fantasia, dados.setor, dados.cidade,
+             dados.uf, dados.descricao, empresa["id_empresa"], id_usuario)
+        )
+        conexao.commit()
+        return {"mensagem": "Perfil empresarial atualizado com sucesso."}
+    except HTTPException:
+        if conexao is not None:
+            conexao.rollback()
+        raise
+    except (Error, RuntimeError) as erro:
+        if conexao is not None:
+            conexao.rollback()
+        raise HTTPException(503, "Não foi possível atualizar o perfil empresarial.") from erro
+    finally:
+        if cursor is not None:
+            cursor.close()
+        if conexao is not None:
+            conexao.close()
 
 
 @router.get("/stats")
@@ -632,6 +751,8 @@ def publicar_vaga_empresa(
                 detail="Informe no máximo 20 habilidades."
             )
 
+        habilidades_normalizadas = preparar_habilidades(dados)
+
         titulo = dados.titulo.strip()
         descricao = dados.descricao.strip()
 
@@ -755,7 +876,8 @@ def publicar_vaga_empresa(
         id_vaga = cursor.lastrowid
 
         # Cadastra ou recupera cada habilidade.
-        for nome in tags:
+        for habilidade in habilidades_normalizadas:
+            nome = habilidade["nome"]
             cursor.execute(
                 """
                 INSERT INTO tags_conhecimento (
@@ -779,9 +901,9 @@ def publicar_vaga_empresa(
                     obrigatorio,
                     peso
                 )
-                VALUES (%s, %s, 0, 1)
+                VALUES (%s, %s, %s, %s)
                 """,
-                (id_vaga, id_tag)
+                (id_vaga, id_tag, int(habilidade["obrigatorio"]), habilidade["peso"])
             )
 
         # Só confirma se todas as operações funcionaram.
@@ -921,7 +1043,7 @@ def detalhes_vaga_empresa(
 
         cursor.execute(
             """
-            SELECT t.nome
+            SELECT t.nome, vt.obrigatorio, vt.peso
             FROM vaga_tags AS vt
             JOIN tags_conhecimento AS t
                 ON t.id_tag = vt.id_tag
@@ -931,7 +1053,15 @@ def detalhes_vaga_empresa(
             (id_vaga,)
         )
 
-        tags = [item["nome"] for item in cursor.fetchall()]
+        habilidades_vaga = [
+            {
+                "nome": item["nome"],
+                "obrigatorio": bool(item["obrigatorio"]),
+                "peso": int(item["peso"] or 1),
+            }
+            for item in cursor.fetchall()
+        ]
+        tags = [item["nome"] for item in habilidades_vaga]
 
         descricao = vaga["descricao"] or ""
         requisitos = ""
@@ -964,7 +1094,8 @@ def detalhes_vaga_empresa(
                 else None
             ),
             "status": vaga["status"],
-            "tags": ", ".join(tags)
+            "tags": ", ".join(tags),
+            "habilidades": habilidades_vaga
         }
 
     except HTTPException:
@@ -1040,6 +1171,8 @@ def editar_vaga_empresa(
                 status_code=422,
                 detail="Informe no máximo 20 habilidades."
             )
+
+        habilidades_normalizadas = preparar_habilidades(dados)
 
         titulo = dados.titulo.strip()
         descricao = dados.descricao.strip()
@@ -1176,7 +1309,8 @@ def editar_vaga_empresa(
             (id_vaga,)
         )
 
-        for nome in tags:
+        for habilidade in habilidades_normalizadas:
+            nome = habilidade["nome"]
             cursor.execute(
                 """
                 INSERT INTO tags_conhecimento (
@@ -1196,9 +1330,9 @@ def editar_vaga_empresa(
                 INSERT INTO vaga_tags (
                     id_vaga, id_tag, obrigatorio, peso
                 )
-                VALUES (%s, %s, 0, 1)
+                VALUES (%s, %s, %s, %s)
                 """,
-                (id_vaga, id_tag)
+                (id_vaga, id_tag, int(habilidade["obrigatorio"]), habilidade["peso"])
             )
 
         conexao.commit()
@@ -1791,7 +1925,22 @@ def listar_candidatos_vaga_empresa(
                 c.nome_completo,
                 c.nivel_carreira,
                 c.cidade,
-                c.uf
+                c.uf,
+                c.biografia,
+                c.linkedin_url,
+                c.github_url,
+                (
+                    SELECT GROUP_CONCAT(DISTINCT t.nome ORDER BY t.nome SEPARATOR ', ')
+                    FROM candidato_tags ct
+                    JOIN tags_conhecimento t ON t.id_tag = ct.id_tag
+                    WHERE ct.id_candidato = ca.id_candidato
+                ) AS habilidades,
+                (
+                    SELECT GROUP_CONCAT(DISTINCT f.nome_curso ORDER BY f.nome_curso SEPARATOR ', ')
+                    FROM candidato_formacao cf
+                    JOIN catalogo_formacoes f ON f.id_formacao = cf.id_formacao
+                    WHERE cf.id_candidato = ca.id_candidato
+                ) AS formacoes
             FROM candidaturas AS ca
             INNER JOIN candidatos AS c
                 ON c.id_candidato = ca.id_candidato
@@ -1808,6 +1957,37 @@ def listar_candidatos_vaga_empresa(
 
         registros = cursor.fetchall()
 
+        # Avaliacoes reais, vinculadas apenas a candidatura da vaga da empresa.
+        # Se nao houver avaliacao, o painel exibe "Nao avaliado".
+        avaliacoes = {}
+        if registros:
+            cursor.execute(
+                """
+                SELECT
+                    ca.id_candidatura,
+                    a.match_score,
+                    a.veredito_ia,
+                    a.pontos_fortes,
+                    a.pontos_atencao
+                FROM candidaturas AS ca
+                INNER JOIN vagas AS v ON v.id_vaga = ca.id_vaga
+                INNER JOIN avaliacoes_ia AS a
+                    ON a.id_avaliacao = (
+                        SELECT a2.id_avaliacao
+                        FROM avaliacoes_ia AS a2
+                        WHERE a2.id_candidatura = ca.id_candidatura
+                        ORDER BY a2.data_analise DESC, a2.id_avaliacao DESC
+                        LIMIT 1
+                    )
+                WHERE ca.id_vaga = %s AND v.id_empresa = %s
+                """,
+                (id_vaga, empresa["id_empresa"])
+            )
+            avaliacoes = {
+                item["id_candidatura"]: item
+                for item in cursor.fetchall()
+            }
+
         candidatos = []
 
         for registro in registros:
@@ -1817,7 +1997,12 @@ def listar_candidatos_vaga_empresa(
                 "candidatura_id": registro["id_candidatura"],
                 "candidato_id": registro["id_candidato"],
                 "nome": registro["nome_completo"],
-                "area_interesse": None,
+                "area_interesse": (registro.get("formacoes") or "").split(", ")[0] or None,
+                "formacoes": registro.get("formacoes") or "",
+                "habilidades": registro.get("habilidades") or "",
+                "biografia": registro.get("biografia") or "",
+                "linkedin_url": registro.get("linkedin_url") or "",
+                "github_url": registro.get("github_url") or "",
                 "nivel_carreira": registro["nivel_carreira"],
                 "cidade": registro["cidade"],
                 "uf": registro["uf"],
@@ -1833,8 +2018,26 @@ def listar_candidatos_vaga_empresa(
                 "data_candidatura": (
                     data.isoformat() if data else None
                 ),
-                "match": None
+                "match": (
+                    {
+                        "score": float(avaliacoes[registro["id_candidatura"]]["match_score"])
+                        if avaliacoes[registro["id_candidatura"]]["match_score"] is not None
+                        else None,
+                        "veredicto": avaliacoes[registro["id_candidatura"]]["veredito_ia"],
+                        "pontos_fortes": avaliacoes[registro["id_candidatura"]]["pontos_fortes"],
+                        "pontos_atencao": avaliacoes[registro["id_candidatura"]]["pontos_atencao"]
+                    }
+                    if registro["id_candidatura"] in avaliacoes else None
+                )
             })
+
+        candidatos.sort(
+            key=lambda candidato: (
+                candidato["match"] is None
+                or candidato["match"]["score"] is None,
+                -(candidato["match"]["score"] if candidato["match"] and candidato["match"]["score"] is not None else 0)
+            )
+        )
 
         return candidatos
 
@@ -1973,6 +2176,22 @@ def atualizar_status_candidatura_empresa(
                 "status": dados.status
             }
 
+
+        # Fluxo controlado: nao pular etapas, nao retroceder e nao reabrir
+        # candidaturas finalizadas. Reprovacao e possivel em qualquer etapa ativa.
+        transicoes_permitidas = {
+            "Pendente": {"Em Análise", "Reprovado"},
+            "Em Análise": {"Entrevista", "Reprovado"},
+            "Entrevista": {"Aprovado", "Reprovado"},
+            "Aprovado": set(),
+            "Reprovado": set(),
+        }
+        status_atual = candidatura["status"]
+        if novo_status not in transicoes_permitidas.get(status_atual, set()):
+            raise HTTPException(
+                status_code=409,
+                detail=f"Transição de status não permitida: {status_atual} → {novo_status}."
+            )
 
         status_anterior = candidatura["status"]
 

@@ -160,7 +160,7 @@
       <div class="section-filters">
         <button class="filter-btn active" data-vaga-filter="todas">Todas</button>
         <button class="filter-btn" data-vaga-filter="aberta">Abertas</button>
-        <button class="filter-btn" data-vaga-filter="fechada">Encerradas</button>
+        <button class="filter-btn" data-vaga-filter="encerrada">Encerradas</button>
       </div>
       <button class="btn btn-primary btn-sm" id="btn-nova-vaga-section">
         <i class="bi bi-plus-lg"></i> Nova Vaga
@@ -171,6 +171,8 @@
         <i class="bi bi-arrow-repeat spin"></i> Carregando vagas...
       </div>
     </div>
+    <div id="paginacao-vagas-empresa" aria-live="polite"
+         style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin:18px 0 8px;" hidden></div>
   </section>
 
   <!-- ── Seção: Candidatos ─────────────────────────────────────────────── -->
@@ -250,6 +252,11 @@
             </label>
             <input type="text" class="field-input" id="vaga-tags"
               placeholder="python, django, backend, junior" />
+            <!-- MARCO_P2_INTERFACE_PESOS_V1 -->
+            <div id="vaga-habilidades-config" style="display:grid;gap:8px;margin-top:10px;"></div>
+            <small style="opacity:.75;display:block;margin-top:6px;">
+              Digite as habilidades separadas por vírgula. Para cada uma, escolha se é obrigatória e o peso (1 a 5).
+            </small>
           </div>
           <div class="field-group">
             <label class="field-label" for="vaga-modalidade">
@@ -330,6 +337,28 @@
           <p class="perfil-hint">As informações da sua organização são integradas às vagas recomendadas para gerar compatibilidade com os candidatos.</p>
         </div>
       </div>
+    </div>
+    <!-- MARCO_P2_TOGGLE_PERFIL_V1 -->
+    <div style="margin-top:18px">
+      <button type="button" id="btn-abrir-edicao-empresa" class="btn btn-primary"
+              aria-controls="painel-editar-perfil-empresa" aria-expanded="false">
+        <i class="bi bi-pencil-square" aria-hidden="true"></i> Editar perfil
+      </button>
+    </div>
+    <!-- MARCO_P2_PERFIL_EMPRESA_V1 -->
+    <div id="painel-editar-perfil-empresa" class="glass-card dash-card" style="margin-top:18px;max-width:850px;display:none">
+      <div class="card-header"><h3><i class="bi bi-pencil-square"></i> Editar dados da empresa</h3></div>
+      <form class="card-body form-vaga" id="form-editar-perfil-empresa">
+        <div class="field-group"><label class="field-label" for="emp-nome">Nome fantasia *</label><input id="emp-nome" class="field-input" maxlength="150" required /></div>
+        <div class="field-group"><label class="field-label" for="emp-setor">Setor</label><input id="emp-setor" class="field-input" maxlength="100" /></div>
+        <div class="form-grid-2">
+          <div class="field-group"><label class="field-label" for="emp-cidade">Cidade</label><input id="emp-cidade" class="field-input" maxlength="100" /></div>
+          <div class="field-group"><label class="field-label" for="emp-uf">UF</label><input id="emp-uf" class="field-input" maxlength="2" placeholder="SP" /></div>
+        </div>
+        <div class="field-group"><label class="field-label" for="emp-descricao">Descrição da empresa</label><textarea id="emp-descricao" class="field-input" rows="4" maxlength="2000"></textarea></div>
+        <div class="form-actions"><button type="button" id="btn-cancelar-perfil-empresa" class="btn btn-ghost">Cancelar</button><button type="submit" id="btn-salvar-perfil-empresa" class="btn btn-primary">Salvar perfil</button></div>
+        <div id="emp-feedback" class="form-feedback" hidden role="status"></div>
+      </form>
     </div>
   </section>
 

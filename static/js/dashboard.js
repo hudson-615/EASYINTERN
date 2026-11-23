@@ -1810,11 +1810,95 @@ async function loadEmpresaDashboard() {
   await loadEmpresaVagas();
 }
 
+// MARCO_P2_PERFIL_EMPRESA_V1
+function preencherEdicaoPerfilEmpresa(stats) {
+  const campos = {
+    'emp-nome': stats.empresa,
+    'emp-setor': stats.setor,
+    'emp-cidade': stats.cidade,
+    'emp-uf': stats.uf,
+    'emp-descricao': stats.descricao
+  };
+  Object.entries(campos).forEach(([id, valor]) => {
+    const el = document.getElementById(id);
+    if (el) el.value = valor ?? '';
+  });
+}
+
+// MARCO_P2_TOGGLE_PERFIL_V1
+function definirEdicaoEmpresaAberta(aberta) {
+  const painel = document.getElementById('painel-editar-perfil-empresa');
+  const botao = document.getElementById('btn-abrir-edicao-empresa');
+  if (painel) painel.style.display = aberta ? '' : 'none';
+  if (botao) {
+    botao.setAttribute('aria-expanded', String(aberta));
+    botao.innerHTML = aberta
+      ? '<i class="bi bi-x-lg" aria-hidden="true"></i> Fechar edição'
+      : '<i class="bi bi-pencil-square" aria-hidden="true"></i> Editar perfil';
+  }
+}
+
+function initEdicaoPerfilEmpresa() {
+  const form = document.getElementById('form-editar-perfil-empresa');
+  if (!form) return;
+  const feedback = document.getElementById('emp-feedback');
+  const botao = document.getElementById('btn-salvar-perfil-empresa');
+  const abrir = document.getElementById('btn-abrir-edicao-empresa');
+  const cancelar = document.getElementById('btn-cancelar-perfil-empresa');
+  abrir?.addEventListener('click', () => {
+    const painel = document.getElementById('painel-editar-perfil-empresa');
+    const estavaAberto = painel?.style.display !== 'none';
+    definirEdicaoEmpresaAberta(!estavaAberto);
+  });
+  cancelar?.addEventListener('click', async () => {
+    try {
+      await loadEmpresaStats();
+    } catch (_) { /* Os dados permanecerão intactos se a consulta falhar. */ }
+    if (feedback) feedback.hidden = true;
+    definirEdicaoEmpresaAberta(false);
+  });
+  form.addEventListener('submit', async (evento) => {
+    evento.preventDefault();
+    const valor = id => document.getElementById(id)?.value.trim() || '';
+    const nome = valor('emp-nome');
+    const uf = valor('emp-uf').toUpperCase();
+    if (nome.length < 2 || (uf && !/^[A-Z]{2}$/.test(uf))) {
+      feedback.hidden = false;
+      feedback.className = 'form-feedback error';
+      feedback.textContent = 'Informe um nome com ao menos 2 caracteres e uma UF válida.';
+      return;
+    }
+    botao.disabled = true;
+    try {
+      await apiFetch('/dashboard/api/empresa/perfil', {
+        nome_fantasia: nome,
+        setor: valor('emp-setor') || null,
+        cidade: valor('emp-cidade') || null,
+        uf: uf || null,
+        descricao: valor('emp-descricao') || null
+      }, 'PATCH');
+      await loadEmpresaStats();
+      feedback.hidden = false;
+      feedback.className = 'form-feedback success';
+      feedback.textContent = 'Perfil atualizado com sucesso!';
+      showToast('Perfil empresarial atualizado!', 'success');
+      definirEdicaoEmpresaAberta(false);
+    } catch (erro) {
+      feedback.hidden = false;
+      feedback.className = 'form-feedback error';
+      feedback.textContent = erro.message || 'Não foi possível salvar o perfil.';
+    } finally {
+      botao.disabled = false;
+    }
+  });
+}
+
 async function loadEmpresaStats() {
   try {
     const stats = await apiFetch(API.stats_emp);
 
     if (!stats) return;
+    preencherEdicaoPerfilEmpresa(stats);
 
     setText('stat-total-vagas', stats.total_vagas);
     setText('stat-vagas-abertas', stats.vagas_abertas);
@@ -1915,7 +1999,7 @@ async function loadEmpresaVagas() {
     setText('badge-vagas', vagas.length);
 
     renderVagasEmpresaTable(vagas);
-    renderVagasEmpresaGrid('todas');
+    await carregarPaginaVagasEmpresa(paginaVagasEmpresa, filtroVagasEmpresa);
     populateVagaSelector();
 
   } catch (erro) {
@@ -2145,18 +2229,94 @@ container
     });
 }
 
-function renderVagasEmpresaGrid(filtro = 'todas') {
+// MARCO_P2_PAGINACAO_UI_V1
+let paginaVagasEmpresa = 1;
+let limiteVagasEmpresa = 10;
+let filtroVagasEmpresa = 'todas';
+
+async function carregarPaginaVagasEmpresa(pagina = 1, filtro = filtroVagasEmpresa) {
+  const painel = document.getElementById('paginacao-vagas-empresa');
+  filtroVagasEmpresa = filtro;
+  const status = filtro === 'todas' ? '' : `&status=${encodeURIComponent(filtro)}`;
+  const url = `/dashboard/api/empresa/vagas/paginadas?pagina=${pagina}&limite=${limiteVagasEmpresa}${status}`;
+
+  try {
+    const dados = await apiFetch(url);
+    if (!dados || !Array.isArray(dados.vagas) ||
+        !Number.isInteger(dados.pagina) ||
+        !Number.isInteger(dados.total_paginas)) {
+      throw new Error('Resposta inválida da paginação de vagas.');
+    }
+    if (dados.total_paginas > 0 && pagina > dados.total_paginas) {
+      return carregarPaginaVagasEmpresa(dados.total_paginas, filtro);
+    }
+
+    paginaVagasEmpresa = dados.pagina;
+    renderVagasEmpresaGrid(filtro, dados.vagas);
+    if (!painel) return;
+    painel.hidden = false;
+    painel.replaceChildren();
+
+    const info = document.createElement('span');
+    info.textContent = `Página ${dados.total_paginas ? dados.pagina : 0} de ${dados.total_paginas} · ${dados.total} vaga(s)`;
+    painel.appendChild(info);
+
+    const botoes = document.createElement('div');
+    botoes.style.cssText = 'display:flex;align-items:center;flex-wrap:wrap;gap:8px';
+
+    const rotulo = document.createElement('label');
+    rotulo.textContent = 'Por página: ';
+    const seletor = document.createElement('select');
+    seletor.className = 'field-input field-select';
+    seletor.setAttribute('aria-label', 'Vagas por página');
+    seletor.style.cssText = 'width:auto;min-width:70px;padding:6px';
+    for (const numero of [1, 5, 10, 20]) {
+      const opcao = document.createElement('option');
+      opcao.value = String(numero);
+      opcao.textContent = String(numero);
+      opcao.selected = numero === limiteVagasEmpresa;
+      seletor.appendChild(opcao);
+    }
+    seletor.addEventListener('change', async () => {
+      limiteVagasEmpresa = Number(seletor.value);
+      await carregarPaginaVagasEmpresa(1, filtroVagasEmpresa);
+    });
+    rotulo.appendChild(seletor);
+    botoes.appendChild(rotulo);
+
+    for (const [texto, destino, desabilitado] of [
+      ['Anterior', paginaVagasEmpresa - 1, paginaVagasEmpresa <= 1],
+      ['Próxima', paginaVagasEmpresa + 1, paginaVagasEmpresa >= dados.total_paginas]
+    ]) {
+      const botao = document.createElement('button');
+      botao.type = 'button';
+      botao.className = 'btn btn-secondary btn-sm';
+      botao.textContent = texto;
+      botao.disabled = desabilitado;
+      botao.addEventListener('click', () => carregarPaginaVagasEmpresa(destino, filtroVagasEmpresa));
+      botoes.appendChild(botao);
+    }
+    painel.appendChild(botoes);
+  } catch (erro) {
+    console.warn('Falha ao paginar vagas:', erro);
+    if (painel) painel.hidden = true;
+    renderVagasEmpresaGrid(filtro);  // fallback para não esconder vagas em caso de erro na API
+    showToast('Não foi possível carregar a paginação das vagas.', 'error');
+  }
+}
+
+function renderVagasEmpresaGrid(filtro = 'todas', vagasDaApi = null) {
   const grid = document.getElementById(
     'vagas-empresa-grid'
   );
 
   if (!grid) return;
 
-  const vagas = filtro === 'todas'
+  const vagas = vagasDaApi ?? (filtro === 'todas'
     ? allVagasEmp
     : allVagasEmp.filter(
         vaga => vaga.status === filtro
-      );
+      ));
 
   if (!vagas.length) {
     grid.innerHTML = `
@@ -2568,6 +2728,15 @@ function abrirDetalhesCandidato(
       </div>
     </div>
 
+    <div style="margin-top:16px;border-top:1px solid rgba(100,100,100,.18);padding-top:13px;display:grid;gap:12px;">
+      <div><strong>Formações</strong><p style="white-space:pre-wrap">${escHtml(candidato.formacoes || 'Não informadas')}</p></div>
+      <div><strong>Habilidades</strong><p style="white-space:pre-wrap">${escHtml(candidato.habilidades || 'Não informadas')}</p></div>
+      <div><strong>Biografia profissional</strong><p style="white-space:pre-wrap">${escHtml(candidato.biografia || 'Não informada')}</p></div>
+      <div><strong>Localização</strong><p>${escHtml([candidato.cidade, candidato.uf].filter(Boolean).join(', ') || 'Não informada')}</p></div>
+      <div><strong>Links profissionais</strong><p id="ei-links-candidato">Não informados</p></div>
+      <p style="font-size:.75rem;color:var(--text-muted)">Currículo PDF: acesso depende de autorização específica e não está incluído nesta consulta.</p>
+    </div>
+
     ${match.veredicto
       ? `
         <div style="margin-top:16px;">
@@ -2578,6 +2747,24 @@ function abrirDetalhesCandidato(
       : ''}
   `;
 
+  const linksContainer = corpo.querySelector('#ei-links-candidato');
+  if (linksContainer) {
+    [['LinkedIn', candidato.linkedin_url], ['GitHub', candidato.github_url]].forEach(([rotulo, endereco]) => {
+      if (!endereco) return;
+      try {
+        const url = new URL(endereco);
+        if (!['https:', 'http:'].includes(url.protocol)) return;
+        if (linksContainer.textContent === 'Não informados') linksContainer.textContent = '';
+        const link = document.createElement('a');
+        link.href = url.href;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = rotulo;
+        link.style.marginRight = '14px';
+        linksContainer.append(link);
+      } catch (_) { /* URL inválida: não exibir */ }
+    });
+  }
   modal.hidden = false;
 }
 
@@ -2637,6 +2824,81 @@ function initCandidatoModal() {
 // CRIAÇÃO DE VAGAS — EMPRESA
 // ============================================================
 let vagaEmEdicaoId = null;
+// MARCO_P2_INTERFACE_PESOS_V1
+function lerHabilidadesFormulario() {
+  const painel = document.getElementById('vaga-habilidades-config');
+  if (!painel) return [];
+  return [...painel.querySelectorAll('[data-habilidade-nome]')].map(linha => ({
+    nome: linha.dataset.habilidadeNome,
+    obrigatorio: linha.querySelector('[data-habilidade-obrigatoria]').checked,
+    peso: Number(linha.querySelector('[data-habilidade-peso]').value)
+  }));
+}
+
+function renderizarHabilidadesFormulario(valoresAnteriores = null) {
+  const painel = document.getElementById('vaga-habilidades-config');
+  const entrada = document.getElementById('vaga-tags');
+  if (!painel || !entrada) return;
+  const anteriores = valoresAnteriores ?? lerHabilidadesFormulario();
+  const configuracoes = new Map(anteriores.map(h => [String(h.nome).trim().toLocaleLowerCase(), h]));
+  const encontrados = new Set();
+  const nomes = entrada.value.split(',').map(s => s.trim()).filter(Boolean)
+    .filter(nome => {
+      const chave = nome.toLocaleLowerCase();
+      if (encontrados.has(chave)) return false;
+      encontrados.add(chave);
+      return true;
+    });
+  painel.replaceChildren();
+  for (const nome of nomes.slice(0, 20)) {
+    const anterior = configuracoes.get(nome.toLocaleLowerCase()) || {};
+    const linha = document.createElement('div');
+    linha.dataset.habilidadeNome = nome;
+    Object.assign(linha.style, {
+      display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px',
+      padding: '9px', border: '1px solid rgba(140,140,140,.25)', borderRadius: '8px'
+    });
+    const nomeEl = document.createElement('strong');
+    nomeEl.textContent = nome;
+    nomeEl.style.flex = '1 1 110px';
+    const labelObrigatorio = document.createElement('label');
+    labelObrigatorio.style.display = 'inline-flex';
+    labelObrigatorio.style.alignItems = 'center';
+    labelObrigatorio.style.gap = '6px';
+    const check = document.createElement('input');
+    check.type = 'checkbox';
+    check.dataset.habilidadeObrigatoria = '1';
+    check.checked = Boolean(anterior.obrigatorio);
+    labelObrigatorio.append(check, document.createTextNode('Obrigatória'));
+    const labelPeso = document.createElement('label');
+    labelPeso.style.display = 'inline-flex';
+    labelPeso.style.alignItems = 'center';
+    labelPeso.style.gap = '6px';
+    labelPeso.append(document.createTextNode('Peso'));
+    const select = document.createElement('select');
+    select.className = 'field-input field-select';
+    select.dataset.habilidadePeso = '1';
+    select.style.width = '70px';
+    for (let peso = 1; peso <= 5; peso++) {
+      const opcao = document.createElement('option');
+      opcao.value = String(peso);
+      opcao.textContent = String(peso);
+      select.append(opcao);
+    }
+    const pesoExistente = Number(anterior.peso);
+    select.value = String(pesoExistente >= 1 && pesoExistente <= 5 ? pesoExistente : 1);
+    labelPeso.append(select);
+    linha.append(nomeEl, labelObrigatorio, labelPeso);
+    painel.append(linha);
+  }
+  if (nomes.length > 20) {
+    const aviso = document.createElement('small');
+    aviso.textContent = 'Máximo de 20 habilidades; reduza a lista antes de salvar.';
+    aviso.style.color = '#e28d61';
+    painel.append(aviso);
+  }
+}
+
 
 function prepararNovaVaga() {
   vagaEmEdicaoId = null;
@@ -2646,6 +2908,7 @@ function prepararNovaVaga() {
   );
 
   formulario?.reset();
+  renderizarHabilidadesFormulario([]);
 
   const titulo = document.querySelector(
     '#section-nova-vaga .card-header h3'
@@ -2688,6 +2951,7 @@ async function abrirEdicaoVaga(id) {
     preencher('vaga-requisitos', vaga.requisitos);
     preencher('vaga-beneficios', vaga.beneficios);
     preencher('vaga-tags', vaga.tags);
+    renderizarHabilidadesFormulario(Array.isArray(vaga.habilidades) ? vaga.habilidades : []);
     preencher('vaga-nivel', vaga.nivel);
 
     preencher(
@@ -2740,6 +3004,10 @@ function initFormNovaVaga() {
   const formulario = document.getElementById(
     'form-nova-vaga'
   );
+  document.getElementById('vaga-tags')?.addEventListener('input', () => {
+    renderizarHabilidadesFormulario();
+  });
+  renderizarHabilidadesFormulario([]);
 
   const feedback = document.getElementById(
     'form-vaga-feedback'
@@ -2751,6 +3019,7 @@ function initFormNovaVaga() {
     ?.addEventListener('click', () => {
       vagaEmEdicaoId = null;
       formulario?.reset();
+      renderizarHabilidadesFormulario([]);
 
       const titulo = document.querySelector(
         '#section-nova-vaga .card-header h3'
@@ -2810,13 +3079,25 @@ function initFormNovaVaga() {
     }
 
 
+    const nomesTags = valor('vaga-tags').split(',').map(t => t.trim()).filter(Boolean);
+    if (nomesTags.length > 20) {
+      if (feedback) {
+        feedback.hidden = false;
+        feedback.className = 'form-feedback error';
+        feedback.textContent = 'Informe no máximo 20 habilidades.';
+      }
+      if (botao) botao.disabled = false;
+      return;
+    }
+
     const dados = {
       titulo: valor('vaga-titulo'),
       prazo_encerramento: prazo,
       descricao: valor('vaga-descricao'),
       requisitos: valor('vaga-requisitos') || null,
       beneficios: valor('vaga-beneficios') || null,
-      tags: valor('vaga-tags') || null,
+      tags: null,
+      habilidades: lerHabilidadesFormulario(),
       nivel: valor('vaga-nivel'),
       modalidade: valor('vaga-modalidade'),
       cidade: valor('vaga-cidade') || null,
@@ -3005,8 +3286,8 @@ function initFilters() {
 
         botao.classList.add('active');
 
-        renderVagasEmpresaGrid(
-          botao.dataset.vagaFilter
+        carregarPaginaVagasEmpresa(
+          1, botao.dataset.vagaFilter
         );
       });
     });
@@ -3677,6 +3958,7 @@ async function init() {
   } else if (dashPanel === 'empresa') {
     initFormNovaVaga();
     initCandidatoModal();
+    initEdicaoPerfilEmpresa();
     await loadEmpresaDashboard();
   }
 
