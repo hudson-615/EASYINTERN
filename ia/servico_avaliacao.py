@@ -68,6 +68,14 @@ def processar_avaliacao(id_candidatura: int) -> bool:
                         SET tentativas = tentativas + 1,
                             ultima_tentativa = UTC_TIMESTAMP()
                         WHERE id_candidatura = %s
+                          AND EXISTS (
+                              SELECT 1
+                              FROM candidaturas AS c
+                              JOIN vaga_tags AS vt
+                                ON vt.id_vaga = c.id_vaga
+                              WHERE c.id_candidatura =
+                                    controle_avaliacoes_ia.id_candidatura
+                          )
                           AND tentativas < 3
                           AND (
                               ultima_tentativa IS NULL
@@ -132,6 +140,11 @@ def listar_candidaturas_para_ia(*, pendentes=True, limite=20):
                 LEFT JOIN controle_avaliacoes_ia ct
                     ON ct.id_candidatura = c.id_candidatura
                 WHERE a.id_avaliacao IS NULL
+                  AND EXISTS (
+                      SELECT 1
+                      FROM vaga_tags AS vt
+                      WHERE vt.id_vaga = c.id_vaga
+                  )
                   AND COALESCE(ct.tentativas, 0) < 3
                   AND (
                       ct.ultima_tentativa IS NULL
