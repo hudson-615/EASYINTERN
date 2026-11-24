@@ -155,3 +155,78 @@ O front-end possui consulta HTTP alternativa a cada cinco segundos.
 - 38 testes automatizados especificos do chat.
 - 33 verificacoes integradas com MySQL, HTTP e WebSocket.
 - 7 verificacoes manuais aprovadas nos dashboards.
+
+## Busca por proximidade
+
+Permite encontrar vagas presenciais e hibridas dentro
+de um raio geografico informado pelo candidato.
+
+### Funcionalidades
+
+- Geolocalizacao mediante permissao do navegador.
+- Cadastro de latitude e longitude por vaga.
+- Preservacao das coordenadas em edicoes compativeis.
+- Calculo de distancia pela formula de Haversine.
+- Raio permitido entre 1 e 200 km.
+- Ordenacao por distancia.
+- Paginacao aplicada apos os filtros geograficos.
+- Combinacao com os filtros existentes.
+- Validacao das UFs brasileiras.
+- Interface responsiva.
+
+### Banco de dados
+
+Aplicar a migracao:
+
+database/migrations/004_localizacao_vagas.sql
+
+A migracao adiciona latitude, longitude, indice
+e restricao de integridade das coordenadas.
+
+Vagas antigas permanecem disponiveis na busca convencional.
+
+### API
+
+POST /dashboard/api/candidato/vagas/proximidade
+
+Exemplo de corpo JSON:
+
+{
+    "latitude": -23.55,
+    "longitude": -46.63,
+    "raio_km": 20,
+    "ordenar": "distancia",
+    "pagina": 1,
+    "limite": 10
+}
+
+A resposta inclui os resultados, distancia_km,
+total de vagas e metadados de paginacao.
+
+As rotas GET existentes permanecem compativeis.
+
+### Privacidade
+
+- Localizacao solicitada mediante autorizacao.
+- Coordenadas do candidato arredondadas para tres casas decimais.
+- Coordenadas do candidato nao persistidas pela funcionalidade.
+- Pesquisa geografica do frontend enviada por POST.
+- Resposta com Cache-Control: no-store.
+- HTTPS necessario em producao.
+- Evitar registro de corpos de requisicoes e parametros geograficos.
+
+### Limitacoes
+
+- Distancia em linha reta, nao por trajeto.
+- Cadastro manual das coordenadas das vagas.
+- Vagas remotas ou sem coordenadas nao entram na busca por raio.
+- Sem mapas interativos ou geocodificacao automatica.
+- Sem testes de carga em larga escala.
+
+### Validacao
+
+- 50 testes automatizados adicionais.
+- 30 verificacoes com MySQL real.
+- 8 testes manuais aprovados.
+- Comparacao entre os calculos SQL e Python.
+- Paginacao, ordenacao e filtros validados.

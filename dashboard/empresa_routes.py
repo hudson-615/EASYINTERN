@@ -63,6 +63,10 @@ def preparar_habilidades(dados: "NovaVaga") -> list[dict]:
     return itens
 
 
+from pydantic import model_validator
+from dashboard.geolocalizacao import validar_coordenadas
+
+
 class NovaVaga(BaseModel):
     titulo: str = Field(min_length=3, max_length=150)
     descricao: str = Field(min_length=10)
@@ -76,6 +80,14 @@ class NovaVaga(BaseModel):
     cidade: str | None = Field(default=None, max_length=100)
     estado: str | None = Field(default=None, max_length=2)
     salario_min: Decimal | None = Field(default=None, ge=0, max_digits=10, decimal_places=2)
+
+    latitude: float | None = Field(default=None, ge=-90, le=90)
+    longitude: float | None = Field(default=None, ge=-180, le=180)
+
+    @model_validator(mode="after")
+    def validar_localizacao(self):
+        validar_coordenadas(self.latitude, self.longitude)
+        return self
 
     prazo_encerramento: date
 
@@ -850,13 +862,15 @@ def publicar_vaga_empresa(
                 modalidade,
                 cidade,
                 uf,
+                latitude,
+                longitude,
                 bolsa,
                 prazo_encerramento,
                 status
             )
             VALUES (
                 %s, %s, %s, %s, %s,
-                %s, %s, %s, %s, %s, 'Aberta'
+                %s, %s, %s, %s, %s, %s, %s, 'Aberta'
             )
             """,
             (
@@ -868,6 +882,8 @@ def publicar_vaga_empresa(
                 modalidades[dados.modalidade],
                 cidade,
                 estado,
+                dados.latitude,
+                dados.longitude,
                 dados.salario_min,
                 dados.prazo_encerramento
             )
@@ -1023,6 +1039,8 @@ def detalhes_vaga_empresa(
                 modalidade,
                 cidade,
                 uf,
+                latitude,
+                longitude,
                 bolsa,
                 prazo_encerramento,
                 status
@@ -1083,6 +1101,14 @@ def detalhes_vaga_empresa(
             "modalidade": vaga["modalidade"],
             "cidade": vaga["cidade"],
             "estado": vaga["uf"],
+            "latitude": (
+                float(vaga["latitude"])
+                if vaga.get("latitude") is not None else None
+            ),
+            "longitude": (
+                float(vaga["longitude"])
+                if vaga.get("longitude") is not None else None
+            ),
             "salario_min": (
                 float(vaga["bolsa"])
                 if vaga["bolsa"] is not None
@@ -1278,6 +1304,16 @@ def editar_vaga_empresa(
                 descricao = %s,
                 beneficios = %s,
                 modalidade = %s,
+                latitude = CASE
+                    WHEN %s THEN %s
+                    WHEN NOT (cidade <=> %s AND uf <=> %s) THEN NULL
+                    ELSE latitude
+                END,
+                longitude = CASE
+                    WHEN %s THEN %s
+                    WHEN NOT (cidade <=> %s AND uf <=> %s) THEN NULL
+                    ELSE longitude
+                END,
                 cidade = %s,
                 uf = %s,
                 bolsa = %s,
@@ -1291,6 +1327,14 @@ def editar_vaga_empresa(
                 descricao,
                 dados.beneficios,
                 modalidades[dados.modalidade],
+                bool({"latitude", "longitude"} & dados.model_fields_set),
+                dados.latitude,
+                cidade,
+                estado,
+                bool({"latitude", "longitude"} & dados.model_fields_set),
+                dados.longitude,
+                cidade,
+                estado,
                 cidade,
                 estado,
                 dados.salario_min,
