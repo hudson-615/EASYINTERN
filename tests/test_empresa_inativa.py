@@ -1,4 +1,5 @@
-﻿from unittest.mock import MagicMock, patch
+from fastapi import BackgroundTasks
+from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi import HTTPException
@@ -72,8 +73,7 @@ def test_bloqueia_candidatura_indisponivel(disponivel):
 
     with patch("dashboard.routes.conectar", return_value=conexao):
         with pytest.raises(HTTPException) as erro:
-            candidatar_a_vaga(
-                dados=NovaCandidatura(id_vaga=10),
+            candidatar_a_vaga(background_tasks=BackgroundTasks(), dados=NovaCandidatura(id_vaga=10),
                 token={"sub": "18"},
             )
 

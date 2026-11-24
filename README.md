@@ -37,3 +37,32 @@ Os pareceres gerados pela IA ainda precisam de revisao de precisao.
 ### Testes
 
     python -m pytest tests/ -q
+
+### Avaliacoes automaticas da IA
+
+Aplique a migration 003 antes de habilitar a automacao.
+
+Configuracao no .env:
+
+    IA_AUTOMATICA=false
+
+A automacao permanece desativada por padrao ate a
+homologacao da qualidade dos pareceres.
+
+Quando autorizada em ambiente de teste, configure
+IA_AUTOMATICA=true e execute em terminais separados:
+
+    uvicorn app:app --reload
+    python -m ia.worker_avaliacao
+
+O worker consulta pendencias a cada 60 segundos.
+Cada candidatura possui ate 3 tentativas, com intervalo
+minimo de 5 minutos entre elas.
+
+O processamento automatico utiliza um bloqueio global
+do MySQL para evitar avaliacoes simultaneas.
+
+Nao execute o motor manual em paralelo com a automacao.
+
+A IA fornece pareceres informativos e nao altera
+automaticamente o status seletivo.
