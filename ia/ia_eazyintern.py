@@ -225,7 +225,7 @@ O veredito deve ser uma análise neutra, não "Aprovado" ou "Reprovado".
 
 [DADOS DO CANDIDATO]\n{perfil_candidato}\n[/DADOS DO CANDIDATO]
 [DADOS DA VAGA]\n{perfil_vaga}\n[/DADOS DA VAGA]"""
-    resposta = ollama.chat(
+    resposta = ollama.Client(timeout=120.0).chat(
         model=MODELO_IA,
         messages=[{"role": "user", "content": prompt}],
         format={

@@ -1,3 +1,4 @@
+from fastapi import BackgroundTasks
 """M-14, M-22, AUTH-05: testes locais com mocks, sem acesso MySQL real."""
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -25,7 +26,7 @@ def executar(respostas, *, usuario='17', vaga=9):
         else:
             dado=NovaCandidatura(id_vaga=vaga)
         try:
-            result=candidatar_a_vaga(dados=dado, token={'sub':usuario})
+            result=candidatar_a_vaga(background_tasks=BackgroundTasks(), dados=dado, token={'sub':usuario})
             return conn, cur, result, None
         except HTTPException as erro:
             return conn, cur, None, erro
@@ -67,7 +68,7 @@ def test_m22_conflito_sql_rollback():
     cur.execute.side_effect=exec_sql
     with patch('dashboard.routes.conectar',return_value=conn):
         with pytest.raises(HTTPException) as exc:
-            candidatar_a_vaga(NovaCandidatura(id_vaga=9),token={'sub':'17'})
+            candidatar_a_vaga(background_tasks=BackgroundTasks(), dados=NovaCandidatura(id_vaga=9),token={'sub':'17'})
     assert exc.value.status_code==409
     conn.rollback.assert_called_once()
     conn.commit.assert_not_called()

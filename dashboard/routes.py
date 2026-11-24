@@ -1,3 +1,6 @@
+from fastapi import BackgroundTasks
+from ia.servico_avaliacao import processar_avaliacao
+
 from datetime import date
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -782,6 +785,7 @@ class NovaCandidatura(BaseModel):
 )
 def candidatar_a_vaga(
     dados: NovaCandidatura,
+    background_tasks: BackgroundTasks,
     token: dict = Depends(obter_usuario_autenticado)
 ):
     conexao = None
@@ -932,6 +936,11 @@ def candidatar_a_vaga(
         id_candidatura = cursor.lastrowid
 
         conexao.commit()
+
+        background_tasks.add_task(
+            processar_avaliacao,
+            id_candidatura
+        )
 
         return {
             "mensagem": "Candidatura realizada com sucesso!",

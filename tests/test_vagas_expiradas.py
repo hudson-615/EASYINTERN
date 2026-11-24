@@ -1,4 +1,5 @@
-﻿from datetime import date, timedelta
+from fastapi import BackgroundTasks
+from datetime import date, timedelta
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -39,8 +40,7 @@ def executar_candidatura(conexao):
         "dashboard.routes.conectar",
         return_value=conexao
     ):
-        return candidatar_a_vaga(
-            dados=NovaCandidatura(id_vaga=10),
+        return candidatar_a_vaga(background_tasks=BackgroundTasks(), dados=NovaCandidatura(id_vaga=10),
             token={"sub": "18"}
         )
 
