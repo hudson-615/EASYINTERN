@@ -215,6 +215,7 @@ def listar_candidaturas_candidato(
     data_fim: date | None = None,
     pagina: int = Query(1, ge=1),
     limite: int = Query(20, ge=1, le=100),
+    com_metadados: bool = False,
 ):
     conexao = None
     cursor = None
@@ -303,6 +304,25 @@ def listar_candidaturas_candidato(
             condicoes.append("ca.data_candidatura < DATE_ADD(%s, INTERVAL 1 DAY)")
             parametros.append(data_fim)
         onde = " AND ".join(condicoes)
+
+        total = None
+
+        if com_metadados:
+            cursor.execute(
+                f"""
+                SELECT COUNT(*) AS total
+                FROM candidaturas AS ca
+                JOIN vagas AS v
+                    ON v.id_vaga = ca.id_vaga
+                JOIN empresas AS e
+                    ON e.id_empresa = v.id_empresa
+                WHERE {onde}
+                """,
+                tuple(parametros)
+            )
+
+            total = int(cursor.fetchone()["total"])
+
         parametros.extend([limite, (pagina - 1) * limite])
 
         # Consulta as candidaturas reais do MySQL.
@@ -423,6 +443,16 @@ def listar_candidaturas_candidato(
                     "veredicto": registro["veredito_ia"]
                 }
             })
+
+        if com_metadados:
+            return {
+                "items": resultado,
+                "total": total,
+                "pagina": pagina,
+                "limite": limite,
+                "total_paginas": (total + limite - 1) // limite,
+                "tem_proxima": pagina * limite < total,
+            }
 
         return resultado
 
