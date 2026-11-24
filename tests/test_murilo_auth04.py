@@ -18,7 +18,7 @@ def test_contabilizar_tentativa_e_bloqueio(antes, esperado):
 
 def test_senha_errada_persiste_contador():
     con=MagicMock();cur=con.cursor.return_value
-    cur.fetchone.side_effect=[(42,'hash','Candidato',1,None,0),(4,)]
+    cur.fetchone.side_effect=[(42,'hash','Candidato',1,None,0, 1),(4,)]
     with patch('usuarios.routes.conectar',return_value=con),patch('usuarios.routes.password_hash.verify',return_value=False):
         with pytest.raises(HTTPException) as erro:login(DADOS)
     assert erro.value.status_code==429
@@ -29,7 +29,7 @@ def test_senha_errada_persiste_contador():
 
 def test_login_correto_limpa_bloqueio_e_tentativas():
     con=MagicMock();cur=con.cursor.return_value
-    cur.fetchone.side_effect=[(42,'hash','Candidato',1,None,0),('Candidato Teste',)]
+    cur.fetchone.side_effect=[(42,'hash','Candidato',1,None,0, 1),('Candidato Teste',)]
     with patch('usuarios.routes.conectar',return_value=con),patch('usuarios.routes.password_hash.verify',return_value=True),patch('usuarios.routes.criar_token_acesso',return_value='token'):
         assert login(DADOS)['access_token']=='token'
     sql,params=cur.execute.call_args.args
@@ -39,7 +39,7 @@ def test_login_correto_limpa_bloqueio_e_tentativas():
 
 def test_conta_ja_bloqueada_com_senha_correta_informa_horario():
     con=MagicMock();cur=con.cursor.return_value
-    cur.fetchone.side_effect=[(42,'hash','Candidato',1,None,1),('15/11/2026 às 21:31',)]
+    cur.fetchone.side_effect=[(42,'hash','Candidato',1,None,1, 1),('15/11/2026 às 21:31',)]
     with patch('usuarios.routes.conectar',return_value=con),patch('usuarios.routes.password_hash.verify',return_value=True):
         with pytest.raises(HTTPException) as erro:login(DADOS)
     assert erro.value.status_code==429
@@ -48,7 +48,7 @@ def test_conta_ja_bloqueada_com_senha_correta_informa_horario():
 
 def test_conta_ja_bloqueada_com_senha_incorreta_nao_revela_horario():
     con=MagicMock();cur=con.cursor.return_value
-    cur.fetchone.return_value=(42,'hash','Candidato',1,None,1)
+    cur.fetchone.return_value=(42,'hash','Candidato',1,None,1, 1)
     with patch('usuarios.routes.conectar',return_value=con),patch('usuarios.routes.password_hash.verify',return_value=False):
         with pytest.raises(HTTPException) as erro:login(DADOS)
     assert erro.value.status_code==401

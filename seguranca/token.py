@@ -17,6 +17,13 @@ JWT_ACCESS_TOKEN_EXPIRE_MINUTES = int(
 )
 
 
+if JWT_ALGORITHM not in {"HS256", "HS384", "HS512"}:
+    raise RuntimeError("Algoritmo JWT nao permitido.")
+
+if JWT_ACCESS_TOKEN_EXPIRE_MINUTES <= 0:
+    raise RuntimeError("Tempo de expiracao JWT invalido.")
+
+
 if not JWT_SECRET_KEY:
     raise RuntimeError(
         "JWT_SECRET_KEY não foi configurada no arquivo .env."
@@ -56,11 +63,22 @@ def verificar_token(token: str) -> dict:
         dados = jwt.decode(
             token,
             JWT_SECRET_KEY,
-            algorithms=[JWT_ALGORITHM]
+            algorithms=[JWT_ALGORITHM],
+            options={
+                "require": ["exp", "sub"]
+            }
         )
 
-        if "sub" not in dados:
-            raise InvalidTokenError("Token sem identificador de usuário.")
+        sub = dados.get("sub")
+
+        if (
+            not isinstance(sub, str)
+            or not sub.isascii()
+            or not sub.isdecimal()
+            or len(sub) > 20
+            or int(sub) <= 0
+        ):
+            raise InvalidTokenError("Identificador de usuario invalido.")
 
         return dados
 

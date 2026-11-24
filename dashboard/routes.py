@@ -150,11 +150,11 @@ def estatisticas_candidato(
         valor_medio = resultado_match.get("score_medio") if resultado_match else None
         taxa_match = float(valor_medio) if valor_medio is not None else None
 
-        nivel = (
-            "junior"
-            if candidato["nivel_carreira"] == "Júnior"
-            else "estagiario"
-        )
+        nivel = {
+            "Estagiário": "estagiario",
+            "Júnior": "junior",
+            "Pleno": "pleno"
+        }.get(candidato["nivel_carreira"], "estagiario")
 
         return {
             "nome": candidato["nome_completo"],

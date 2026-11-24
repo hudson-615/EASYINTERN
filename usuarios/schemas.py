@@ -7,13 +7,13 @@ from seguranca.cnpj import validar_cnpj
 
 
 class LoginRequest(BaseModel):
-    email: EmailStr
+    email: EmailStr = Field(max_length=150)
     password: str = Field(min_length=1, max_length=128)
 
 
 class CandidatoCadastro(BaseModel):
     nome_completo: str = Field(min_length=3, max_length=150)
-    email: EmailStr
+    email: EmailStr = Field(max_length=150)
     nivel: Literal["estagiario", "junior"] = "estagiario"
     area_interesse: str | None = Field(default=None, max_length=150)
     id_formacao: int | None = Field(default=None, gt=0)
@@ -69,7 +69,7 @@ class EmpresaCadastro(BaseModel):
         "Marketing",
         "Outros",
     ] | None = None
-    email: EmailStr
+    email: EmailStr = Field(max_length=150)
     password: str = Field(min_length=8, max_length=128)
 
     @field_validator("razao_social")
