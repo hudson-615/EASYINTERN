@@ -51,7 +51,7 @@ def test_m15_candidato_enxerga_status_entrevista_apos_mudanca():
 
 def test_m15_empresa_atualiza_status_com_auditoria():
     empresa = {"tipo_usuario": "Empresa", "ativo": 1, "deletado_em": None, "id_empresa": 5}
-    conn, cur = conexao_mock([empresa, {"id_candidatura": 3, "id_vaga": 2, "status": "Pendente"}])
+    conn, cur = conexao_mock([empresa, {"id_candidatura": 3, "id_vaga": 2, "status": "Em Análise"}])
     with patch("dashboard.empresa_routes.conectar", return_value=conn):
         resultado = atualizar_status_candidatura_empresa(
             id_candidatura=3, dados=AtualizarStatusCandidatura(status="entrevista"),
