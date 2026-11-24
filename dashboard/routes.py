@@ -489,19 +489,23 @@ def listar_vagas_recomendadas(
     token: dict = Depends(obter_usuario_autenticado),
     busca: Annotated[str | None, Query(max_length=120)] = None,
     cidade: Annotated[str | None, Query(max_length=100)] = None,
+    latitude: Annotated[float | None, Query(ge=-90, le=90)] = None,
+    longitude: Annotated[float | None, Query(ge=-180, le=180)] = None,
+    raio_km: Annotated[float | None, Query(ge=1, le=200)] = None,
     uf: Annotated[str | None, Query(min_length=2, max_length=2)] = None,
     modalidade: Annotated[str | None, Query(pattern="^(presencial|remoto|hibrido)$")] = None,
     nivel: Annotated[str | None, Query(pattern="^(estagio|junior|pleno)$")] = None,
     bolsa_min: Annotated[float | None, Query(ge=0)] = None,
     bolsa_max: Annotated[float | None, Query(ge=0)] = None,
     tag: Annotated[str | None, Query(max_length=50)] = None,
-    ordenar: Annotated[str, Query(pattern="^(recentes|antigas|bolsa_maior|bolsa_menor|compatibilidade)$")] = "recentes",
+    ordenar: Annotated[str, Query(pattern="^(recentes|antigas|bolsa_maior|bolsa_menor|compatibilidade|distancia)$")] = "recentes",
     pagina: Annotated[int, Query(ge=1)] = 1,
     limite: Annotated[int, Query(ge=1, le=100)] = 50,
 ):
     """Compatibilidade: retorna array, como o dashboard.js atual espera."""
     return _consultar_vagas_candidato(
         token=token, busca=busca, cidade=cidade, uf=uf,
+        latitude=latitude, longitude=longitude, raio_km=raio_km,
         modalidade=modalidade, nivel=nivel, bolsa_min=bolsa_min,
         bolsa_max=bolsa_max, tag=tag, ordenar=ordenar,
         pagina=pagina, limite=limite, com_metadados=False,
@@ -513,22 +517,66 @@ def listar_vagas_candidato(
     token: dict = Depends(obter_usuario_autenticado),
     busca: Annotated[str | None, Query(max_length=120)] = None,
     cidade: Annotated[str | None, Query(max_length=100)] = None,
+    latitude: Annotated[float | None, Query(ge=-90, le=90)] = None,
+    longitude: Annotated[float | None, Query(ge=-180, le=180)] = None,
+    raio_km: Annotated[float | None, Query(ge=1, le=200)] = None,
     uf: Annotated[str | None, Query(min_length=2, max_length=2)] = None,
     modalidade: Annotated[str | None, Query(pattern="^(presencial|remoto|hibrido)$")] = None,
     nivel: Annotated[str | None, Query(pattern="^(estagio|junior|pleno)$")] = None,
     bolsa_min: Annotated[float | None, Query(ge=0)] = None,
     bolsa_max: Annotated[float | None, Query(ge=0)] = None,
     tag: Annotated[str | None, Query(max_length=50)] = None,
-    ordenar: Annotated[str, Query(pattern="^(recentes|antigas|bolsa_maior|bolsa_menor|compatibilidade)$")] = "recentes",
+    ordenar: Annotated[str, Query(pattern="^(recentes|antigas|bolsa_maior|bolsa_menor|compatibilidade|distancia)$")] = "recentes",
     pagina: Annotated[int, Query(ge=1)] = 1,
     limite: Annotated[int, Query(ge=1, le=100)] = 20,
 ):
     """API paginada para o frontend: items, total, pagina e tem_proxima."""
     return _consultar_vagas_candidato(
         token=token, busca=busca, cidade=cidade, uf=uf,
+        latitude=latitude, longitude=longitude, raio_km=raio_km,
         modalidade=modalidade, nivel=nivel, bolsa_min=bolsa_min,
         bolsa_max=bolsa_max, tag=tag, ordenar=ordenar,
         pagina=pagina, limite=limite, com_metadados=True,
+    )
+
+
+
+class BuscaGeograficaVagas(BaseModel):
+    latitude: float = Field(ge=-90, le=90)
+    longitude: float = Field(ge=-180, le=180)
+    raio_km: float = Field(ge=1, le=200)
+
+    busca: str | None = Field(default=None, max_length=120)
+    cidade: str | None = Field(default=None, max_length=100)
+    uf: str | None = Field(default=None, max_length=2)
+    modalidade: str | None = None
+    nivel: str | None = None
+    bolsa_min: float | None = Field(default=None, ge=0)
+    bolsa_max: float | None = Field(default=None, ge=0)
+    tag: str | None = Field(default=None, max_length=50)
+
+    ordenar: str = "distancia"
+    pagina: int = Field(default=1, ge=1)
+    limite: int = Field(default=20, ge=1, le=100)
+
+
+@router.post("/candidato/vagas/proximidade")
+def buscar_vagas_proximidade(
+    dados: BuscaGeograficaVagas,
+    token: dict = Depends(obter_usuario_autenticado)
+):
+    from fastapi.responses import JSONResponse
+    from fastapi.encoders import jsonable_encoder
+
+    resultado = _consultar_vagas_candidato(
+        token=token,
+        **dados.model_dump(),
+        com_metadados=True
+    )
+
+    return JSONResponse(
+        content=jsonable_encoder(resultado),
+        headers={"Cache-Control": "no-store"}
     )
 
 
@@ -537,9 +585,45 @@ def _consultar_vagas_candidato(
     uf: str | None, modalidade: str | None, nivel: str | None,
     bolsa_min: float | None, bolsa_max: float | None, tag: str | None,
     ordenar: str, pagina: int, limite: int, com_metadados: bool,
+    latitude: float | None = None,
+    longitude: float | None = None,
+    raio_km: float | None = None,
 ):
     """M-09/M-10/M-12: filtros parametrizados, ordenação segura e paginação."""
     # As validações Query cobrem chamadas HTTP; as abaixo protegem chamadas diretas.
+    from dashboard.geolocalizacao import (
+        validar_uf,
+        validar_coordenadas,
+        validar_raio,
+    )
+
+    uf = validar_uf(uf)
+
+    validar_coordenadas(latitude, longitude)
+
+    busca_geografica = any(
+        valor is not None
+        for valor in (latitude, longitude, raio_km)
+    )
+
+    if busca_geografica:
+        if any(
+            valor is None
+            for valor in (latitude, longitude, raio_km)
+        ):
+            raise HTTPException(
+                422,
+                "Informe latitude, longitude e raio juntos."
+            )
+
+        validar_raio(raio_km)
+
+    if ordenar == "distancia" and not busca_geografica:
+        raise HTTPException(
+            422,
+            "Informe a localizacao para ordenar por distancia."
+        )
+
     if pagina < 1 or not 1 <= limite <= 100:
         raise HTTPException(422, "Paginação inválida.")
     if bolsa_min is not None and bolsa_min < 0:
@@ -552,6 +636,7 @@ def _consultar_vagas_candidato(
     modalidades = {"presencial": "Presencial", "remoto": "Remoto", "hibrido": "Híbrido"}
     niveis = {"estagio": "Estagiário", "junior": "Júnior", "pleno": "Pleno"}
     ordenacoes = {
+        "distancia": "distancia_km ASC, v.id_vaga DESC",
         "recentes": "v.criado_em DESC, v.id_vaga DESC",
         "compatibilidade": """
             (
@@ -586,8 +671,6 @@ def _consultar_vagas_candidato(
         raise HTTPException(422, "Nível inválido.")
     if ordenar not in ordenacoes:
         raise HTTPException(422, "Ordenação inválida.")
-    if uf is not None and (len(uf.strip()) != 2 or not uf.strip().isalpha()):
-        raise HTTPException(422, "UF inválida.")
 
     conexao = None
     cursor = None
@@ -656,6 +739,39 @@ def _consultar_vagas_candidato(
             )""")
             parametros.append(tag.strip())
 
+        distancia_sql = "NULL"
+        parametros_distancia = []
+
+        if busca_geografica:
+            distancia_sql = '''
+                6371.0088 * 2 * ASIN(
+                    SQRT(
+                        LEAST(1.0, GREATEST(0.0,
+                            POW(SIN(RADIANS(v.latitude - %s) / 2), 2)
+                            + COS(RADIANS(%s))
+                            * COS(RADIANS(v.latitude))
+                            * POW(SIN(RADIANS(v.longitude - %s) / 2), 2)
+                        ))
+                    )
+                )
+            '''
+
+            parametros_distancia = [
+                latitude, latitude, longitude
+            ]
+
+            condicoes.extend([
+                "v.latitude IS NOT NULL",
+                "v.longitude IS NOT NULL",
+                "v.modalidade IN ('Presencial', 'Hibrido', 'H?brido')",
+                "(" + distancia_sql + ") <= %s",
+            ])
+
+            parametros.extend([
+                *parametros_distancia,
+                raio_km,
+            ])
+
         base_sql = """
             FROM vagas AS v
             JOIN empresas AS e ON e.id_empresa = v.id_empresa
@@ -679,7 +795,8 @@ def _consultar_vagas_candidato(
                 EXISTS (
                     SELECT 1 FROM candidaturas AS ca
                     WHERE ca.id_vaga = v.id_vaga AND ca.id_candidato = %s
-                ) AS ja_candidatou
+                ) AS ja_candidatou,
+        """ + distancia_sql + """ AS distancia_km
         """ + base_sql + " ORDER BY " + ordenacoes[ordenar] + " LIMIT %s OFFSET %s"
         parametros_ordem = (
             [candidato["id_candidato"]]
@@ -691,6 +808,7 @@ def _consultar_vagas_candidato(
             sql,
             (
                 candidato["id_candidato"],
+                *parametros_distancia,
                 *parametros,
                 *parametros_ordem,
                 limite,
@@ -763,6 +881,11 @@ def _consultar_vagas_candidato(
                 "empresa": vaga["empresa"], "nivel": nivel_formatado,
                 "modalidade": mapa_modalidade.get(vaga["modalidade"], "presencial"),
                 "cidade": vaga["cidade"], "estado": vaga["estado"],
+                "distancia_km": (
+                    round(float(vaga["distancia_km"]), 2)
+                    if vaga.get("distancia_km") is not None
+                    else None
+                ),
                 "salario_min": float(vaga["salario_min"]) if vaga["salario_min"] is not None else None,
                 "descricao": vaga["descricao"], "beneficios": vaga["beneficios"],
                 "requisitos": None, "tags": vaga.get("tags") or "",

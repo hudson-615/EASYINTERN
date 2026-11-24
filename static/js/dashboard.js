@@ -1442,6 +1442,128 @@ function renderTimeline() {
 const recSearchState = { pagina: 1, limite: 10, total: 0, proxima: false, requestId: 0, iniciado: false };
 
 function recValor(id) { return document.getElementById(id)?.value.trim() || ''; }
+let recLocalizacao = null;
+let recPedidoGeo = 0;
+
+function recLimparLocalizacao() {
+  recPedidoGeo++;
+  recLocalizacao = null;
+
+  const status = document.getElementById('rec-geo-status');
+
+  if (status) {
+    status.textContent = 'Busca por proximidade desativada.';
+  }
+
+  const botao = document.getElementById('rec-usar-localizacao');
+
+  if (botao) botao.disabled = false;
+}
+
+function recSetupLocalizacao(form) {
+  if (document.getElementById('rec-usar-localizacao')) return;
+
+  const painel = document.createElement('div');
+
+  painel.className = 'field-group ei-geo-filtros';
+
+  painel.innerHTML = `
+    <label class="field-label" for="rec-raio">
+      Buscar vagas próximas
+    </label>
+
+    <select id="rec-raio" class="field-input field-select">
+      <option value="5">5 km</option>
+      <option value="10">10 km</option>
+      <option value="20" selected>20 km</option>
+      <option value="50">50 km</option>
+      <option value="100">100 km</option>
+    </select>
+
+    <button type="button" class="filter-btn"
+      id="rec-usar-localizacao">
+      <i class="bi bi-geo-alt"></i>
+      Usar minha localização
+    </button>
+
+    <button type="button" class="filter-btn"
+      id="rec-remover-localizacao">
+      Desativar proximidade
+    </button>
+
+    <small id="rec-geo-status" role="status"
+      aria-live="polite">
+      Busca por proximidade desativada.
+    </small>
+  `;
+
+  form.append(painel);
+
+  const status = document.getElementById('rec-geo-status');
+  const botao = document.getElementById('rec-usar-localizacao');
+
+  botao.addEventListener('click', () => {
+    if (!navigator.geolocation) {
+      status.textContent = 'Geolocalização indisponível.';
+      return;
+    }
+
+    const pedido = ++recPedidoGeo;
+
+    botao.disabled = true;
+    status.textContent = 'Obtendo localização...';
+
+    navigator.geolocation.getCurrentPosition(
+      posicao => {
+        if (pedido !== recPedidoGeo) return;
+
+        recLocalizacao = {
+          latitude: Number(posicao.coords.latitude.toFixed(3)),
+          longitude: Number(posicao.coords.longitude.toFixed(3))
+        };
+
+        status.textContent = 'Busca por proximidade ativada.';
+        botao.disabled = false;
+
+        recSearchState.pagina = 1;
+        loadVagasRecomendadas();
+      },
+
+      () => {
+        if (pedido !== recPedidoGeo) return;
+
+        botao.disabled = false;
+
+        status.textContent = recLocalizacao
+          ? 'Não foi possível atualizar. Localização anterior mantida.'
+          : 'Localização indisponível ou permissão negada.';
+      },
+
+      {
+        enableHighAccuracy: false,
+        timeout: 15000,
+        maximumAge: 0
+      }
+    );
+  });
+
+  document.getElementById('rec-raio')
+    .addEventListener('change', () => {
+      if (!recLocalizacao) return;
+
+      recSearchState.pagina = 1;
+      loadVagasRecomendadas();
+    });
+
+  document.getElementById('rec-remover-localizacao')
+    .addEventListener('click', () => {
+      recLimparLocalizacao();
+
+      recSearchState.pagina = 1;
+      loadVagasRecomendadas();
+    });
+}
+
 function recModalidade() {
   const atual = document.querySelector('.filter-btn[data-rec-filter].active');
   return atual?.dataset.recFilter === 'todos' ? '' : (atual?.dataset.recFilter || '');
@@ -1451,6 +1573,7 @@ function recSetupBusca() {
   const form = document.getElementById('rec-busca-form');
   if (!form) return;
   recSearchState.iniciado = true;
+  recSetupLocalizacao(form);
   form.addEventListener('submit', (evento) => { evento.preventDefault(); recSearchState.pagina = 1; loadVagasRecomendadas(); });
   ['rec-nivel','rec-ordenar'].forEach(id => document.getElementById(id)?.addEventListener('change', () => {
     recSearchState.pagina = 1; loadVagasRecomendadas();
@@ -1464,6 +1587,7 @@ function recSetupBusca() {
   });
   document.getElementById('rec-limpar')?.addEventListener('click', () => {
     form.reset();
+    recLimparLocalizacao();
     document.querySelectorAll('.filter-btn[data-rec-filter]').forEach(btn => btn.classList.toggle('active', btn.dataset.recFilter === 'todos'));
     recSearchState.pagina = 1; loadVagasRecomendadas();
   });
@@ -1484,6 +1608,13 @@ async function loadVagasRecomendadas() {
     modalidade: recModalidade(), nivel: recValor('rec-nivel'), bolsa_min: recValor('rec-bolsa-min'),
     bolsa_max: recValor('rec-bolsa-max'), tag: recValor('rec-tag'), ordenar: recValor('rec-ordenar')
   };
+  if (recLocalizacao) {
+    campos.latitude = String(recLocalizacao.latitude);
+    campos.longitude = String(recLocalizacao.longitude);
+    campos.raio_km = recValor('rec-raio') || '20';
+    campos.ordenar = 'distancia';
+  }
+
   if (campos.uf && campos.uf.length !== 2) return;
   if (campos.bolsa_min && campos.bolsa_max && Number(campos.bolsa_min) > Number(campos.bolsa_max)) {
     const grid = document.getElementById('vagas-recomendadas-grid');
@@ -1494,14 +1625,37 @@ async function loadVagasRecomendadas() {
   const grid = document.getElementById('vagas-recomendadas-grid');
   if (grid) grid.setAttribute('aria-busy', 'true');
   try {
-    const dados = await apiFetch(`/dashboard/api/candidato/vagas?${params}`);
+    let dados;
+
+    if (recLocalizacao) {
+      const corpo = Object.fromEntries(params.entries());
+
+      for (const campo of [
+        'latitude', 'longitude', 'raio_km',
+        'pagina', 'limite', 'bolsa_min', 'bolsa_max'
+      ]) {
+        if (campo in corpo) {
+          corpo[campo] = Number(corpo[campo]);
+        }
+      }
+
+      dados = await apiFetch(
+        '/dashboard/api/candidato/vagas/proximidade',
+        corpo,
+        'POST'
+      );
+    } else {
+      dados = await apiFetch(
+        `/dashboard/api/candidato/vagas?${params}`
+      );
+    }
     if (idPedido !== recSearchState.requestId) return;
     if (!dados || !Array.isArray(dados.items)) throw new Error('Resposta inválida da pesquisa de vagas.');
     allVagasRec = dados.items;
     recSearchState.total = Number(dados.total) || 0;
     recSearchState.proxima = Boolean(dados.tem_proxima);
     renderVagasRec('todos');
-    setText('rec-count', `${recSearchState.total} vagas`);
+    setText('rec-count', `${recSearchState.total} ${recSearchState.total === 1 ? 'vaga' : 'vagas'}`);
     renderTopVagas();
     const paginacao = document.getElementById('rec-paginacao');
     if (paginacao) {
@@ -1541,7 +1695,7 @@ function renderVagasRec(filtro = 'todos') {
         vaga => vaga.modalidade === filtro
       );
 
-  setText('rec-count', `${vagas.length} vagas`);
+  setText('rec-count', `${vagas.length} ${vagas.length === 1 ? 'vaga' : 'vagas'}`);
 
   if (!vagas.length) {
     grid.innerHTML = `
@@ -1650,6 +1804,15 @@ function renderVagasRec(filtro = 'todos') {
         <div class="vaga-meta">
 
           ${modalidadePill(vaga.modalidade)}
+
+          ${vaga.distancia_km != null &&
+            Number.isFinite(Number(vaga.distancia_km))
+            ? `<span class="meta-pill">
+                <i class="bi bi-geo-alt"></i>
+                ${Number(vaga.distancia_km).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} km
+              </span>`
+            : ''}
+
 
           <span class="meta-pill">
             <i class="bi bi-mortarboard"></i>
@@ -3267,6 +3430,8 @@ async function abrirEdicaoVaga(id) {
 
     preencher('vaga-cidade', vaga.cidade);
     preencher('vaga-estado', vaga.estado);
+    preencher('vaga-latitude', vaga.latitude);
+    preencher('vaga-longitude', vaga.longitude);
     preencher('vaga-salario-min', vaga.salario_min);
     preencher('vaga-prazo', vaga.prazo_encerramento);
 
@@ -3394,6 +3559,32 @@ function initFormNovaVaga() {
       return;
     }
 
+
+    const latTexto = valor('vaga-latitude');
+    const lonTexto = valor('vaga-longitude');
+
+    const latitude = latTexto === '' ? null : Number(latTexto);
+    const longitude = lonTexto === '' ? null : Number(lonTexto);
+
+    if (
+      (latitude === null) !== (longitude === null) ||
+      (latitude !== null && (
+        !Number.isFinite(latitude) ||
+        !Number.isFinite(longitude) ||
+        latitude < -90 || latitude > 90 ||
+        longitude < -180 || longitude > 180
+      ))
+    ) {
+      if (feedback) {
+        feedback.hidden = false;
+        feedback.className = 'form-feedback error';
+        feedback.textContent = 'Informe coordenadas válidas e completas.';
+      }
+
+      if (botao) botao.disabled = false;
+      return;
+    }
+
     const dados = {
       titulo: valor('vaga-titulo'),
       prazo_encerramento: prazo,
@@ -3404,6 +3595,8 @@ function initFormNovaVaga() {
       habilidades: lerHabilidadesFormulario(),
       nivel: valor('vaga-nivel'),
       modalidade: valor('vaga-modalidade'),
+      latitude,
+      longitude,
       cidade: valor('vaga-cidade') || null,
       estado:
         valor('vaga-estado').toUpperCase() || null,

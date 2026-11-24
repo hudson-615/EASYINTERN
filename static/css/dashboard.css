@@ -2719,3 +2719,43 @@ select option,
   border-color: #735894;
   color: #dcc3fb;
 }
+
+.ei-geo-filtros {
+    display: grid;
+    grid-template-columns: 120px auto auto;
+    justify-content: start;
+    align-items: center;
+    gap: 10px;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border-color, #8884);
+}
+
+.ei-geo-filtros .field-label,
+.ei-geo-filtros #rec-geo-status {
+    grid-column: 1 / -1;
+}
+
+.ei-geo-filtros .filter-btn {
+    min-height: 44px;
+    padding: 10px 18px;
+}
+
+#rec-usar-localizacao {
+    background: #168451;
+    border-color: #168451;
+    color: #fff;
+}
+
+.ei-geo-filtros button:focus-visible,
+.ei-geo-filtros select:focus-visible {
+    outline: 2px solid #20b479;
+    outline-offset: 3px;
+}
+
+@media (max-width: 600px) {
+    .ei-geo-filtros {
+        grid-template-columns: 1fr;
+        justify-content: stretch;
+    }
+}

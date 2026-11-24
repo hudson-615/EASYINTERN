@@ -9,7 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="/static/css/easyintern.css" />
-  <link rel="stylesheet" href="/static/css/dashboard.css?v=6" />
+  <link rel="stylesheet" href="/static/css/dashboard.css?v=13" />
 <link rel="stylesheet" href="/static/css/chat.css?v=2">
 </head>
 <body class="dash-body" data-panel="empresa">
@@ -299,7 +299,36 @@
           </div>
         </div>
 
+
+        <div class="form-grid-2">
           <div class="field-group">
+            <label class="field-label" for="vaga-latitude">
+              Latitude do local de trabalho
+            </label>
+            <input type="number" class="field-input"
+              id="vaga-latitude" min="-90" max="90"
+              step="0.000001" placeholder="-23.550520" />
+          </div>
+
+          <div class="field-group">
+            <label class="field-label" for="vaga-longitude">
+              Longitude do local de trabalho
+            </label>
+            <input type="number" class="field-input"
+              id="vaga-longitude" min="-180" max="180"
+              step="0.000001" placeholder="-46.633308" />
+          </div>
+        </div>
+
+        <div class="field-group">
+          <small>
+            Coordenadas opcionais. Informe a localizacao real
+            do local de trabalho. Voce pode copiar as coordenadas
+            de um mapa.
+          </small>
+        </div>
+
+        <div class="field-group">
             <label class="field-label" for="vaga-prazo">
               <i class="bi bi-calendar-event"></i>
               Prazo de Encerramento *
@@ -607,7 +636,7 @@
 
 <!-- Maxwell Barvian's NumberFlow custom element -->
 <script type="module" src="https://esm.sh/number-flow"></script>
-<script src="/static/js/dashboard.js?v=9"></script>
+<script src="/static/js/dashboard.js?v=14"></script>
 <script defer src="/static/js/chat.js?v=3"></script>
 </body>
 </html>
