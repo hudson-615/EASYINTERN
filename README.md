@@ -230,3 +230,47 @@ As rotas GET existentes permanecem compativeis.
 - 8 testes manuais aprovados.
 - Comparacao entre os calculos SQL e Python.
 - Paginacao, ordenacao e filtros validados.
+
+## Revisao final das integracoes
+
+### Frontend
+
+- Paginacao de candidaturas utilizando metadados da API.
+- Recomendacoes gerais independentes dos filtros de busca.
+- Distincao entre compatibilidade de 0% e ausencia de avaliacao.
+- Exibicao dos pontos fortes, pontos de atencao e parecer da IA.
+- Aviso sobre limitacoes da analise automatizada.
+- Protecao contra respostas desatualizadas no ranking.
+- Melhorias no controle de concorrencia do chat.
+- Deduplicacao de mensagens.
+- Preservacao do historico carregado.
+- Melhorias no isolamento de sessoes e reconexao WebSocket.
+
+### Validacao
+
+- 349 testes automatizados de Python aprovados.
+- 11 testes automatizados de JavaScript aprovados.
+- Comunicacao real entre Python e Ollama validada.
+- Calculo ponderado validado em tres cenarios ficticios.
+- 11 verificacoes de persistencia da IA com MySQL real.
+- Exibicao das avaliacoes nos dois dashboards validada.
+- Distincao visual entre notas de 0%, 80% e ausencia de avaliacao.
+- Media de compatibilidade validada.
+
+### Executar os testes
+
+python -m pytest tests/ -q
+
+node --test tests/frontend/revisao_final.test.cjs
+
+### Limitacoes e pendencias
+
+- O modelo de linguagem pode produzir pareceres contraditorios.
+- A nota ponderada prevalece quando os requisitos estao cadastrados.
+- A avaliacao automatica permanece desativada ate homologacao do motor.
+- A recuperacao integral dos perfis pelo motor requer validacao adicional.
+- A IA nao deve aprovar ou rejeitar candidatos automaticamente.
+- Testes de carga e concorrencia em larga escala nao realizados.
+- Busca geografica utiliza distancia em linha reta.
+- Mapas interativos e geocodificacao automatica nao implementados.
+- Identificadores de reenvio do chat preservados apenas em memoria.
