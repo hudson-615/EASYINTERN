@@ -70,6 +70,31 @@
       min-height: 42px;
     }
   </style>
+<style id="ei-style-educacao">
+  .ei-education-row { display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid rgba(128,128,128,.25); }
+  .ei-education-row>span { flex:1;min-width:190px; }
+  .ei-inline-form { display:flex;flex-wrap:wrap;align-items:end;gap:10px; }
+  .ei-inline-form label { display:flex;flex-direction:column;gap:5px; }
+  .ei-inline-form input { max-width:115px; }
+  #ei-perfil-educacao input,#ei-perfil-educacao select { padding:9px;border-radius:6px; }
+  @media(max-width:600px){.ei-education-row,.ei-inline-form{flex-direction:column;align-items:stretch}.ei-education-row>span{min-width:0}}
+</style>
+
+  <!-- Estilos locais da busca de vagas; não modificam outros painéis -->
+  <style id="rec-filtros-estilos">
+    .rec-search-panel{margin:12px 0 16px;padding:14px;border:1px solid var(--border-color,#ddd);background:var(--card-bg,transparent);border-radius:14px}
+    .rec-search-line{display:flex;gap:10px;align-items:end;flex-wrap:wrap}
+    .rec-field{display:flex;flex:1 1 150px;flex-direction:column;gap:5px;font-size:12px;font-weight:600;color:var(--text-muted,#555)}
+    .rec-field.rec-wide{flex:2 1 250px}.rec-field.rec-uf{flex:0 1 75px}
+    .rec-field input,.rec-field select{box-sizing:border-box;width:100%;padding:10px;border:1px solid #ccc;border-radius:9px;background:var(--card-bg,#fff);color:var(--text-primary,inherit);font:inherit;min-height:40px}
+    .rec-primary,.rec-secondary,.rec-pagination button{padding:10px 14px;border-radius:9px;border:1px solid #aaa;cursor:pointer;min-height:40px}
+    .rec-primary{background:#246ed0;border-color:#246ed0;color:white;font-weight:600}.rec-secondary{background:transparent;color:inherit}
+    .rec-more{margin-top:10px}.rec-more summary{cursor:pointer;font-size:13px}.rec-advanced{margin-top:12px}
+    .rec-pagination{display:flex;gap:12px;justify-content:center;align-items:center;margin:16px 0 6px;font-size:13px}.rec-pagination[hidden]{display:none}
+    .rec-pagination button:disabled{opacity:.45;cursor:not-allowed}
+    @media(max-width:520px){.rec-field,.rec-field.rec-wide{flex:1 1 100%}.rec-field.rec-uf{flex:1 1 90px}}
+  </style>
+
 </head>
 
 <body class="dash-body" data-panel="candidato">
@@ -334,6 +359,49 @@
         <span class="filter-count" id="rec-count">0 vagas</span>
       </div>
 
+
+      <!-- M09-M10-M12 busca e filtros UI -->
+      <form id="rec-busca-form" class="rec-search-panel" autocomplete="off">
+        <div class="rec-search-line">
+          <label class="rec-field rec-wide">Pesquisar vaga
+            <input id="rec-busca" type="search" maxlength="120" placeholder="Ex.: Python, React, estágio..." />
+          </label>
+          <label class="rec-field">Cidade
+            <input id="rec-cidade" type="text" maxlength="100" placeholder="Ex.: São Paulo" />
+          </label>
+          <label class="rec-field rec-uf">UF
+            <input id="rec-uf" type="text" maxlength="2" placeholder="SP" style="text-transform:uppercase" />
+          </label>
+          <button class="rec-primary" type="submit">Pesquisar</button>
+        </div>
+        <details class="rec-more">
+          <summary>Filtros avançados</summary>
+          <div class="rec-search-line rec-advanced">
+            <label class="rec-field">Nível
+              <select id="rec-nivel"><option value="">Todos</option><option value="estagio">Estágio</option><option value="junior">Júnior</option><option value="pleno">Pleno</option></select>
+            </label>
+            <label class="rec-field">Bolsa mínima (R$)
+              <input id="rec-bolsa-min" type="number" min="0" step="0.01" placeholder="0" />
+            </label>
+            <label class="rec-field">Bolsa máxima (R$)
+              <input id="rec-bolsa-max" type="number" min="0" step="0.01" placeholder="Sem limite" />
+            </label>
+            <label class="rec-field">Habilidade
+              <input id="rec-tag" maxlength="50" placeholder="Ex.: Python" />
+            </label>
+            <label class="rec-field">Ordenação
+              <select id="rec-ordenar"><option value="recentes">Mais recentes</option><option value="antigas">Mais antigas</option><option value="bolsa_maior">Maior bolsa</option><option value="bolsa_menor">Menor bolsa</option></select>
+            </label>
+            <button id="rec-limpar" type="button" class="rec-secondary">Limpar filtros</button>
+          </div>
+        </details>
+      </form>
+      <nav id="rec-paginacao" class="rec-pagination" aria-label="Paginação das vagas" hidden>
+        <button type="button" id="rec-anterior">Anterior</button>
+        <span id="rec-pagina-info" aria-live="polite"></span>
+        <button type="button" id="rec-proxima">Próxima</button>
+      </nav>
+
       <div class="vagas-grid" id="vagas-recomendadas-grid">
         <div class="loading-placeholder full">
           <i class="bi bi-arrow-repeat spin"></i>
@@ -504,6 +572,49 @@
               </button>
             </div>
           </form>
+        </div>
+      </div>
+<!-- EI-M04-M06-INICIO -->
+      <div class="glass-card" id="ei-perfil-educacao" style="margin-top:24px;padding:24px;">
+        <div class="card-header"><h3><i class="bi bi-mortarboard"></i> Habilidades e formações</h3></div>
+        <p id="ei-perfil-educacao-status" role="status" aria-live="polite"></p>
+        <h4>Minhas habilidades</h4>
+        <div id="ei-lista-habilidades"></div>
+        <form id="ei-form-habilidade" class="ei-inline-form" style="margin-top:12px;">
+          <label>Habilidade <select id="ei-habilidade-catalogo" required></select></label>
+          <label>Nível <select id="ei-nivel-habilidade"><option>Básico</option><option>Intermediário</option><option>Avançado</option></select></label>
+          <button class="btn btn-primary" type="submit">Adicionar habilidade</button>
+        </form>
+        <hr style="margin:24px 0;opacity:.3;">
+        <h4>Minhas formações</h4>
+        <div id="ei-lista-formacoes"></div>
+        <form id="ei-form-formacao" class="ei-inline-form" style="margin-top:12px;">
+          <label>Curso <select id="ei-formacao-catalogo" required></select></label>
+          <label>Situação <select id="ei-status-formacao"><option>Cursando</option><option>Concluído</option><option>Trancado</option></select></label>
+          <label>Semestre <input id="ei-semestre-formacao" type="number" min="1" max="12" placeholder="1 a 12"></label>
+          <label>Ano de conclusão <input id="ei-ano-formacao" type="number" min="1901" max="2155" placeholder="AAAA"></label>
+          <button class="btn btn-primary" type="submit">Adicionar formação</button>
+        </form>
+        <button class="btn btn-ghost" id="ei-atualizar-educacao" type="button" style="margin-top:14px;">Atualizar listas</button>
+      </div>
+      <!-- EI-M04-M06-FIM -->
+      <!-- EASYINTERN-M08-UI -->
+      <div class="glass-card" id="curriculo-card" style="margin-top:24px;padding:24px">
+        <div class="card-header"><h3><i class="bi bi-file-earmark-pdf"></i> Meu Currículo</h3></div>
+        <div class="card-body">
+          <p id="curriculo-situacao" aria-live="polite">Consultando currículo...</p>
+          <form id="curriculo-form" style="display:flex;flex-wrap:wrap;gap:12px;align-items:end">
+            <label for="curriculo-arquivo" style="flex:1 1 230px">Arquivo PDF (máximo 5 MB)
+              <input id="curriculo-arquivo" type="file" accept=".pdf,application/pdf" required style="display:block;width:100%;margin-top:8px">
+            </label>
+            <button id="curriculo-enviar" type="submit" class="btn btn-primary">Enviar PDF</button>
+          </form>
+          <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:14px">
+            <button id="curriculo-visualizar" type="button" class="btn btn-ghost" hidden>Visualizar PDF</button>
+            <button id="curriculo-baixar" type="button" class="btn btn-ghost" hidden>Baixar PDF</button>
+            <button id="curriculo-excluir" type="button" class="btn btn-ghost" hidden>Excluir currículo</button>
+          </div>
+          <p id="curriculo-mensagem" role="status" aria-live="polite" style="margin-top:12px"></p>
         </div>
       </div>
     </section>
@@ -783,5 +894,7 @@
 
   <script type="module" src="https://esm.sh/number-flow"></script>
   <script src="/static/js/dashboard.js?v=8"></script>
+  <script src="/static/js/perfil-formacoes-habilidades.js?v=1"></script>
+  <script defer src="/static/js/curriculo-perfil.js?v=1"></script>
 </body>
 </html>

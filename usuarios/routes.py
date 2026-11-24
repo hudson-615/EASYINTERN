@@ -80,25 +80,38 @@ def cadastrar_candidato(dados: CandidatoCadastro):
         # Se uma formação foi informada, ela precisa existir no catálogo.
         id_formacao = None
 
-        if dados.area_interesse:
+        if dados.id_formacao is not None:
+            # Preferir o identificador unico que veio do autocomplete.
+            cursor.execute(
+                "SELECT id_formacao FROM catalogo_formacoes WHERE id_formacao = %s",
+                (dados.id_formacao,)
+            )
+            formacao = cursor.fetchone()
+            if not formacao:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                    detail="A formação selecionada não está disponível no catálogo."
+                )
+            id_formacao = formacao[0]
+
+        elif dados.area_interesse:
+            # Compatibilidade com formulario antigo. Um nome pode existir em
+            # mais de um tipo de formacao; nunca escolher arbitrariamente.
             cursor.execute(
                 """
-                SELECT id_formacao
-                FROM catalogo_formacoes
+                SELECT id_formacao FROM catalogo_formacoes
                 WHERE nome_curso = %s
+                ORDER BY id_formacao LIMIT 2
                 """,
                 (dados.area_interesse,)
             )
-
-            formacao = cursor.fetchone()
-
-            if not formacao:
+            formacoes = cursor.fetchall()
+            if len(formacoes) != 1:
                 raise HTTPException(
                     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail="A formação selecionada não está disponível no catálogo."
+                    detail="Formação não encontrada ou ambígua. Selecione uma opção no catálogo."
                 )
-
-            id_formacao = formacao[0]
+            id_formacao = formacoes[0][0]
 
         senha_criptografada = password_hash.hash(dados.password)
 
@@ -286,6 +299,39 @@ def cadastrar_empresa(dados: EmpresaCadastro):
             conexao.close()
 
 
+# Bloqueio por CONTA: cinco falhas consecutivas => 15 minutos.
+# O controle por IP (distribuido) sera implementado separadamente.
+def registrar_tentativa_falha_login(cursor, conexao, id_usuario: int):
+    # FOR UPDATE impede duas requisicoes simultaneas de perderem incrementos.
+    cursor.execute(
+        """
+        SELECT CASE
+          WHEN bloqueado_ate IS NOT NULL AND bloqueado_ate <= NOW() THEN 0
+          ELSE tentativas_login
+        END
+        FROM usuarios WHERE id_usuario = %s FOR UPDATE
+        """,
+        (id_usuario,),
+    )
+    resultado = cursor.fetchone()
+    if resultado is None:
+        return
+    tentativas = min(int(resultado[0] or 0) + 1, 5)
+    cursor.execute(
+        """
+        UPDATE usuarios
+        SET tentativas_login = %s,
+            bloqueado_ate = CASE WHEN %s >= 5
+                THEN DATE_ADD(NOW(), INTERVAL 15 MINUTE)
+                ELSE NULL END
+        WHERE id_usuario = %s
+        """,
+        (tentativas, tentativas, id_usuario),
+    )
+    conexao.commit()
+    return tentativas
+
+
 @router.post("/login")
 def login(dados: LoginRequest):
     conexao = None
@@ -332,7 +378,7 @@ def login(dados: LoginRequest):
             bloqueado
         ) = usuario
 
-        if not ativo or deletado_em is not None or bloqueado:
+        if not ativo or deletado_em is not None:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail=mensagem_erro
@@ -347,9 +393,37 @@ def login(dados: LoginRequest):
             senha_correta = False
 
         if not senha_correta:
+            # Senha incorreta nunca revela data de bloqueio.
+            if bloqueado:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail=mensagem_erro
+                )
+            tentativas = registrar_tentativa_falha_login(cursor, conexao, id_usuario)
+            if tentativas >= 5:
+                raise HTTPException(
+                    status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                    detail="Muitas tentativas de login. Por segurança, aguarde 15 minutos antes de tentar novamente."
+                )
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail=mensagem_erro
+            )
+
+        if bloqueado:
+            # Data só aparece quando a senha fornecida está correta.
+            cursor.execute(
+                "SELECT DATE_FORMAT(bloqueado_ate, '%d/%m/%Y às %H:%i') FROM usuarios WHERE id_usuario = %s",
+                (id_usuario,)
+            )
+            horario_row = cursor.fetchone()
+            horario = horario_row[0] if horario_row else None
+            detalhe = "Sua conta está temporariamente bloqueada."
+            if horario:
+                detalhe += f" Você poderá entrar novamente em {horario} (horário do servidor)."
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=detalhe
             )
 
         if tipo_usuario == "Candidato":
@@ -385,7 +459,8 @@ def login(dados: LoginRequest):
             """
             UPDATE usuarios
             SET ultimo_login_em = CURRENT_TIMESTAMP,
-                tentativas_login = 0
+                tentativas_login = 0,
+                bloqueado_ate = NULL
             WHERE id_usuario = %s
             """,
             (id_usuario,)
@@ -487,6 +562,7 @@ def usuario_atual(
             )
 
         return {
+            "id_usuario": id_usuario,
             "nome": perfil[0],
             "tipo": tipo_usuario.lower()
         }

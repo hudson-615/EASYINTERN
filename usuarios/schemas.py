@@ -16,6 +16,7 @@ class CandidatoCadastro(BaseModel):
     email: EmailStr
     nivel: Literal["estagiario", "junior"] = "estagiario"
     area_interesse: str | None = Field(default=None, max_length=150)
+    id_formacao: int | None = Field(default=None, gt=0)
     password: str = Field(min_length=8, max_length=128)
 
     @field_validator("nome_completo")

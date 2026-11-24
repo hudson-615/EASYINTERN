@@ -2701,3 +2701,21 @@ select option,
 }
 
 
+
+
+/* M-14: Entrevista e uma etapa propria, diferente de Em Analise. */
+.status-entrevista {
+  background: rgba(139, 92, 246, 0.14);
+  color: #a78bfa;
+  border: 1px solid rgba(139, 92, 246, 0.36);
+}
+.dash-body .status-entrevista {
+  background: #f0eaff;
+  border-color: #d6c5f2;
+  color: #6841a3;
+}
+.dash-body[data-theme="dark"] .status-entrevista {
+  background: #392d4a;
+  border-color: #735894;
+  color: #dcc3fb;
+}

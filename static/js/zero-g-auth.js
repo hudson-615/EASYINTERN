@@ -1207,6 +1207,7 @@
       nome_completo: (rawData.nome_completo || '').trim(),
       area_interesse:
         (rawData.area_interesse || '').trim() || null,
+      id_formacao: selectedAreaItem?.id || null,
       password: rawData.password || '',
     };
 

@@ -527,7 +527,7 @@ function statusBadge(statusAtual) {
     ],
     entrevista: [
       '<i class="bi bi-calendar-event"></i> Entrevista',
-      'status-em_analise'
+      'status-entrevista'
     ],
     aprovado: [
       '<i class="bi bi-check-circle"></i> Aprovado',
@@ -893,11 +893,10 @@ function initThemeControl() {
     });
   };
 
-  aplicar(
-    localStorage.getItem(
-      'easyintern-dashboard-theme'
-    ) || 'light'
-  );
+  // M25: preferência de tema é local por conta neste MVP.
+  // A coluna candidatos.modo_escuro fica reservada para sincronização futura.
+  const chaveTema = getProfileStorageKey('easyintern-dashboard-theme');
+  aplicar(prefGet(chaveTema) || 'light');
 
   botoes.forEach(botao => {
     botao.addEventListener('click', () => {
@@ -908,10 +907,7 @@ function initThemeControl() {
 
       aplicar(proximo);
 
-      localStorage.setItem(
-        'easyintern-dashboard-theme',
-        proximo
-      );
+      prefSet(chaveTema, proximo);
     });
   });
 }
@@ -1095,15 +1091,11 @@ async function loadCandidatoStats() {
     }
 
   } catch (erro) {
-    console.warn(
-      'Erro nas estatísticas:',
-      erro.message
-    );
-
-    showToast(
-      'Não foi possível carregar as estatísticas.',
-      'error'
-    );
+    console.warn('Erro nas estatísticas:', erro.message);
+    // M20: não conservar números antigos ou demonstrativos após falha.
+    ['stat-total-c', 'stat-aprovadas-v', 'stat-analise-v',
+     'badge-candidaturas', 'stat-taxa-match'].forEach(id => setText(id, '—'));
+    showToast('Não foi possível carregar as estatísticas.', 'error');
   }
 }
 
@@ -1368,48 +1360,92 @@ function renderTimeline() {
 // VAGAS REAIS DO MYSQL
 // ============================================================
 
+const recSearchState = { pagina: 1, limite: 10, total: 0, proxima: false, requestId: 0, iniciado: false };
+
+function recValor(id) { return document.getElementById(id)?.value.trim() || ''; }
+function recModalidade() {
+  const atual = document.querySelector('.filter-btn[data-rec-filter].active');
+  return atual?.dataset.recFilter === 'todos' ? '' : (atual?.dataset.recFilter || '');
+}
+function recSetupBusca() {
+  if (recSearchState.iniciado) return;
+  const form = document.getElementById('rec-busca-form');
+  if (!form) return;
+  recSearchState.iniciado = true;
+  form.addEventListener('submit', (evento) => { evento.preventDefault(); recSearchState.pagina = 1; loadVagasRecomendadas(); });
+  ['rec-nivel','rec-ordenar'].forEach(id => document.getElementById(id)?.addEventListener('change', () => {
+    recSearchState.pagina = 1; loadVagasRecomendadas();
+  }));
+  let tempoDebounce;
+  ['rec-busca','rec-cidade','rec-uf','rec-bolsa-min','rec-bolsa-max','rec-tag'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', () => {
+      clearTimeout(tempoDebounce);
+      tempoDebounce = setTimeout(() => { recSearchState.pagina = 1; loadVagasRecomendadas(); }, 450);
+    });
+  });
+  document.getElementById('rec-limpar')?.addEventListener('click', () => {
+    form.reset();
+    document.querySelectorAll('.filter-btn[data-rec-filter]').forEach(btn => btn.classList.toggle('active', btn.dataset.recFilter === 'todos'));
+    recSearchState.pagina = 1; loadVagasRecomendadas();
+  });
+  document.getElementById('rec-anterior')?.addEventListener('click', () => {
+    if (recSearchState.pagina > 1) { recSearchState.pagina--; loadVagasRecomendadas(); }
+  });
+  document.getElementById('rec-proxima')?.addEventListener('click', () => {
+    if (recSearchState.proxima) { recSearchState.pagina++; loadVagasRecomendadas(); }
+  });
+}
+
 async function loadVagasRecomendadas() {
+  recSetupBusca();
+  const idPedido = ++recSearchState.requestId;
+  const params = new URLSearchParams({ pagina: String(recSearchState.pagina), limite: String(recSearchState.limite) });
+  const campos = {
+    busca: recValor('rec-busca'), cidade: recValor('rec-cidade'), uf: recValor('rec-uf').toUpperCase(),
+    modalidade: recModalidade(), nivel: recValor('rec-nivel'), bolsa_min: recValor('rec-bolsa-min'),
+    bolsa_max: recValor('rec-bolsa-max'), tag: recValor('rec-tag'), ordenar: recValor('rec-ordenar')
+  };
+  if (campos.uf && campos.uf.length !== 2) return;
+  if (campos.bolsa_min && campos.bolsa_max && Number(campos.bolsa_min) > Number(campos.bolsa_max)) {
+    const grid = document.getElementById('vagas-recomendadas-grid');
+    if (grid) grid.textContent = 'A bolsa mínima não pode ser maior que a máxima.';
+    return;
+  }
+  Object.entries(campos).forEach(([chave, valor]) => { if (valor !== '') params.set(chave, valor); });
+  const grid = document.getElementById('vagas-recomendadas-grid');
+  if (grid) grid.setAttribute('aria-busy', 'true');
   try {
-    const vagas = await apiFetch(API.recomendadas);
-
-    if (!Array.isArray(vagas)) {
-      throw new Error(
-        'Formato inválido da lista de vagas.'
-      );
-    }
-
-    allVagasRec = vagas;
-
+    const dados = await apiFetch(`/dashboard/api/candidato/vagas?${params}`);
+    if (idPedido !== recSearchState.requestId) return;
+    if (!dados || !Array.isArray(dados.items)) throw new Error('Resposta inválida da pesquisa de vagas.');
+    allVagasRec = dados.items;
+    recSearchState.total = Number(dados.total) || 0;
+    recSearchState.proxima = Boolean(dados.tem_proxima);
     renderVagasRec('todos');
+    setText('rec-count', `${recSearchState.total} vagas`);
     renderTopVagas();
-
+    const paginacao = document.getElementById('rec-paginacao');
+    if (paginacao) {
+      paginacao.hidden = recSearchState.total <= recSearchState.limite;
+      setText('rec-pagina-info', `Página ${recSearchState.pagina} de ${Math.max(1, Number(dados.total_paginas) || 1)}`);
+      const anterior = document.getElementById('rec-anterior');
+      const proximo = document.getElementById('rec-proxima');
+      if (anterior) anterior.disabled = recSearchState.pagina <= 1;
+      if (proximo) proximo.disabled = !recSearchState.proxima;
+    }
   } catch (erro) {
-    console.warn(
-      'Erro ao carregar vagas:',
-      erro.message
-    );
-
-    const grid = document.getElementById(
-      'vagas-recomendadas-grid'
-    );
-
-    if (grid) {
-      grid.innerHTML = `
-        <div class="empty-state">
-          <h4>Não foi possível carregar as vagas.</h4>
-          <p>${escHtml(erro.message)}</p>
-        </div>
-      `;
-    }
-
-    const top = document.getElementById(
-      'top-vagas-list'
-    );
-
-    if (top) {
-      top.textContent =
-        'Não foi possível carregar as vagas disponíveis.';
-    }
+    if (idPedido !== recSearchState.requestId) return;
+    console.warn('Erro ao carregar vagas:', erro.message);
+    allVagasRec = [];
+    recSearchState.proxima = false;
+    setText('rec-count', '— vagas');
+    const paginacao = document.getElementById('rec-paginacao');
+    if (paginacao) paginacao.hidden = true;
+    if (grid) grid.innerHTML = `<div class="empty-state"><h4>Não foi possível carregar as vagas.</h4><p>${escHtml(erro.message)}</p></div>`;
+    const top = document.getElementById('top-vagas-list');
+    if (top) top.textContent = 'Não foi possível carregar as vagas disponíveis.';
+  } finally {
+    if (idPedido === recSearchState.requestId && grid) grid.removeAttribute('aria-busy');
   }
 }
 
@@ -1897,7 +1933,7 @@ async function loadEmpresaStats() {
   try {
     const stats = await apiFetch(API.stats_emp);
 
-    if (!stats) return;
+    if (!stats) throw new Error('Dados empresariais ausentes.');
     preencherEdicaoPerfilEmpresa(stats);
 
     setText('stat-total-vagas', stats.total_vagas);
@@ -1979,10 +2015,10 @@ async function loadEmpresaStats() {
     }
 
   } catch (erro) {
-    console.warn(
-      'Erro nas estatísticas da empresa:',
-      erro.message
-    );
+    console.warn('Erro nas estatísticas da empresa:', erro.message);
+    ['stat-total-vagas', 'stat-vagas-abertas', 'stat-total-candidatos',
+     'stat-aprovados', 'badge-vagas'].forEach(id => setText(id, '—'));
+    showToast('Não foi possível carregar as estatísticas da empresa.', 'error');
   }
 }
 
@@ -3268,9 +3304,8 @@ function initFilters() {
 
         botao.classList.add('active');
 
-        renderVagasRec(
-          botao.dataset.recFilter
-        );
+        recSearchState.pagina = 1;
+        loadVagasRecomendadas();
       });
     });
 
@@ -3298,25 +3333,25 @@ function initFilters() {
 // ============================================================
 
 function getProfileStorageKey(prefixo) {
-  let identificador = dashPanel || 'candidato';
-
-  try {
-    const usuario = JSON.parse(
-      localStorage.getItem('easyintern_user') ||
-      localStorage.getItem('ag_user') ||
-      'null'
-    );
-
-    if (usuario?.email) {
-      identificador = usuario.email
-        .toLowerCase()
-        .replace(/[^a-z0-9]/g, '_');
-    }
-  } catch {
-    // Usa o tipo de painel como identificador.
+  // Identidade verificada pelo servidor; nunca compartilhar preferências por painel.
+  const id = Number(currentUser?.id_usuario);
+  if (!Number.isSafeInteger(id) || id <= 0) {
+    // Sem ID autenticado não é seguro gravar preferências persistentes.
+    return null;
   }
+  return `${prefixo}_usuario_${id}`;
+}
 
-  return `${prefixo}_${identificador}`;
+function prefGet(chave) {
+  return chave ? localStorage.getItem(chave) : null;
+}
+
+function prefSet(chave, valor) {
+  if (chave) localStorage.setItem(chave, valor);
+}
+
+function prefRemove(chave) {
+  if (chave) localStorage.removeItem(chave);
 }
 
 function getDynamicStats() {
@@ -3365,7 +3400,7 @@ function initDashboardDragAndDrop() {
 
   try {
     const salvo = JSON.parse(
-      localStorage.getItem(chave) || '{}'
+      prefGet(chave) || '{}'
     );
 
     Object.entries(salvo).forEach(
@@ -3415,7 +3450,7 @@ function initDashboardDragAndDrop() {
         .map(item => item.id);
     });
 
-    localStorage.setItem(
+    prefSet(
       chave,
       JSON.stringify(dados)
     );
@@ -3684,7 +3719,7 @@ function initEditDashboardsPanel() {
 
   try {
     visibilidade = JSON.parse(
-      localStorage.getItem(chaveVisibilidade) || '{}'
+      prefGet(chaveVisibilidade) || '{}'
     );
   } catch {
     visibilidade = {};
@@ -3715,21 +3750,21 @@ function initEditDashboardsPanel() {
             toggle.checked ? '' : 'none';
         }
 
-        localStorage.setItem(
+        prefSet(
           chaveVisibilidade,
           JSON.stringify(visibilidade)
         );
       });
     });
 
-  let modo = localStorage.getItem(chaveModo) ||
+  let modo = prefGet(chaveModo) ||
     'grid';
 
-  let modelo = localStorage.getItem(chaveModelo) ||
+  let modelo = prefGet(chaveModelo) ||
     'panoramic';
 
   let autoplay =
-    localStorage.getItem(chaveAutoplay) === 'true';
+    prefGet(chaveAutoplay) === 'true';
 
   const aplicar = () => {
     document
@@ -3784,7 +3819,7 @@ function initEditDashboardsPanel() {
       card.addEventListener('click', () => {
         modo = card.dataset.mode;
 
-        localStorage.setItem(
+        prefSet(
           chaveModo,
           modo
         );
@@ -3801,7 +3836,7 @@ function initEditDashboardsPanel() {
       chip.addEventListener('click', () => {
         modelo = chip.dataset.carouselModel;
 
-        localStorage.setItem(
+        prefSet(
           chaveModelo,
           modelo
         );
@@ -3815,7 +3850,7 @@ function initEditDashboardsPanel() {
     ?.addEventListener('change', evento => {
       autoplay = evento.target.checked;
 
-      localStorage.setItem(
+      prefSet(
         chaveAutoplay,
         String(autoplay)
       );
@@ -3834,7 +3869,7 @@ function initEditDashboardsPanel() {
         getProfileStorageKey('easyintern_order'),
         getProfileStorageKey('easyintern_dyn_stats')
       ].forEach(chave => {
-        localStorage.removeItem(chave);
+        prefRemove(chave);
       });
 
       showToast(

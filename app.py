@@ -7,11 +7,13 @@ from fastapi.templating import Jinja2Templates
 
 from database.connection import conectar
 from usuarios.routes import router as usuarios_router
+from usuarios.recuperacao_routes import router as recuperacao_router
 from dados.routes import router as dados_router
 from dashboard.routes import router as dashboard_router
 from dashboard.empresa_routes import router as empresa_router
 
 from dashboard.formacoes_routes import router as formacoes_router
+from dashboard.curriculo_routes import router as curriculo_router
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -42,11 +44,13 @@ templates = Jinja2Templates(
 
 # Rotas da API
 app.include_router(usuarios_router)
+app.include_router(recuperacao_router)
 app.include_router(dados_router)
 app.include_router(dashboard_router)
 app.include_router(empresa_router)
 
 app.include_router(formacoes_router)
+app.include_router(curriculo_router)
 
 @app.get("/")
 def inicio():
