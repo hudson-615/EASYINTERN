@@ -1,4 +1,4 @@
-﻿from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi import HTTPException
@@ -41,7 +41,8 @@ def test_login_conta_indisponivel(usuario):
 
 def test_login_senha_incorreta():
     conexao = preparar(
-        (1, "hash", "Candidato", 1, None, 0)
+        (1, "hash", "Candidato", 1, None, 0),
+        (0,)  # Consulta extra: contador anterior de tentativas.
     )
 
     with patch("usuarios.routes.conectar", return_value=conexao):
@@ -50,7 +51,11 @@ def test_login_senha_incorreta():
                 login(DADOS)
 
     assert erro.value.status_code == 401
-    conexao.commit.assert_not_called()
+    conexao.commit.assert_called_once()
+    cursor = conexao.cursor.return_value
+    sql, parametros = cursor.execute.call_args.args
+    assert "UPDATE usuarios" in sql
+    assert parametros == (1, 1, 1)
 
 
 def test_login_valido():

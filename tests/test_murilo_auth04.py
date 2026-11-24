@@ -21,7 +21,8 @@ def test_senha_errada_persiste_contador():
     cur.fetchone.side_effect=[(42,'hash','Candidato',1,None,0),(4,)]
     with patch('usuarios.routes.conectar',return_value=con),patch('usuarios.routes.password_hash.verify',return_value=False):
         with pytest.raises(HTTPException) as erro:login(DADOS)
-    assert erro.value.status_code==401
+    assert erro.value.status_code==429
+    assert '15 minutos' in erro.value.detail
     assert con.commit.call_count==1
     sql,params=cur.execute.call_args.args
     assert params==(5,5,42)
@@ -36,11 +37,20 @@ def test_login_correto_limpa_bloqueio_e_tentativas():
     assert params==(42,)
     con.commit.assert_called_once()
 
-def test_conta_ja_bloqueada_nao_consulta_senha():
+def test_conta_ja_bloqueada_com_senha_correta_informa_horario():
+    con=MagicMock();cur=con.cursor.return_value
+    cur.fetchone.side_effect=[(42,'hash','Candidato',1,None,1),('15/11/2026 às 21:31',)]
+    with patch('usuarios.routes.conectar',return_value=con),patch('usuarios.routes.password_hash.verify',return_value=True):
+        with pytest.raises(HTTPException) as erro:login(DADOS)
+    assert erro.value.status_code==429
+    assert '21:31' in erro.value.detail
+    con.commit.assert_not_called()
+
+def test_conta_ja_bloqueada_com_senha_incorreta_nao_revela_horario():
     con=MagicMock();cur=con.cursor.return_value
     cur.fetchone.return_value=(42,'hash','Candidato',1,None,1)
-    with patch('usuarios.routes.conectar',return_value=con),patch('usuarios.routes.password_hash.verify') as verify:
+    with patch('usuarios.routes.conectar',return_value=con),patch('usuarios.routes.password_hash.verify',return_value=False):
         with pytest.raises(HTTPException) as erro:login(DADOS)
     assert erro.value.status_code==401
-    verify.assert_not_called()
+    assert erro.value.detail=='E-mail ou senha incorretos.'
     con.commit.assert_not_called()
