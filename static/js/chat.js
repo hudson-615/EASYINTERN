@@ -17,6 +17,15 @@
     let versao = 0;
     let pendente = null;
     let pagina = 1;
+    let carregandoInicial = false;
+    let carregandoAnteriores = false;
+    let carregandoConversas = false;
+    let sessaoAtual = token();
+    let ultimaLeitura = new Map();
+    let conversasCarregadas = new Map();
+    let mensagensPendentes = new Map();
+    let geracaoSessao = 0;
+    let paginaSuspensa = false;
 
     function token() {
         return localStorage.getItem("easyintern_token")
@@ -35,6 +44,7 @@
 
     async function api(caminho, metodo = "GET", dados = null) {
         const credencial = token();
+        const geracao = geracaoSessao;
 
         if (!credencial) {
             throw new Error("Sessão indisponível.");
@@ -69,7 +79,13 @@
             );
         }
 
-        return resposta.json();
+        const resultado = await resposta.json();
+
+        if (credencial !== token() || geracao !== geracaoSessao) {
+            throw new Error("Sessao alterada.");
+        }
+
+        return resultado;
     }
 
     function podeEnviar() {
@@ -140,28 +156,65 @@
     }
 
     async function carregarConversas(proxima = false) {
-        const alvo = proxima ? pagina + 1 : 1;
+        if (carregandoConversas) return;
 
-        const dados = await api(
-            `/conversas?pagina=${alvo}&limite=20`
-        );
+        carregandoConversas = true;
+        const geracao = geracaoSessao;
+        const botao = el("chat-mais-conversas");
+        botao.disabled = true;
 
-        pagina = alvo;
+        try {
+            const alvo = proxima ? pagina + 1 : 1;
 
-        if (conversa) {
-            const atual = dados.items.find(
-                item => item.id_chat === conversa.id_chat
+            const dados = await api(
+                `/conversas?pagina=${alvo}&limite=20`
             );
 
-            if (atual) {
-                conversa = atual;
-                atualizarCabecalho();
+            if (geracao !== geracaoSessao) return;
+
+            if (!proxima && pagina === 1) {
+                conversasCarregadas.clear();
             }
+
+            for (const item of dados.items) {
+                conversasCarregadas.set(item.id_chat, item);
+            }
+
+            if (proxima) pagina = alvo;
+
+            if (conversa) {
+                const atual = dados.items.find(
+                    item => item.id_chat === conversa.id_chat
+                );
+
+                if (atual) {
+                    conversa = atual;
+                    atualizarCabecalho();
+                }
+            }
+
+            renderizarConversas([...conversasCarregadas.values()]);
+
+            if (proxima || pagina === 1) {
+                botao.hidden = !dados.tem_proxima;
+            }
+
+        } finally {
+            carregandoConversas = false;
+            botao.disabled = false;
+        }
+    }
+
+    function unirMensagens(anteriores, novas) {
+        const unicas = new Map();
+
+        for (const item of [...anteriores, ...novas]) {
+            unicas.set(Number(item.id_mensagem), item);
         }
 
-        renderizarConversas(dados.items, proxima);
-
-        el("chat-mais-conversas").hidden = !dados.tem_proxima;
+        return [...unicas.values()].sort(
+            (a, b) => Number(a.id_mensagem) - Number(b.id_mensagem)
+        );
     }
 
     function renderizarMensagens(rolar = true) {
@@ -202,10 +255,22 @@
     async function registrarLeitura(id, ultimo) {
         if (!ultimo || !visivel() || conversa?.id_chat !== id) return;
 
-        await api(
-            `/conversas/${id}/leitura?ate_id=${ultimo}`,
-            "PATCH"
-        );
+        if (Number(ultimo) <= (ultimaLeitura.get(id) || 0)) return;
+
+        const anterior = ultimaLeitura.get(id) || 0;
+        ultimaLeitura.set(id, Number(ultimo));
+
+        try {
+            await api(
+                `/conversas/${id}/leitura?ate_id=${ultimo}`,
+                "PATCH"
+            );
+        } catch (erro) {
+            if (ultimaLeitura.get(id) === Number(ultimo)) {
+                ultimaLeitura.set(id, anterior);
+            }
+            throw erro;
+        }
     }
 
     async function abrirConversa(item) {
@@ -213,34 +278,40 @@
 
         conversa = item;
         mensagens = [];
-        pendente = null;
+        carregandoInicial = true;
+        pendente = mensagensPendentes.get(item.id_chat) || null;
 
-        el("chat-conteudo").value = "";
+        el("chat-conteudo").value = pendente?.conteudo || "";
         el("chat-mais-mensagens").hidden = true;
 
         atualizarCabecalho();
         renderizarMensagens();
         aviso();
 
-        const dados = await api(
-            `/conversas/${item.id_chat}/mensagens?limite=50`
-        );
+        try {
+            const dados = await api(
+                `/conversas/${item.id_chat}/mensagens?limite=50`
+            );
 
-        if (atual !== versao) return;
+            if (atual !== versao) return;
 
-        mensagens = dados.items;
+            mensagens = unirMensagens([], dados.items);
 
-        renderizarMensagens();
+            renderizarMensagens();
 
-        el("chat-mais-mensagens").hidden = !dados.tem_mais;
+            el("chat-mais-mensagens").hidden = !dados.tem_mais;
 
-        await registrarLeitura(item.id_chat, dados.ultimo_id);
+            await registrarLeitura(item.id_chat, dados.ultimo_id);
 
-        await carregarConversas();
+            if (atual === versao) await carregarConversas();
+
+        } finally {
+            if (atual === versao) carregandoInicial = false;
+        }
     }
 
     async function atualizarMensagens() {
-        if (!conversa || !visivel() || atualizando) return;
+        if (!conversa || !visivel() || atualizando || carregandoInicial) return;
 
         atualizando = true;
 
@@ -261,7 +332,7 @@
                 if (atual !== versao) return;
 
                 if (dados.items.length) {
-                    mensagens.push(...dados.items);
+                    mensagens = unirMensagens(mensagens, dados.items);
                     alterou = true;
                 }
 
@@ -283,7 +354,12 @@
     }
 
     async function carregarAnteriores() {
-        if (!conversa || !mensagens.length) return;
+        if (!conversa || !mensagens.length || carregandoAnteriores || carregandoInicial) return;
+
+        carregandoAnteriores = true;
+        el("chat-mais-mensagens").disabled = true;
+
+        try {
 
         const atual = versao;
         const id = conversa.id_chat;
@@ -299,7 +375,7 @@
         const alturaAnterior = painel.scrollHeight;
         const posicaoAnterior = painel.scrollTop;
 
-        mensagens = [...dados.items, ...mensagens];
+        mensagens = unirMensagens(dados.items, mensagens);
 
         renderizarMensagens(false);
 
@@ -307,6 +383,10 @@
             + painel.scrollHeight - alturaAnterior;
 
         el("chat-mais-mensagens").hidden = !dados.tem_mais;
+        } finally {
+            carregandoAnteriores = false;
+            el("chat-mais-mensagens").disabled = false;
+        }
     }
 
     el("chat-form").addEventListener("submit", async evento => {
@@ -333,6 +413,8 @@
             };
         }
 
+        mensagensPendentes.set(id, pendente);
+
         enviando = true;
         atualizarControles();
 
@@ -341,6 +423,8 @@
                 conteudo: pendente.conteudo,
                 uuid_cliente: pendente.uuid_cliente
             });
+
+            mensagensPendentes.delete(id);
 
             if (atual === versao) {
                 el("chat-conteudo").value = "";
@@ -385,7 +469,9 @@
     }
 
     async function sincronizar() {
-        if (!token()) return;
+        verificarSessao();
+
+        if (!token() || paginaSuspensa) return;
 
         try {
             if (visivel()) {
@@ -438,7 +524,9 @@
     let consultandoNotificacoes = false;
 
     async function atualizarNotificacoes() {
-        if (!token() || consultandoNotificacoes) return;
+        verificarSessao();
+
+        if (!token() || consultandoNotificacoes || paginaSuspensa) return;
 
         consultandoNotificacoes = true;
         const sessao = token();
@@ -459,8 +547,60 @@
         }
     }
 
+    function encerrarSocket() {
+        clearTimeout(timer);
+        timer = null;
+
+        if (socket) {
+            const anterior = socket;
+            socket = null;
+            anterior.onclose = null;
+            anterior.onmessage = null;
+            anterior.onopen = null;
+            anterior.close();
+        }
+    }
+
+    function verificarSessao() {
+        const atual = token();
+
+        if (atual === sessaoAtual) return;
+
+        sessaoAtual = atual;
+        geracaoSessao++;
+        versao++;
+
+        encerrarSocket();
+
+        conversa = null;
+        mensagens = [];
+        pendente = null;
+        pagina = 1;
+        carregandoInicial = false;
+
+        mensagensPendentes.clear();
+        conversasCarregadas.clear();
+        ultimaLeitura.clear();
+
+        el("chat-conversas").replaceChildren();
+        el("chat-mensagens").replaceChildren();
+        el("chat-conteudo").value = "";
+        el("chat-nome").textContent = "Conversa";
+        el("chat-status").textContent = "";
+        el("chat-mais-conversas").hidden = true;
+        el("chat-mais-mensagens").hidden = true;
+
+        atualizarBadge(0);
+        atualizarControles();
+        aviso();
+
+        if (atual && !paginaSuspensa) conectar();
+    }
+
     function conectar() {
-        if (!token() || socket) return;
+        if (!token() || socket || paginaSuspensa) return;
+
+        const credencial = token();
 
         const protocolo = location.protocol === "https:"
             ? "wss:" : "ws:";
@@ -469,11 +609,16 @@
             `${protocolo}//${location.host}${BASE}/ws`
         );
 
+        const conexao = socket;
+
         socket.onopen = () => {
-            socket.send(JSON.stringify({ token: token() }));
+            if (socket !== conexao || token() !== credencial) return;
+            conexao.send(JSON.stringify({ token: credencial }));
         };
 
         socket.onmessage = evento => {
+            if (socket !== conexao || token() !== credencial) return;
+
             let dados;
 
             try {
@@ -494,11 +639,12 @@
         };
 
         socket.onclose = evento => {
+            if (socket !== conexao) return;
             socket = null;
 
             el("chat-conexao").textContent = "Desconectado";
 
-            if (token() && evento.code !== 1008) {
+            if (token() && !paginaSuspensa && evento.code !== 1008) {
                 timer = setTimeout(conectar, 5000);
             }
         };
@@ -513,11 +659,24 @@
 
                 el("nav-chat").click();
 
-                const lista = await api("/conversas?limite=100");
+                let item = null;
+                let numeroPagina = 1;
+                let temProxima = true;
 
-                const item = lista.items.find(
-                    c => c.id_chat === dados.id_chat
-                );
+                while (!item && temProxima) {
+                    const lista = await api(
+                        `/conversas?pagina=${numeroPagina}&limite=100`
+                    );
+
+                    item = lista.items.find(
+                        c => c.id_chat === dados.id_chat
+                    );
+
+                    temProxima = Boolean(lista.tem_proxima)
+                        && lista.items.length > 0;
+
+                    numeroPagina++;
+                }
 
                 if (!item) {
                     throw new Error("Conversa não localizada na lista.");
@@ -575,13 +734,19 @@
     document.addEventListener("visibilitychange", sincronizar);
 
     window.addEventListener("pagehide", () => {
-        clearTimeout(timer);
-
-        if (socket) {
-            socket.onclose = null;
-            socket.close();
-        }
+        paginaSuspensa = true;
+        encerrarSocket();
     });
+
+    window.addEventListener("pageshow", () => {
+        paginaSuspensa = false;
+        verificarSessao();
+        conectar();
+        atualizarNotificacoes();
+        sincronizar();
+    });
+
+    window.addEventListener("storage", verificarSessao);
 
     conectar();
 

@@ -975,7 +975,10 @@ async function loadCandidatoDashboard() {
   await loadCandidatoStats();
   await carregarPerfilCandidato();
   await loadCandidaturas();
-  await loadVagasRecomendadas();
+  await Promise.all([
+    loadVagasRecomendadas(),
+    loadTopVagas()
+  ]);
 }
 
 async function loadCandidatoStats() {
@@ -1176,38 +1179,29 @@ async function loadCandidaturas(pagina = 1, filtro = candState.filtro) {
   }
 
   try {
-    const resultado = await apiFetch(
+
+    params.set('com_metadados', 'true');
+
+    const dados = await apiFetch(
       `${API.candidaturas}?${params}`
     );
 
     if (requestId !== candState.requestId) return;
 
-    if (!Array.isArray(resultado)) {
+    if (!dados || !Array.isArray(dados.items)) {
       throw new Error('Formato inv\u00e1lido de candidaturas.');
     }
 
+    const resultado = dados.items;
+
     if (!resultado.length && pagina > 1) {
-      return loadCandidaturas(pagina - 1, filtro);
-    }
-
-    let temProxima = false;
-
-    if (resultado.length === candState.limite) {
-      const consulta = new URLSearchParams(params);
-      consulta.set('pagina', String(pagina + 1));
-
-      const seguintes = await apiFetch(
-        `${API.candidaturas}?${consulta}`
+      return loadCandidaturas(
+        Math.max(1, Math.min(pagina - 1, Number(dados.total_paginas) || 1)),
+        filtro
       );
-
-      if (requestId !== candState.requestId) return;
-
-      if (!Array.isArray(seguintes)) {
-        throw new Error('Formato inv\u00e1lido de pagina\u00e7\u00e3o.');
-      }
-
-      temProxima = seguintes.length > 0;
     }
+
+    const temProxima = Boolean(dados.tem_proxima);
 
     candState.pagina = pagina;
     candState.filtro = filtro;
@@ -1615,10 +1609,28 @@ async function loadVagasRecomendadas() {
     campos.ordenar = 'distancia';
   }
 
-  if (campos.uf && campos.uf.length !== 2) return;
+  if (campos.uf && campos.uf.length !== 2) {
+    const grid = document.getElementById('vagas-recomendadas-grid');
+    if (grid) {
+      grid.removeAttribute('aria-busy');
+      grid.textContent = 'Informe uma UF com duas letras.';
+    }
+    recSearchState.proxima = false;
+    const paginacao = document.getElementById('rec-paginacao');
+    if (paginacao) paginacao.hidden = true;
+    setText('rec-count', '\u2014 vagas');
+    return;
+  }
   if (campos.bolsa_min && campos.bolsa_max && Number(campos.bolsa_min) > Number(campos.bolsa_max)) {
     const grid = document.getElementById('vagas-recomendadas-grid');
-    if (grid) grid.textContent = 'A bolsa mínima não pode ser maior que a máxima.';
+    if (grid) {
+      grid.removeAttribute('aria-busy');
+      grid.textContent = 'A bolsa m\u00ednima n\u00e3o pode ser maior que a m\u00e1xima.';
+    }
+    recSearchState.proxima = false;
+    const paginacao = document.getElementById('rec-paginacao');
+    if (paginacao) paginacao.hidden = true;
+    setText('rec-count', '\u2014 vagas');
     return;
   }
   Object.entries(campos).forEach(([chave, valor]) => { if (valor !== '') params.set(chave, valor); });
@@ -1656,7 +1668,7 @@ async function loadVagasRecomendadas() {
     recSearchState.proxima = Boolean(dados.tem_proxima);
     renderVagasRec('todos');
     setText('rec-count', `${recSearchState.total} ${recSearchState.total === 1 ? 'vaga' : 'vagas'}`);
-    renderTopVagas();
+
     const paginacao = document.getElementById('rec-paginacao');
     if (paginacao) {
       paginacao.hidden = recSearchState.total <= recSearchState.limite;
@@ -1675,8 +1687,7 @@ async function loadVagasRecomendadas() {
     const paginacao = document.getElementById('rec-paginacao');
     if (paginacao) paginacao.hidden = true;
     if (grid) grid.innerHTML = `<div class="empty-state"><h4>Não foi possível carregar as vagas.</h4><p>${escHtml(erro.message)}</p></div>`;
-    const top = document.getElementById('top-vagas-list');
-    if (top) top.textContent = 'Não foi possível carregar as vagas disponíveis.';
+
   } finally {
     if (idPedido === recSearchState.requestId && grid) grid.removeAttribute('aria-busy');
   }
@@ -1887,14 +1898,44 @@ function renderVagasRec(filtro = 'todos') {
   }
 }
 
-function renderTopVagas() {
+
+let topVagasRequestId = 0;
+
+async function loadTopVagas() {
+  const elemento = document.getElementById('top-vagas-list');
+  if (!elemento) return;
+
+  const pedido = ++topVagasRequestId;
+
+  try {
+    const dados = await apiFetch(
+      '/dashboard/api/candidato/vagas?pagina=1&limite=4&ordenar=compatibilidade'
+    );
+
+    if (pedido !== topVagasRequestId) return;
+
+    if (!dados || !Array.isArray(dados.items)) {
+      throw new Error('Resposta inv\u00e1lida.');
+    }
+
+    renderTopVagas(dados.items);
+
+  } catch (erro) {
+    if (pedido !== topVagasRequestId) return;
+
+    elemento.textContent =
+      'N\u00e3o foi poss\u00edvel carregar as melhores vagas.';
+  }
+}
+
+function renderTopVagas(resultados) {
   const elemento = document.getElementById(
     'top-vagas-list'
   );
 
   if (!elemento) return;
 
-  const vagas = allVagasRec.slice(0, 4);
+  const vagas = resultados.slice(0, 4);
 
   if (!vagas.length) {
     elemento.innerHTML = `
@@ -2066,7 +2107,10 @@ function initCandidaturaModal() {
       // O MySQL é a fonte oficial dos indicadores.
       await loadCandidatoStats();
       await loadCandidaturas();
-      await loadVagasRecomendadas();
+      await Promise.all([
+        loadVagasRecomendadas(),
+        loadTopVagas()
+      ]);
 
     } catch (erro) {
       showToast(
@@ -2811,10 +2855,13 @@ function populateVagaSelector() {
   };
 }
 
+let rankingRequestId = 0;
+
 async function loadCandidatosVaga(
   vagaId,
   titulo = ''
 ) {
+  const pedidoRanking = ++rankingRequestId;
   currentVagaIdCandidatos = vagaId;
 
   navigateTo('candidatos');
@@ -2839,10 +2886,16 @@ async function loadCandidatosVaga(
     ranking.textContent = 'Carregando candidatos...';
   }
 
+  if (overview) {
+    overview.textContent = 'Carregando candidatos...';
+  }
+
   try {
     const candidatos = await apiFetch(
       API.candidatos_vaga(vagaId)
     );
+
+    if (pedidoRanking !== rankingRequestId) return;
 
     if (!Array.isArray(candidatos)) {
       throw new Error(
@@ -2939,6 +2992,13 @@ async function loadCandidatosVaga(
     animateScoreBars();
 
   } catch (erro) {
+    if (pedidoRanking !== rankingRequestId) return;
+
+    if (overview) {
+      overview.textContent =
+        'N\u00e3o foi poss\u00edvel carregar o ranking.';
+    }
+
     if (ranking) {
       ranking.textContent =
         'Não foi possível carregar o ranking.';
@@ -3157,14 +3217,38 @@ function abrirDetalhesCandidato(
       </div>
     </div>
 
-    ${match.veredicto
-      ? `
-        <div style="margin-top:16px;">
-          <strong>Veredito da IA</strong>
-          <p>${escHtml(match.veredicto)}</p>
-        </div>
-      `
-      : ''}
+    <div style="margin-top:16px;display:grid;gap:12px;">
+      <strong>Compatibilidade profissional</strong>
+
+      ${scoreValido(match) ? `
+        ${match.pontos_fortes ? `
+          <div>
+            <strong>Pontos fortes</strong>
+            <p style="white-space:pre-wrap">${escHtml(match.pontos_fortes)}</p>
+          </div>
+        ` : ''}
+
+        ${match.pontos_atencao ? `
+          <div>
+            <strong>Pontos de aten&ccedil;&atilde;o</strong>
+            <p style="white-space:pre-wrap">${escHtml(match.pontos_atencao)}</p>
+          </div>
+        ` : ''}
+
+        ${match.veredicto ? `
+          <div>
+            <strong>Parecer da IA</strong>
+            <p style="white-space:pre-wrap">${escHtml(match.veredicto)}</p>
+          </div>
+        ` : ''}
+      ` : '<p>Avalia&ccedil;&atilde;o ainda indispon&iacute;vel.</p>'}
+
+      <small style="color:var(--text-muted);line-height:1.5;">
+        A an&aacute;lise automatizada pode conter imprecis&otilde;es.
+        Confira as habilidades cadastradas e o curr&iacute;culo.
+        A decis&atilde;o do processo seletivo cabe ao recrutador.
+      </small>
+    </div>
   `;
 
 
