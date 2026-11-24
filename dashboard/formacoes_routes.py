@@ -41,6 +41,9 @@ class FormacaoAtualizacao(BaseModel):
 
     @model_validator(mode="after")
     def validar_campos(self):
+        if "status" in self.model_fields_set and self.status is None:
+            raise ValueError("O status da formacao nao pode ser nulo.")
+
         if not self.model_fields_set:
             raise ValueError("Informe pelo menos um campo para atualização.")
         return self

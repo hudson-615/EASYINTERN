@@ -150,11 +150,11 @@ def estatisticas_candidato(
         valor_medio = resultado_match.get("score_medio") if resultado_match else None
         taxa_match = float(valor_medio) if valor_medio is not None else None
 
-        nivel = (
-            "junior"
-            if candidato["nivel_carreira"] == "Júnior"
-            else "estagiario"
-        )
+        nivel = {
+            "Estagiário": "estagiario",
+            "Júnior": "junior",
+            "Pleno": "pleno"
+        }.get(candidato["nivel_carreira"], "estagiario")
 
         return {
             "nome": candidato["nome_completo"],
@@ -321,7 +321,8 @@ def listar_candidaturas_candidato(
                 ) AS empresa_nome,
 
                 ia.match_score,
-                ia.veredito_ia
+                ia.veredito_ia,
+                fb.mensagem AS feedback_privado
 
             FROM candidaturas AS ca
 
@@ -333,6 +334,9 @@ def listar_candidaturas_candidato(
 
             LEFT JOIN avaliacoes_ia AS ia
                 ON ia.id_candidatura = ca.id_candidatura
+
+            LEFT JOIN feedbacks_candidatura AS fb
+                ON fb.id_candidatura = ca.id_candidatura
 
             WHERE {onde}
 
@@ -408,6 +412,7 @@ def listar_candidaturas_candidato(
                     "pendente"
                 ),
                 "created_at": data_candidatura,
+                "feedback": registro.get("feedback_privado"),
                 "match": {
                     "score": score,
                     "cor": cor,
@@ -457,7 +462,7 @@ def listar_vagas_recomendadas(
     bolsa_min: Annotated[float | None, Query(ge=0)] = None,
     bolsa_max: Annotated[float | None, Query(ge=0)] = None,
     tag: Annotated[str | None, Query(max_length=50)] = None,
-    ordenar: Annotated[str, Query(pattern="^(recentes|antigas|bolsa_maior|bolsa_menor)$")] = "recentes",
+    ordenar: Annotated[str, Query(pattern="^(recentes|antigas|bolsa_maior|bolsa_menor|compatibilidade)$")] = "recentes",
     pagina: Annotated[int, Query(ge=1)] = 1,
     limite: Annotated[int, Query(ge=1, le=100)] = 50,
 ):
@@ -481,7 +486,7 @@ def listar_vagas_candidato(
     bolsa_min: Annotated[float | None, Query(ge=0)] = None,
     bolsa_max: Annotated[float | None, Query(ge=0)] = None,
     tag: Annotated[str | None, Query(max_length=50)] = None,
-    ordenar: Annotated[str, Query(pattern="^(recentes|antigas|bolsa_maior|bolsa_menor)$")] = "recentes",
+    ordenar: Annotated[str, Query(pattern="^(recentes|antigas|bolsa_maior|bolsa_menor|compatibilidade)$")] = "recentes",
     pagina: Annotated[int, Query(ge=1)] = 1,
     limite: Annotated[int, Query(ge=1, le=100)] = 20,
 ):
@@ -515,6 +520,29 @@ def _consultar_vagas_candidato(
     niveis = {"estagio": "Estagiário", "junior": "Júnior", "pleno": "Pleno"}
     ordenacoes = {
         "recentes": "v.criado_em DESC, v.id_vaga DESC",
+        "compatibilidade": """
+            (
+                SELECT
+                    SUM(
+                        CASE WHEN EXISTS (
+                            SELECT 1
+                            FROM candidato_tags AS ct
+                            WHERE ct.id_candidato = %s
+                              AND ct.id_tag = vt.id_tag
+                        )
+                        THEN GREATEST(1, LEAST(5, COALESCE(vt.peso, 1)))
+                        ELSE 0 END
+                    ) * 100.0 /
+                    NULLIF(
+                        SUM(GREATEST(1, LEAST(5, COALESCE(vt.peso, 1)))),
+                        0
+                    )
+                FROM vaga_tags AS vt
+                WHERE vt.id_vaga = v.id_vaga
+            ) DESC,
+            v.criado_em DESC,
+            v.id_vaga DESC
+        """,
         "antigas": "v.criado_em ASC, v.id_vaga ASC",
         "bolsa_maior": "(v.bolsa IS NULL), v.bolsa DESC, v.id_vaga DESC",
         "bolsa_menor": "(v.bolsa IS NULL), v.bolsa ASC, v.id_vaga DESC",
@@ -620,12 +648,79 @@ def _consultar_vagas_candidato(
                     WHERE ca.id_vaga = v.id_vaga AND ca.id_candidato = %s
                 ) AS ja_candidatou
         """ + base_sql + " ORDER BY " + ordenacoes[ordenar] + " LIMIT %s OFFSET %s"
-        cursor.execute(sql, (candidato["id_candidato"], *parametros, limite, (pagina - 1) * limite))
+        parametros_ordem = (
+            [candidato["id_candidato"]]
+            if ordenar == "compatibilidade"
+            else []
+        )
+
+        cursor.execute(
+            sql,
+            (
+                candidato["id_candidato"],
+                *parametros,
+                *parametros_ordem,
+                limite,
+                (pagina - 1) * limite
+            )
+        )
         vagas = cursor.fetchall()
+
+        from ia.ia_eazyintern import calcular_score_ponderado
+
+        scores = {}
+
+        if vagas:
+            cursor.execute(
+                "SELECT id_tag FROM candidato_tags WHERE id_candidato = %s",
+                (candidato["id_candidato"],)
+            )
+
+            tags_candidato = {
+                int(item["id_tag"])
+                for item in cursor.fetchall()
+            }
+
+            ids_vagas = [int(vaga["id"]) for vaga in vagas]
+            placeholders = ", ".join(["%s"] * len(ids_vagas))
+
+            cursor.execute(
+                f"""
+                SELECT id_vaga, id_tag, obrigatorio, peso
+                FROM vaga_tags
+                WHERE id_vaga IN ({placeholders})
+                """,
+                tuple(ids_vagas)
+            )
+
+            requisitos_por_vaga = {}
+
+            for requisito in cursor.fetchall():
+                requisitos_por_vaga.setdefault(
+                    int(requisito["id_vaga"]), []
+                ).append(requisito)
+
+            for vaga in vagas:
+                id_vaga = int(vaga["id"])
+
+                scores[id_vaga] = calcular_score_ponderado(
+                    tags_candidato,
+                    requisitos_por_vaga.get(id_vaga, [])
+                )
+
 
         mapa_modalidade = {"Presencial": "presencial", "Remoto": "remoto", "Híbrido": "hibrido"}
         resultado = []
         for vaga in vagas:
+            score = scores.get(int(vaga["id"]))
+
+            cor = (
+                "#6b7280" if score is None
+                else "#22c55e" if score >= 75
+                else "#eab308" if score >= 50
+                else "#ef4444"
+            )
+
             nivel_vaga = (vaga.get("nivel") or "").lower()
             nivel_formatado = "junior" if nivel_vaga in ("júnior", "junior") else (
                 "pleno" if nivel_vaga == "pleno" else "estagio"
@@ -639,8 +734,17 @@ def _consultar_vagas_candidato(
                 "descricao": vaga["descricao"], "beneficios": vaga["beneficios"],
                 "requisitos": None, "tags": vaga.get("tags") or "",
                 "ja_candidatou": bool(vaga["ja_candidatou"]),
-                "match": {"score": None, "cor": "#6b7280", "avaliado": False,
-                          "veredicto": None, "motivo": None},
+                "match": {
+                    "score": score,
+                    "cor": cor,
+                    "avaliado": score is not None,
+                    "estimado": True,
+                    "veredicto": None,
+                    "motivo": (
+                        "Estimativa baseada nas habilidades cadastradas."
+                        if score is not None else None
+                    ),
+                },
             })
 
         if not com_metadados:

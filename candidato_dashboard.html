@@ -345,6 +345,17 @@
           Carregando candidaturas...
         </div>
       </div>
+
+      <nav aria-label="Paginacao das candidaturas"
+           style="display:flex;justify-content:center;align-items:center;gap:16px;margin:20px 0">
+        <button type="button" class="filter-btn"
+                id="cand-anterior" disabled>Anterior</button>
+
+        <span id="cand-pagina" aria-live="polite">P&aacute;gina 1</span>
+
+        <button type="button" class="filter-btn"
+                id="cand-proxima" disabled>Pr&oacute;xima</button>
+      </nav>
     </section>
 
     <!-- Seção: Vagas Recomendadas -->
@@ -390,7 +401,7 @@
               <input id="rec-tag" maxlength="50" placeholder="Ex.: Python" />
             </label>
             <label class="rec-field">Ordenação
-              <select id="rec-ordenar"><option value="recentes">Mais recentes</option><option value="antigas">Mais antigas</option><option value="bolsa_maior">Maior bolsa</option><option value="bolsa_menor">Menor bolsa</option></select>
+              <select id="rec-ordenar"><option value="compatibilidade">Maior compatibilidade</option><option value="recentes">Mais recentes</option><option value="antigas">Mais antigas</option><option value="bolsa_maior">Maior bolsa</option><option value="bolsa_menor">Menor bolsa</option></select>
             </label>
             <button id="rec-limpar" type="button" class="rec-secondary">Limpar filtros</button>
           </div>
@@ -405,7 +416,7 @@
       <div class="vagas-grid" id="vagas-recomendadas-grid">
         <div class="loading-placeholder full">
           <i class="bi bi-arrow-repeat spin"></i>
-          Calculando compatibilidade com IA...
+          Calculando compatibilidade profissional...
         </div>
       </div>
     </section>
@@ -878,6 +889,12 @@
       </div>
 
       <div class="modal-footer">
+        <p id="aviso-compartilhamento-curriculo"
+           style="font-size:.8rem;color:var(--text-muted);margin:8px 0">
+          Ao confirmar sua candidatura, a empresa respons&aacute;vel
+          pela vaga poder&aacute; consultar seu curr&iacute;culo atual,
+          caso esteja cadastrado em seu perfil.
+        </p>
         <button class="btn btn-ghost" id="btn-cand-cancel">
           Cancelar
         </button>

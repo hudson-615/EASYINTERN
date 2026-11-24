@@ -228,7 +228,35 @@ O veredito deve ser uma análise neutra, não "Aprovado" ou "Reprovado".
     resposta = ollama.chat(
         model=MODELO_IA,
         messages=[{"role": "user", "content": prompt}],
-        format="json",
+        format={
+            "type": "object",
+            "properties": {
+                "match_score": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                },
+                "pontos_fortes": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "pontos_atencao": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "veredito": {
+                    "type": "string",
+                    "minLength": 1
+                }
+            },
+            "required": [
+                "match_score",
+                "pontos_fortes",
+                "pontos_atencao",
+                "veredito"
+            ],
+            "additionalProperties": False
+        },
         options={"temperature": 0.1},
     )
     return resposta["message"]["content"]

@@ -24,9 +24,9 @@ def preparar(usuario, perfil=None):
 
 @pytest.mark.parametrize("usuario", [
     None,
-    (1, "hash", "Candidato", 0, None, 0),
-    (1, "hash", "Candidato", 1, "2026-01-01", 0),
-    (1, "hash", "Candidato", 1, None, 1),
+    (1, "hash", "Candidato", 0, None, 0, 1),
+    (1, "hash", "Candidato", 1, "2026-01-01", 0, 1),
+    (1, "hash", "Candidato", 1, None, 1, 1),
 ])
 def test_login_conta_indisponivel(usuario):
     conexao = preparar(usuario)
@@ -41,7 +41,7 @@ def test_login_conta_indisponivel(usuario):
 
 def test_login_senha_incorreta():
     conexao = preparar(
-        (1, "hash", "Candidato", 1, None, 0),
+        (1, "hash", "Candidato", 1, None, 0, 1),
         (0,)  # Consulta extra: contador anterior de tentativas.
     )
 
@@ -60,7 +60,7 @@ def test_login_senha_incorreta():
 
 def test_login_valido():
     conexao = preparar(
-        (1, "hash", "Candidato", 1, None, 0),
+        (1, "hash", "Candidato", 1, None, 0, 1),
         ("Candidato Teste",)
     )
 

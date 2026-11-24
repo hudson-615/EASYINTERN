@@ -148,6 +148,15 @@ let currentUser = null;
 const dashPanel = document.body.dataset.panel;
 
 let allCandidaturas = [];
+let candidaturasRecentes = [];
+const candState = {
+  pagina: 1,
+  limite: 20,
+  filtro: 'todos',
+  proxima: false,
+  requestId: 0,
+  carregando: false
+};
 let allVagasRec = [];
 let allVagasEmp = [];
 
@@ -448,7 +457,7 @@ function matchBadgeHtml(match) {
       </span>
 
       <span class="match-label-small">
-        ${avaliado ? 'IA match' : 'IA pendente'}
+        ${match?.estimado ? (avaliado ? 'Match estimado' : 'Sem requisitos') : (avaliado ? 'IA match' : 'IA pendente')}
       </span>
     </div>
   `;
@@ -997,13 +1006,15 @@ async function loadCandidatoStats() {
       stats.total_candidaturas
     );
 
-    setText('stat-taxa-match', '—');
+    atualizarMediaMatch(stats.taxa_match);
 
     setText(
       'header-nivel',
-      stats.nivel === 'junior'
-        ? 'Júnior'
-        : 'Estagiário'
+      ({
+        estagiario: 'Estagiário',
+        junior: 'Júnior',
+        pleno: 'Pleno'
+      })[stats.nivel] || 'Não informado'
     );
 
     setText('perfil-nome', stats.nome);
@@ -1015,9 +1026,11 @@ async function loadCandidatoStats() {
 
     setText(
       'perfil-nivel-tag',
-      stats.nivel === 'junior'
-        ? 'Júnior'
-        : 'Estagiário'
+      ({
+        estagiario: 'Estagiário',
+        junior: 'Júnior',
+        pleno: 'Pleno'
+      })[stats.nivel] || 'Não informado'
     );
 
     const info = document.getElementById(
@@ -1091,6 +1104,7 @@ async function loadCandidatoStats() {
     }
 
   } catch (erro) {
+    atualizarMediaMatch(null, true);
     console.warn('Erro nas estatísticas:', erro.message);
     // M20: não conservar números antigos ou demonstrativos após falha.
     ['stat-total-c', 'stat-aprovadas-v', 'stat-analise-v',
@@ -1103,66 +1117,116 @@ async function loadCandidatoStats() {
 // CANDIDATURAS REAIS
 // ============================================================
 
-async function loadCandidaturas() {
+
+function atualizarMediaMatch(valor, falha = false) {
+  const valido = valor !== null &&
+    valor !== undefined &&
+    Number.isFinite(Number(valor)) &&
+    Number(valor) >= 0 &&
+    Number(valor) <= 100;
+
+  const media = valido ? Number(valor) : null;
+
+  animateDonut(media);
+  setText(
+    'stat-taxa-match',
+    valido ? `${Math.round(media)}%` : '\u2014'
+  );
+
+  const dica = document.getElementById('match-tip');
+
+  if (dica) {
+    dica.textContent = falha
+      ? 'N\u00e3o foi poss\u00edvel carregar a compatibilidade.'
+      : valido
+        ? 'Compatibilidade m\u00e9dia das candidaturas avaliadas pela IA.'
+        : 'Ainda n\u00e3o existem candidaturas avaliadas pela IA.';
+  }
+}
+
+function atualizarPaginacaoCandidaturas() {
+  const anterior = document.getElementById('cand-anterior');
+  const proxima = document.getElementById('cand-proxima');
+
+  if (anterior) {
+    anterior.disabled = candState.carregando || candState.pagina <= 1;
+  }
+
+  if (proxima) {
+    proxima.disabled = candState.carregando || !candState.proxima;
+  }
+
+  setText('cand-pagina', `P\u00e1gina ${candState.pagina}`);
+}
+
+async function loadCandidaturas(pagina = 1, filtro = candState.filtro) {
+  const requestId = ++candState.requestId;
+
+  candState.carregando = true;
+  atualizarPaginacaoCandidaturas();
+
+  const params = new URLSearchParams({
+    pagina: String(pagina),
+    limite: String(candState.limite)
+  });
+
+  if (filtro !== 'todos') {
+    params.set('situacao', filtro);
+  }
+
   try {
     const resultado = await apiFetch(
-      API.candidaturas
+      `${API.candidaturas}?${params}`
     );
 
+    if (requestId !== candState.requestId) return;
+
     if (!Array.isArray(resultado)) {
-      throw new Error(
-        'Formato inválido da lista de candidaturas.'
-      );
+      throw new Error('Formato inv\u00e1lido de candidaturas.');
     }
 
+    if (!resultado.length && pagina > 1) {
+      return loadCandidaturas(pagina - 1, filtro);
+    }
+
+    let temProxima = false;
+
+    if (resultado.length === candState.limite) {
+      const consulta = new URLSearchParams(params);
+      consulta.set('pagina', String(pagina + 1));
+
+      const seguintes = await apiFetch(
+        `${API.candidaturas}?${consulta}`
+      );
+
+      if (requestId !== candState.requestId) return;
+
+      if (!Array.isArray(seguintes)) {
+        throw new Error('Formato inv\u00e1lido de pagina\u00e7\u00e3o.');
+      }
+
+      temProxima = seguintes.length > 0;
+    }
+
+    candState.pagina = pagina;
+    candState.filtro = filtro;
+    candState.proxima = temProxima;
     allCandidaturas = resultado;
 
     renderCandidaturas('todos');
-    renderTimeline();
 
-    // Somente candidaturas realmente avaliadas pela IA
-    // participam do cálculo da média.
-    const avaliadas = allCandidaturas.filter(
-      candidatura => scoreValido(candidatura.match)
-    );
-
-    const dica = document.getElementById('match-tip');
-
-    if (avaliadas.length) {
-      const soma = avaliadas.reduce(
-        (total, candidatura) =>
-          total + obterScore(candidatura.match),
-        0
-      );
-
-      const media = soma / avaliadas.length;
-
-      animateDonut(media);
-      setText('stat-taxa-match', `${Math.round(media)}%`);
-
-      if (dica) {
-        dica.textContent =
-          'Compatibilidade média das candidaturas avaliadas pela IA.';
-      }
-    } else {
-      animateDonut(null);
-      setText('stat-taxa-match', '—');
-
-      if (dica) {
-        dica.textContent =
-          'Ainda não existem candidaturas avaliadas pela IA.';
-      }
+    if (pagina === 1 && filtro === 'todos') {
+      candidaturasRecentes = resultado.slice(0, 5);
+      renderTimeline();
     }
 
   } catch (erro) {
-    console.warn(
-      'Erro nas candidaturas:',
-      erro.message
-    );
+    if (requestId !== candState.requestId) return;
 
-    const grid = document.getElementById(
-      'candidaturas-grid'
-    );
+    allCandidaturas = [];
+    candState.proxima = false;
+
+    const grid = document.getElementById('candidaturas-grid');
 
     if (grid) {
       grid.innerHTML = `
@@ -1173,13 +1237,10 @@ async function loadCandidaturas() {
       `;
     }
 
-    const timeline = document.getElementById(
-      'timeline-recente'
-    );
-
-    if (timeline) {
-      timeline.textContent =
-        'Não foi possível carregar a atividade recente.';
+  } finally {
+    if (requestId === candState.requestId) {
+      candState.carregando = false;
+      atualizarPaginacaoCandidaturas();
     }
   }
 }
@@ -1281,6 +1342,16 @@ function renderCandidaturas(filtro = 'todos') {
           </span>
         </div>
 
+
+        ${candidatura.feedback ? `
+          <div style="padding:12px;border:1px solid var(--border-color,#8884);border-radius:8px">
+            <strong>Feedback da empresa</strong>
+            <p style="white-space:pre-wrap;margin-top:6px;overflow-wrap:anywhere">
+              ${escHtml(candidatura.feedback)}
+            </p>
+          </div>
+        ` : ''}
+
         ${match.veredicto
           ? `
             <div style="
@@ -1307,7 +1378,7 @@ function renderTimeline() {
 
   if (!elemento) return;
 
-  const recentes = allCandidaturas.slice(0, 5);
+  const recentes = candidaturasRecentes;
 
   if (!recentes.length) {
     elemento.innerHTML = `
@@ -2710,6 +2781,138 @@ async function loadCandidatosVaga(
 // DETALHES DO CANDIDATO — EMPRESA
 // ============================================================
 
+
+async function baixarCurriculoEmpresa(id, botao) {
+  const candidatura = Number(id);
+
+  if (!Number.isSafeInteger(candidatura) || candidatura <= 0) {
+    showToast('Candidatura inv\u00e1lida.', 'error');
+    return;
+  }
+
+  const token = getToken();
+
+  if (!token) {
+    showToast('Fa\u00e7a login novamente.', 'error');
+    return;
+  }
+
+  botao.disabled = true;
+  const textoOriginal = botao.textContent;
+  botao.textContent = 'Baixando...';
+
+  try {
+    const resposta = await fetch(
+      `/dashboard/api/empresa/candidaturas/${candidatura}/curriculo`,
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/pdf'
+        },
+        cache: 'no-store'
+      }
+    );
+
+    if (resposta.status === 401) {
+      limparSessao();
+      window.location.href = '/auth';
+      return;
+    }
+
+    if (resposta.status === 404) {
+      throw new Error('Curr\u00edculo indispon\u00edvel.');
+    }
+
+    if (!resposta.ok) {
+      throw new Error('N\u00e3o foi poss\u00edvel baixar o curr\u00edculo.');
+    }
+
+    const tipo = resposta.headers.get('content-type') || '';
+
+    if (!tipo.toLowerCase().startsWith('application/pdf')) {
+      throw new Error('Formato de arquivo inesperado.');
+    }
+
+    const arquivo = await resposta.blob();
+    const url = URL.createObjectURL(arquivo);
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `curriculo-${candidatura}.pdf`;
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+    showToast('Curr\u00edculo baixado com sucesso.', 'success');
+
+  } catch (erro) {
+    showToast(erro.message, 'error');
+
+  } finally {
+    botao.disabled = false;
+    botao.textContent = textoOriginal;
+  }
+}
+
+
+async function configurarFeedbackEmpresa(candidaturaId, corpo) {
+  const campo = corpo.querySelector('#ei-feedback-texto');
+  const botao = corpo.querySelector('#ei-feedback-salvar');
+  const aviso = corpo.querySelector('#ei-feedback-aviso');
+
+  if (!campo || !botao || !aviso) return;
+
+  const id = Number(candidaturaId);
+
+  if (!Number.isSafeInteger(id) || id <= 0) return;
+
+  const url = `/dashboard/api/empresa/candidaturas/${id}/feedback`;
+
+  campo.disabled = true;
+  botao.disabled = true;
+
+  try {
+    const dados = await apiFetch(url);
+    campo.value = dados.feedback || '';
+    aviso.textContent = 'Feedback vis\u00edvel ao candidato.';
+    campo.disabled = false;
+    botao.disabled = false;
+
+  } catch (erro) {
+    aviso.textContent = 'N\u00e3o foi poss\u00edvel carregar o feedback.';
+    return;
+  }
+
+  botao.addEventListener('click', async () => {
+    const mensagem = campo.value.trim();
+
+    if (mensagem.length < 3 || mensagem.length > 2000) {
+      showToast('Informe entre 3 e 2000 caracteres.', 'error');
+      return;
+    }
+
+    botao.disabled = true;
+    campo.disabled = true;
+
+    try {
+      await apiFetch(url, { mensagem }, 'PUT');
+      aviso.textContent = 'Feedback salvo com sucesso.';
+      showToast('Feedback enviado!', 'success');
+
+    } catch (erro) {
+      showToast(erro.message, 'error');
+
+    } finally {
+      botao.disabled = false;
+      campo.disabled = false;
+    }
+  });
+}
+
 function abrirDetalhesCandidato(
   candidato,
   candidaturaId
@@ -2770,7 +2973,17 @@ function abrirDetalhesCandidato(
       <div><strong>Biografia profissional</strong><p style="white-space:pre-wrap">${escHtml(candidato.biografia || 'Não informada')}</p></div>
       <div><strong>Localização</strong><p>${escHtml([candidato.cidade, candidato.uf].filter(Boolean).join(', ') || 'Não informada')}</p></div>
       <div><strong>Links profissionais</strong><p id="ei-links-candidato">Não informados</p></div>
-      <p style="font-size:.75rem;color:var(--text-muted)">Currículo PDF: acesso depende de autorização específica e não está incluído nesta consulta.</p>
+
+      <div>
+        <strong>Curr&iacute;culo profissional</strong>
+        <p style="margin-top:8px">
+          <button type="button"
+                  class="filter-btn"
+                  id="ei-baixar-curriculo">
+            Baixar curr&iacute;culo PDF
+          </button>
+        </p>
+      </div>
     </div>
 
     ${match.veredicto
@@ -2782,6 +2995,37 @@ function abrirDetalhesCandidato(
       `
       : ''}
   `;
+
+
+  corpo.insertAdjacentHTML('beforeend', `
+    <div style="margin-top:16px;display:grid;gap:8px">
+      <label for="ei-feedback-texto">
+        <strong>Feedback privado para o candidato</strong>
+      </label>
+
+      <textarea id="ei-feedback-texto" rows="4"
+        maxlength="2000" disabled
+        placeholder="Informe pontos de melhoria e orientacoes profissionais..."
+        style="width:100%;padding:10px;border-radius:8px"></textarea>
+
+      <button type="button" class="btn btn-primary"
+        id="ei-feedback-salvar" disabled>
+        Salvar feedback
+      </button>
+
+      <p id="ei-feedback-aviso" aria-live="polite">
+        Carregando...
+      </p>
+    </div>
+  `);
+
+  configurarFeedbackEmpresa(candidaturaId, corpo);
+
+  const botaoCurriculo = corpo.querySelector('#ei-baixar-curriculo');
+
+  botaoCurriculo?.addEventListener('click', () => {
+    baixarCurriculoEmpresa(candidaturaId, botaoCurriculo);
+  });
 
   const linksContainer = corpo.querySelector('#ei-links-candidato');
   if (linksContainer) {
@@ -3274,6 +3518,18 @@ async function fecharVaga(vagaId) {
 // ============================================================
 
 function initFilters() {
+  document.getElementById('cand-anterior')?.addEventListener('click', () => {
+    if (!candState.carregando && candState.pagina > 1) {
+      loadCandidaturas(candState.pagina - 1);
+    }
+  });
+
+  document.getElementById('cand-proxima')?.addEventListener('click', () => {
+    if (!candState.carregando && candState.proxima) {
+      loadCandidaturas(candState.pagina + 1);
+    }
+  });
+
   document
     .querySelectorAll('.filter-btn[data-filter]')
     .forEach(botao => {
@@ -3286,9 +3542,7 @@ function initFilters() {
 
         botao.classList.add('active');
 
-        renderCandidaturas(
-          botao.dataset.filter
-        );
+        loadCandidaturas(1, botao.dataset.filter);
       });
     });
 

@@ -9,11 +9,12 @@ from datetime import datetime, timedelta, timezone
 from email.message import EmailMessage
 from urllib.parse import urlencode
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from mysql.connector import Error
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from database.connection import conectar
+from seguranca.rate_limit import limitar_recuperacao
 from usuarios.routes import password_hash
 
 router = APIRouter(prefix="/api/auth", tags=["Recuperação de senha"])
@@ -23,7 +24,7 @@ RESPOSTA_GENERICA = "Se o e-mail estiver cadastrado, você receberá as instruç
 
 
 class PedidoRecuperacao(BaseModel):
-    email: EmailStr
+    email: EmailStr = Field(max_length=150)
 
 
 class NovaSenha(BaseModel):
@@ -83,7 +84,7 @@ def _enviar_email(destinatario: str, token: str, config, porta: int, base: str):
             smtp.send_message(mensagem)
 
 
-@router.post("/recuperar-senha")
+@router.post("/recuperar-senha", dependencies=[Depends(limitar_recuperacao)])
 def recuperar_senha(dados: PedidoRecuperacao):
     config, porta, base = _config_email()
     conexao = cursor = None
@@ -116,7 +117,7 @@ def recuperar_senha(dados: PedidoRecuperacao):
         return {"mensagem": RESPOSTA_GENERICA}
     except HTTPException:
         raise
-    except Error:
+    except (Error, RuntimeError):
         if conexao:
             conexao.rollback()
         LOG.exception("Falha no banco ao solicitar recuperação")
@@ -142,7 +143,7 @@ def validar_token_recuperacao(token: str):
             (_hash_token(token),),
         )
         return {"valido": cursor.fetchone() is not None}
-    except Error:
+    except (Error, RuntimeError):
         raise HTTPException(status_code=503, detail="Serviço temporariamente indisponível.")
     finally:
         if cursor:
@@ -169,7 +170,8 @@ def redefinir_senha(dados: NovaSenha):
         novo_hash = password_hash.hash(dados.nova_senha)
         cursor.execute(
             "UPDATE usuarios SET senha_hash = %s, token_recuperacao = NULL, "
-            "token_recuperacao_expira = NULL, tentativas_login = 0, bloqueado_ate = NULL "
+            "token_recuperacao_expira = NULL, tentativas_login = 0, bloqueado_ate = NULL, "
+            "versao_sessao = versao_sessao + 1 "
             "WHERE id_usuario = %s AND token_recuperacao = %s",
             (novo_hash, usuario[0], _hash_token(dados.token)),
         )
@@ -181,7 +183,7 @@ def redefinir_senha(dados: NovaSenha):
         if conexao:
             conexao.rollback()
         raise
-    except Error:
+    except (Error, RuntimeError):
         if conexao:
             conexao.rollback()
         raise HTTPException(status_code=503, detail="Serviço temporariamente indisponível.")

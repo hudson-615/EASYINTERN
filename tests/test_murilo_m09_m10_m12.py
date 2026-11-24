@@ -15,7 +15,15 @@ def mock_banco(total=0, vagas=None):
     conexao = MagicMock()
     cursor = conexao.cursor.return_value
     cursor.fetchone.side_effect = [USUARIO, {"id_candidato": 6}, {"total": total}]
-    cursor.fetchall.return_value = vagas or []
+    cursor.fetchall.side_effect = [
+        vagas or [],
+        [{"id_tag": 1}],
+        [
+            {"id_vaga": vaga["id"], "id_tag": 1,
+             "peso": 3, "obrigatorio": 1}
+            for vaga in (vagas or [])
+        ]
+    ]
     return conexao, cursor
 
 
@@ -63,8 +71,20 @@ def test_m12_metadados_paginacao_e_consulta_total():
     assert resposta["items"][0]["tags"] == "Python, MySQL"
     assert resposta["items"][0]["ja_candidatou"] is True
     assert resposta["items"][0]["salario_min"] == 1800.0
-    assert "COUNT(*)" in cursor.execute.call_args_list[-2].args[0]
-    assert cursor.execute.call_args.args[1][-2:] == (10, 10)
+    consultas = cursor.execute.call_args_list
+
+    assert "COUNT(*)" in consultas[2].args[0]
+    assert consultas[3].args[1][-2:] == (10, 10)
+
+    assert "candidato_tags" in consultas[4].args[0]
+    assert consultas[4].args[1] == (6,)
+
+    assert "vaga_tags" in consultas[5].args[0]
+    assert consultas[5].args[1] == (2,)
+
+    assert resposta["items"][0]["match"]["score"] == 100
+    assert resposta["items"][0]["match"]["estimado"] is True
+    assert resposta["items"][0]["match"]["avaliado"] is True
 
 
 def test_m10_bolsa_invertida_422_sem_conectar():

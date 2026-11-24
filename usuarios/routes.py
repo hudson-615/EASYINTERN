@@ -4,6 +4,7 @@ from pwdlib import PasswordHash
 from mysql.connector import Error, IntegrityError
 
 from database.connection import conectar
+from seguranca.rate_limit import limitar_login
 from seguranca.token import criar_token_acesso, verificar_token
 from .schemas import (
     LoginRequest,
@@ -31,15 +32,65 @@ def obter_usuario_autenticado(
             headers={"WWW-Authenticate": "Bearer"}
         )
 
-    return verificar_token(credenciais.credentials)
+    dados = verificar_token(credenciais.credentials)
+    versao = dados.get("versao_sessao")
+
+    if type(versao) is not int or versao <= 0:
+        raise HTTPException(
+            status_code=401,
+            detail="Sessao invalida. Faca login novamente.",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+
+    conexao = cursor = None
+
+    try:
+        conexao = conectar()
+        cursor = conexao.cursor()
+        cursor.execute(
+            """
+            SELECT versao_sessao, ativo, deletado_em
+            FROM usuarios
+            WHERE id_usuario = %s
+            """,
+            (int(dados["sub"]),)
+        )
+        usuario = cursor.fetchone()
+
+        if (
+            not usuario
+            or usuario[0] != versao
+            or not usuario[1]
+            or usuario[2] is not None
+        ):
+            raise HTTPException(
+                status_code=401,
+                detail="Sessao expirada ou revogada.",
+                headers={"WWW-Authenticate": "Bearer"}
+            )
+
+        return dados
+
+    except (Error, RuntimeError):
+        raise HTTPException(
+            status_code=503,
+            detail="Servico temporariamente indisponivel."
+        )
+
+    finally:
+        if cursor is not None:
+            cursor.close()
+        if conexao is not None:
+            conexao.close()
 
 
-def gerar_resposta_login(id_usuario: int, nome: str, tipo: str):
+def gerar_resposta_login(id_usuario: int, nome: str, tipo: str, versao_sessao: int = 1):
     tipo_frontend = tipo.lower()
 
     token = criar_token_acesso({
         "sub": str(id_usuario),
-        "tipo_usuario": tipo_frontend
+        "tipo_usuario": tipo_frontend,
+        "versao_sessao": versao_sessao
     })
 
     return {
@@ -332,7 +383,7 @@ def registrar_tentativa_falha_login(cursor, conexao, id_usuario: int):
     return tentativas
 
 
-@router.post("/login")
+@router.post("/login", dependencies=[Depends(limitar_login)])
 def login(dados: LoginRequest):
     conexao = None
     cursor = None
@@ -351,9 +402,10 @@ def login(dados: LoginRequest):
                 tipo_usuario,
                 ativo,
                 deletado_em,
-                (bloqueado_ate IS NOT NULL AND bloqueado_ate > NOW()) AS bloqueado
+                (bloqueado_ate IS NOT NULL AND bloqueado_ate > NOW()) AS bloqueado,
+                versao_sessao
             FROM usuarios
-            WHERE email = %s
+            WHERE email = %s FOR UPDATE
             """,
             (email,)
         )
@@ -375,7 +427,8 @@ def login(dados: LoginRequest):
             tipo_usuario,
             ativo,
             deletado_em,
-            bloqueado
+            bloqueado,
+            versao_sessao
         ) = usuario
 
         if not ativo or deletado_em is not None:
@@ -471,7 +524,8 @@ def login(dados: LoginRequest):
         return gerar_resposta_login(
             id_usuario,
             nome,
-            tipo_usuario
+            tipo_usuario,
+            versao_sessao
         )
 
     except HTTPException:
@@ -479,7 +533,7 @@ def login(dados: LoginRequest):
             conexao.rollback()
         raise
 
-    except Error:
+    except (Error, RuntimeError):
         if conexao:
             conexao.rollback()
 

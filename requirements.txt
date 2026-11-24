@@ -6,3 +6,4 @@ pwdlib[argon2]
 ollama
 PyJWT[crypto]
 jinja2
+pypdf==7.1.1

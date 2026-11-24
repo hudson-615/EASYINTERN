@@ -1,7 +1,8 @@
 from pathlib import Path
 
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.exceptions import RequestValidationError
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -14,6 +15,7 @@ from dashboard.empresa_routes import router as empresa_router
 
 from dashboard.formacoes_routes import router as formacoes_router
 from dashboard.curriculo_routes import router as curriculo_router
+from dashboard.feedback_routes import router as feedback_router
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -26,6 +28,36 @@ app = FastAPI(
     docs_url="/api/docs",
     redoc_url=None
 )
+
+@app.exception_handler(RequestValidationError)
+async def tratar_erro_validacao(
+    request: Request,
+    exc: RequestValidationError
+):
+    mensagens = {
+        "missing": "Campo obrigat\u00f3rio.",
+        "string_too_short": "Valor menor que o tamanho permitido.",
+        "string_too_long": "Valor maior que o tamanho permitido.",
+        "value_error": "Valor informado inv\u00e1lido.",
+        "literal_error": "Op\u00e7\u00e3o inv\u00e1lida.",
+        "json_invalid": "JSON inv\u00e1lido."
+    }
+
+    detalhe = [
+        {
+            "msg": mensagens.get(
+                erro.get("type"),
+                "Dados inv\u00e1lidos. Verifique os campos informados."
+            )
+        }
+        for erro in exc.errors()
+    ]
+
+    return JSONResponse(
+        status_code=422,
+        content={"detail": detalhe}
+    )
+
 
 
 # Arquivos estáticos: CSS, JavaScript e imagens
@@ -51,6 +83,7 @@ app.include_router(empresa_router)
 
 app.include_router(formacoes_router)
 app.include_router(curriculo_router)
+app.include_router(feedback_router)
 
 @app.get("/")
 def inicio():
