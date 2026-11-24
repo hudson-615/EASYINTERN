@@ -791,6 +791,7 @@ function navigateTo(secao) {
   const titulos = {
     overview: 'Visão Geral',
     candidaturas: 'Minhas Candidaturas',
+    chat: 'Mensagens',
     recomendadas: 'Vagas Recomendadas',
     perfil:
       dashPanel === 'empresa'
@@ -1342,6 +1343,13 @@ function renderCandidaturas(filtro = 'todos') {
           </span>
         </div>
 
+
+        <button type="button"
+                class="filter-btn ei-iniciar-chat"
+                data-candidatura-chat="${Number(candidatura.id)}">
+          <i class="bi bi-chat-dots" aria-hidden="true"></i>
+          Conversar com empresa
+        </button>
 
         ${candidatura.feedback ? `
           <div style="padding:12px;border:1px solid var(--border-color,#8884);border-radius:8px">
@@ -3018,6 +3026,22 @@ function abrirDetalhesCandidato(
       </p>
     </div>
   `);
+
+  const botaoChat = document.createElement('button');
+
+  botaoChat.type = 'button';
+  botaoChat.className = 'filter-btn ei-iniciar-chat';
+  botaoChat.textContent = 'Conversar com candidato';
+
+  botaoChat.addEventListener('click', async () => {
+    if (!window.EasyInternChat) return;
+
+    modal.hidden = true;
+
+    await window.EasyInternChat.iniciar(candidaturaId);
+  });
+
+  corpo.append(botaoChat);
 
   configurarFeedbackEmpresa(candidaturaId, corpo);
 

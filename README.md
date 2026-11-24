@@ -86,3 +86,72 @@ Sem esse parametro, permanece o retorno original em array.
 A media global de compatibilidade deve ser obtida pela
 rota /dashboard/api/candidato/stats, campo taxa_match.
 Nao recalcular a media com base na pagina atual.
+
+## Sistema de chat
+
+O chat permite a comunicacao entre candidatos e empresas
+vinculados a uma candidatura.
+
+### Funcionalidades
+
+- Criacao de uma conversa por candidatura.
+- Envio e recebimento de mensagens de texto.
+- Historico com paginacao.
+- Notificacoes e contadores de mensagens nao lidas.
+- Comunicacao por WebSocket autenticado.
+- Bloqueio e encerramento de conversas.
+- Prevencao de mensagens duplicadas por UUID.
+- Interface responsiva nos dashboards.
+- Suporte aos temas claro e escuro.
+
+### Rotas HTTP
+
+| Metodo | Rota | Finalidade |
+|---|---|---|
+| POST | /api/chat/conversas | Criar conversa |
+| GET | /api/chat/conversas | Listar conversas |
+| POST | /api/chat/conversas/{id_chat}/mensagens | Enviar mensagem |
+| GET | /api/chat/conversas/{id_chat}/mensagens | Consultar historico |
+| PATCH | /api/chat/conversas/{id_chat}/leitura | Registrar leitura |
+| PATCH | /api/chat/conversas/{id_chat}/status | Bloquear ou encerrar |
+| GET | /api/chat/notificacoes | Consultar notificacoes |
+
+### WebSocket
+
+Endpoint: /api/chat/ws
+
+A autenticacao ocorre por meio da primeira mensagem JSON,
+contendo o token JWT.
+
+Eventos enviados pelo servidor:
+
+- CONECTADO
+- ATUALIZAR_CHAT
+
+O envio de mensagens permanece na API HTTP.
+O WebSocket consulta notificacoes a cada dois segundos.
+O front-end possui consulta HTTP alternativa a cada cinco segundos.
+
+### Seguranca e regras
+
+- Acesso restrito aos participantes da candidatura.
+- Validacao de contas ativas e sessoes revogadas.
+- Validade inicial de 30 dias por conversa.
+- Limite de 4000 caracteres por mensagem.
+- Conversas encerradas ou bloqueadas nao aceitam novas mensagens.
+- Persistencia transacional de mensagens e notificacoes.
+- Conteudo exibido como texto, sem interpretacao de HTML.
+
+### Limitacoes atuais
+
+- Suporte apenas a mensagens de texto.
+- Sem reabertura de conversas.
+- Sem anexos ou respostas a mensagens especificas.
+- Sem homologacao de carga em larga escala.
+- Prazo de expiracao sujeito ao alinhamento do grupo.
+
+### Validacao
+
+- 38 testes automatizados especificos do chat.
+- 33 verificacoes integradas com MySQL, HTTP e WebSocket.
+- 7 verificacoes manuais aprovadas nos dashboards.

@@ -16,6 +16,8 @@ from dashboard.empresa_routes import router as empresa_router
 from dashboard.formacoes_routes import router as formacoes_router
 from dashboard.curriculo_routes import router as curriculo_router
 from dashboard.feedback_routes import router as feedback_router
+from chat.routes import router as chat_router
+from chat.websocket import router as chat_ws_router
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -84,6 +86,8 @@ app.include_router(empresa_router)
 app.include_router(formacoes_router)
 app.include_router(curriculo_router)
 app.include_router(feedback_router)
+app.include_router(chat_router)
+app.include_router(chat_ws_router)
 
 @app.get("/")
 def inicio():

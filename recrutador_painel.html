@@ -10,6 +10,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="/static/css/easyintern.css" />
   <link rel="stylesheet" href="/static/css/dashboard.css?v=6" />
+<link rel="stylesheet" href="/static/css/chat.css?v=2">
 </head>
 <body class="dash-body" data-panel="empresa">
 
@@ -39,6 +40,13 @@
       <i class="bi bi-plus-circle-fill"></i>
       <span>Nova Vaga</span>
     </a>
+
+      <a href="#" class="nav-item" data-section="chat" id="nav-chat">
+        <i class="bi bi-chat-dots-fill" aria-hidden="true"></i>
+        <span>Mensagens</span>
+        <span class="nav-badge" id="badge-chat" hidden>0</span>
+      </a>
+
     <a href="#" class="nav-item" data-section="perfil" id="nav-perfil">
       <i class="bi bi-building"></i>
       <span>Perfil da Empresa</span>
@@ -505,6 +513,61 @@
     </div>
   </section>
 
+
+<section class="dash-section" id="section-chat">
+  <div class="ei-chat-layout">
+    <aside class="ei-chat-sidebar">
+      <h2>Conversas</h2>
+      <button type="button" id="chat-atualizar">Atualizar conversas</button>
+      <div id="chat-conversas" aria-label="Conversas dispon?veis">
+        Carregando conversas...
+      </div>
+      <button type="button" id="chat-mais-conversas" hidden>
+        Mais conversas
+      </button>
+    </aside>
+
+    <div class="ei-chat-principal">
+      <header class="ei-chat-header">
+        <div>
+          <h2 id="chat-nome">Mensagens</h2>
+          <p id="chat-status">Selecione uma conversa.</p>
+        </div>
+
+        <div class="ei-chat-acoes">
+          <button type="button" id="chat-bloquear" disabled>Bloquear</button>
+          <button type="button" id="chat-encerrar" disabled>Encerrar</button>
+        </div>
+      </header>
+
+      <button type="button" id="chat-mais-mensagens" hidden>
+        Carregar mensagens anteriores
+      </button>
+
+      <div id="chat-mensagens" role="log"
+           aria-live="polite" aria-label="Hist?rico de mensagens">
+        <p>Nenhuma conversa selecionada.</p>
+      </div>
+
+      <p id="chat-aviso" role="status" aria-live="polite"></p>
+
+      <form id="chat-form" class="ei-chat-form">
+        <textarea id="chat-conteudo" maxlength="4000"
+          aria-label="Digite sua mensagem"
+          placeholder="Digite sua mensagem..."
+          rows="2" required disabled></textarea>
+
+        <button type="submit" id="chat-enviar" disabled>
+          <i class="bi bi-send-fill" aria-hidden="true"></i>
+          Enviar
+        </button>
+      </form>
+
+      <p id="chat-conexao" role="status">Desconectado</p>
+    </div>
+  </div>
+</section>
+
 </main>
 
 <!-- ── Modal: Candidato Detalhe ───────────────────────────────────────────── -->
@@ -544,6 +607,7 @@
 
 <!-- Maxwell Barvian's NumberFlow custom element -->
 <script type="module" src="https://esm.sh/number-flow"></script>
-<script src="/static/js/dashboard.js?v=8"></script>
+<script src="/static/js/dashboard.js?v=9"></script>
+<script defer src="/static/js/chat.js?v=3"></script>
 </body>
 </html>
