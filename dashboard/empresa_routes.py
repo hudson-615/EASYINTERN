@@ -823,11 +823,7 @@ def publicar_vaga_empresa(
             )
 
         # Conserva os requisitos livres na descrição.
-        if dados.requisitos and dados.requisitos.strip():
-            descricao += (
-                "\n\nRequisitos / Habilidades:\n"
-                + dados.requisitos.strip()
-            )
+        requisitos = dados.requisitos
 
         estado = (
             dados.estado.strip().upper()
@@ -906,6 +902,7 @@ def publicar_vaga_empresa(
                 titulo,
                 nivel,
                 descricao,
+                requisitos,
                 beneficios,
                 modalidade,
                 cidade,
@@ -917,7 +914,7 @@ def publicar_vaga_empresa(
                 status
             )
             VALUES (
-                %s, %s, %s, %s, %s,
+                %s, %s, %s, %s, %s, %s,
                 %s, %s, %s, %s, %s, %s, %s, 'Aberta'
             )
             """,
@@ -926,6 +923,7 @@ def publicar_vaga_empresa(
                 titulo,
                 dados.nivel,
                 descricao,
+                requisitos,
                 dados.beneficios,
                 modalidades[dados.modalidade],
                 cidade,
@@ -1082,6 +1080,7 @@ def detalhes_vaga_empresa(
                 id_vaga,
                 titulo,
                 descricao,
+                requisitos,
                 beneficios,
                 nivel,
                 modalidade,
@@ -1130,14 +1129,7 @@ def detalhes_vaga_empresa(
         tags = [item["nome"] for item in habilidades_vaga]
 
         descricao = vaga["descricao"] or ""
-        requisitos = ""
-
-        separador = "\n\nRequisitos / Habilidades:\n"
-
-        if separador in descricao:
-            descricao, _, requisitos = descricao.rpartition(
-                separador
-            )
+        requisitos = vaga.get("requisitos") or ""
 
         return {
             "id": vaga["id_vaga"],
@@ -1258,11 +1250,7 @@ def editar_vaga_empresa(
             )
 
         # Preserva os requisitos dentro da descrição.
-        if dados.requisitos and dados.requisitos.strip():
-            descricao += (
-                "\n\nRequisitos / Habilidades:\n"
-                + dados.requisitos.strip()
-            )
+        requisitos = dados.requisitos
 
         cidade = dados.cidade.strip() if dados.cidade else None
         estado = dados.estado.strip().upper() if dados.estado else None
@@ -1326,7 +1314,7 @@ def editar_vaga_empresa(
         # Bloqueia a vaga e verifica sua propriedade.
         cursor.execute(
             """
-            SELECT id_vaga, titulo, descricao, modalidade, bolsa
+            SELECT id_vaga, titulo, descricao, requisitos, modalidade, bolsa
             FROM vagas
             WHERE id_vaga = %s
               AND id_empresa = %s
@@ -1366,6 +1354,7 @@ def editar_vaga_empresa(
         alterou_avaliacao = (
             vaga_anterior["titulo"] != titulo
             or vaga_anterior["descricao"] != descricao
+            or vaga_anterior.get("requisitos") != requisitos
             or vaga_anterior["modalidade"] != modalidades[dados.modalidade]
             or vaga_anterior["bolsa"] != dados.salario_min
             or habilidades_anteriores != habilidades_novas
@@ -1380,6 +1369,7 @@ def editar_vaga_empresa(
                 titulo = %s,
                 nivel = %s,
                 descricao = %s,
+                requisitos = %s,
                 beneficios = %s,
                 modalidade = %s,
                 latitude = CASE
@@ -1403,6 +1393,7 @@ def editar_vaga_empresa(
                 titulo,
                 dados.nivel,
                 descricao,
+                requisitos,
                 dados.beneficios,
                 modalidades[dados.modalidade],
                 bool({"latitude", "longitude"} & dados.model_fields_set),

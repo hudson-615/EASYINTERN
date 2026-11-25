@@ -73,7 +73,7 @@ def montar_perfil_vaga(id_vaga: int) -> str:
     with closing(conectar_banco()) as conn:
         with closing(conn.cursor(dictionary=True)) as cursor:
             cursor.execute(
-                """SELECT titulo, descricao, modalidade, bolsa
+                """SELECT titulo, descricao, requisitos, modalidade, bolsa
                    FROM vagas WHERE id_vaga = %s""",
                 (id_vaga,),
             )
@@ -102,7 +102,8 @@ def montar_perfil_vaga(id_vaga: int) -> str:
         f"Modalidade: {_texto(vaga['modalidade'])}\n"
         f"Bolsa: R$ {_texto(vaga['bolsa'])}\n"
         f"Descrição: {_texto(vaga['descricao'])}\n"
-        f"Requisitos: {requisitos_txt}\n"
+        f"Requisitos textuais: {_texto(vaga.get('requisitos'))}\n"
+        f"Requisitos tecnicos: {requisitos_txt}\n"
     )
 
 
