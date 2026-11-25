@@ -155,12 +155,16 @@ def obter_habilidades_para_score(id_candidato: int, id_vaga: int):
             tags_candidato = {int(t["id_tag"]) for t in cursor.fetchall()}
             cursor.execute(
                 """SELECT vt.id_tag, vt.obrigatorio, vt.peso,
-                          t.nome AS nome
+                          t.nome AS nome,
+                          ct.nivel AS nivel_candidato
                    FROM vaga_tags AS vt
                    JOIN tags_conhecimento AS t
                      ON t.id_tag = vt.id_tag
+                   LEFT JOIN candidato_tags AS ct
+                     ON ct.id_tag = vt.id_tag
+                    AND ct.id_candidato = %s
                    WHERE vt.id_vaga = %s""",
-                (id_vaga,),
+                (id_candidato, id_vaga),
             )
             requisitos = cursor.fetchall()
     return tags_candidato, requisitos
@@ -289,7 +293,16 @@ def _parecer_objetivo(
 
         if corresponde:
             if nome:
-                presentes.append(nome)
+                nivel = str(
+                    requisito.get("nivel_candidato") or ""
+                ).strip()
+
+                if nivel in ("Básico", "Intermediário", "Avançado"):
+                    presentes.append(
+                        f"{nome} (nível informado: {nivel})"
+                    )
+                else:
+                    presentes.append(nome)
         else:
             if nome:
                 obrigatorio = bool(int(requisito.get("obrigatorio") or 0))
