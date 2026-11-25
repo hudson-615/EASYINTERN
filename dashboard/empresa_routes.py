@@ -67,22 +67,49 @@ from pydantic import model_validator
 from dashboard.geolocalizacao import validar_coordenadas
 
 
+UFS_VALIDAS = frozenset(
+    "AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE "
+    "PI RJ RN RS RO RR SC SP SE TO".split()
+)
+
+
 class NovaVaga(BaseModel):
     titulo: str = Field(min_length=3, max_length=150)
-    descricao: str = Field(min_length=10)
+    descricao: str = Field(min_length=10, max_length=5000)
     nivel: Literal["estagiario", "junior"]
     modalidade: Literal["presencial", "remoto", "hibrido"]
 
-    requisitos: str | None = None
-    beneficios: str | None = None
-    tags: str | None = None
-    habilidades: list[HabilidadeVaga] | None = None
+    requisitos: str | None = Field(default=None, max_length=5000)
+    beneficios: str | None = Field(default=None, max_length=2000)
+    tags: str | None = Field(default=None, max_length=1020)
+    habilidades: list[HabilidadeVaga] | None = Field(default=None, max_length=20)
     cidade: str | None = Field(default=None, max_length=100)
     estado: str | None = Field(default=None, max_length=2)
     salario_min: Decimal | None = Field(default=None, ge=0, max_digits=10, decimal_places=2)
 
     latitude: float | None = Field(default=None, ge=-90, le=90)
     longitude: float | None = Field(default=None, ge=-180, le=180)
+
+    @field_validator("cidade", "requisitos", "beneficios", mode="before")
+    @classmethod
+    def normalizar_opcionais(cls, valor):
+        if isinstance(valor, str):
+            return valor.strip() or None
+        return valor
+
+    @field_validator("estado", mode="before")
+    @classmethod
+    def validar_estado(cls, valor):
+        if valor is None:
+            return None
+        if not isinstance(valor, str):
+            raise ValueError("UF invalida.")
+        valor = valor.strip().upper()
+        if not valor:
+            return None
+        if valor not in UFS_VALIDAS:
+            raise ValueError("UF brasileira invalida.")
+        return valor
 
     @model_validator(mode="after")
     def validar_localizacao(self):
@@ -91,9 +118,12 @@ class NovaVaga(BaseModel):
 
     prazo_encerramento: date
 
-    @field_validator("titulo", "descricao")
+    @field_validator("titulo", "descricao", mode="before")
     @classmethod
     def validar_texto(cls, valor: str):
+        if not isinstance(valor, str):
+            raise ValueError("Informe um texto valido.")
+
         valor = valor.strip()
 
         if not valor:
