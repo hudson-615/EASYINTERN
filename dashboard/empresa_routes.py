@@ -1278,7 +1278,7 @@ def editar_vaga_empresa(
         # Bloqueia a vaga e verifica sua propriedade.
         cursor.execute(
             """
-            SELECT id_vaga
+            SELECT id_vaga, titulo, descricao, modalidade, bolsa
             FROM vagas
             WHERE id_vaga = %s
               AND id_empresa = %s
@@ -1287,11 +1287,41 @@ def editar_vaga_empresa(
             (id_vaga, empresa["id_empresa"])
         )
 
-        if not cursor.fetchone():
+        vaga_anterior = cursor.fetchone()
+        if not vaga_anterior:
             raise HTTPException(
                 status_code=404,
                 detail="Vaga não encontrada."
             )
+
+        cursor.execute(
+            """
+            SELECT t.nome, vt.obrigatorio, vt.peso
+            FROM vaga_tags AS vt
+            JOIN tags_conhecimento AS t
+                ON t.id_tag = vt.id_tag
+            WHERE vt.id_vaga = %s
+            """,
+            (id_vaga,)
+        )
+
+        habilidades_anteriores = {
+            (h["nome"].casefold(), bool(h["obrigatorio"]), int(h["peso"]))
+            for h in cursor.fetchall()
+        }
+
+        habilidades_novas = {
+            (h["nome"].casefold(), bool(h["obrigatorio"]), int(h["peso"]))
+            for h in habilidades_normalizadas
+        }
+
+        alterou_avaliacao = (
+            vaga_anterior["titulo"] != titulo
+            or vaga_anterior["descricao"] != descricao
+            or vaga_anterior["modalidade"] != modalidades[dados.modalidade]
+            or vaga_anterior["bolsa"] != dados.salario_min
+            or habilidades_anteriores != habilidades_novas
+        )
 
         # Atualiza apenas os campos permitidos.
         # O status da vaga permanece inalterado.
@@ -1377,6 +1407,37 @@ def editar_vaga_empresa(
                 VALUES (%s, %s, %s, %s)
                 """,
                 (id_vaga, id_tag, int(habilidade["obrigatorio"]), habilidade["peso"])
+            )
+
+        if alterou_avaliacao:
+            cursor.execute(
+                """
+                UPDATE vagas
+                SET versao_avaliacao = versao_avaliacao + 1
+                WHERE id_vaga = %s
+                  AND id_empresa = %s
+                """,
+                (id_vaga, empresa["id_empresa"])
+            )
+
+            cursor.execute(
+                """
+                DELETE a FROM avaliacoes_ia AS a
+                JOIN candidaturas AS c
+                    ON c.id_candidatura = a.id_candidatura
+                WHERE c.id_vaga = %s
+                """,
+                (id_vaga,)
+            )
+
+            cursor.execute(
+                """
+                DELETE ct FROM controle_avaliacoes_ia AS ct
+                JOIN candidaturas AS c
+                    ON c.id_candidatura = ct.id_candidatura
+                WHERE c.id_vaga = %s
+                """,
+                (id_vaga,)
             )
 
         conexao.commit()

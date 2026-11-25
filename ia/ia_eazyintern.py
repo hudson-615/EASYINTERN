@@ -134,7 +134,8 @@ def obter_candidatura(id_candidatura: int):
     with closing(conectar_banco()) as conn:
         with closing(conn.cursor(dictionary=True)) as cursor:
             cursor.execute(
-                """SELECT c.id_candidatura, c.id_candidato, c.id_vaga, c.status
+                """SELECT c.id_candidatura, c.id_candidato, c.id_vaga, c.status,
+                          v.versao_avaliacao
                    FROM candidaturas AS c
                    JOIN candidatos AS cand ON cand.id_candidato = c.id_candidato
                    JOIN vagas AS v ON v.id_vaga = c.id_vaga
@@ -288,6 +289,7 @@ def avaliar_candidatura(id_candidatura: int) -> dict:
     dados["id_candidatura"] = candidatura["id_candidatura"]
     dados["id_candidato"] = candidato_id
     dados["id_vaga"] = vaga_id
+    dados["versao_avaliacao"] = candidatura["versao_avaliacao"]
     return dados
 
 
@@ -310,7 +312,7 @@ def salvar_avaliacao_no_banco(id_candidatura: int, avaliacao: dict | str) -> Non
         try:
             with closing(conn.cursor(dictionary=True)) as cursor:
                 cursor.execute(
-                    """SELECT c.id_candidato, c.id_vaga
+                    """SELECT c.id_candidato, c.id_vaga, v.versao_avaliacao
                        FROM candidaturas AS c
                        JOIN candidatos AS cand ON cand.id_candidato = c.id_candidato
                        JOIN vagas AS v ON v.id_vaga = c.id_vaga
@@ -320,6 +322,12 @@ def salvar_avaliacao_no_banco(id_candidatura: int, avaliacao: dict | str) -> Non
                 vinculo = cursor.fetchone()
                 if not vinculo:
                     raise ValueError("Candidatura não encontrada: avaliação não gravada.")
+                if not isinstance(avaliacao, dict) or (
+                    avaliacao.get("versao_avaliacao")
+                    != vinculo["versao_avaliacao"]
+                ):
+                    raise ValueError("Avaliacao desatualizada ou sem versao.")
+
                 if isinstance(avaliacao, dict):
                     if ("id_candidato" in avaliacao and
                         int(avaliacao["id_candidato"]) != int(vinculo["id_candidato"])):
