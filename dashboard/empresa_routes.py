@@ -20,6 +20,15 @@ router = APIRouter(
     tags=["Dashboard Empresa"]
 )
 
+def normalizar_nivel_vaga(nivel):
+    valor = (nivel or "").strip().lower()
+
+    return {
+        "estagi\u00e1rio": "estagiario",
+        "j\u00fanior": "junior"
+    }.get(valor, valor)
+
+
 # MARCO_P2_HABILIDADES_V1
 class HabilidadeVaga(BaseModel):
     nome: str = Field(min_length=1, max_length=50)
@@ -569,7 +578,7 @@ def listar_vagas_empresa(
             vagas.append({
                 "id": vaga["id"],
                 "titulo": vaga["titulo"],
-                "nivel": (vaga["nivel"] or "").lower(),
+                "nivel": normalizar_nivel_vaga(vaga["nivel"]),
                 "modalidade": vaga["modalidade"],
                 "status": status_vaga,
                 "total_candidatos": int(
@@ -765,9 +774,7 @@ def listar_vagas_empresa_paginadas(
             vagas.append({
                 "id": vaga["id"],
                 "titulo": vaga["titulo"],
-                "nivel": (
-                    vaga["nivel"] or ""
-                ).lower(),
+                "nivel": normalizar_nivel_vaga(vaga["nivel"]),
                 "modalidade": vaga["modalidade"],
                 "status": vaga["status_exibicao"],
                 "total_candidatos": int(
@@ -968,7 +975,7 @@ def publicar_vaga_empresa(
             (
                 empresa["id_empresa"],
                 titulo,
-                dados.nivel,
+                {"estagiario": "Estagiário", "junior": "Júnior"}[dados.nivel],
                 descricao,
                 requisitos,
                 dados.beneficios,
@@ -1184,7 +1191,7 @@ def detalhes_vaga_empresa(
             "descricao": descricao,
             "requisitos": requisitos,
             "beneficios": vaga["beneficios"],
-            "nivel": (vaga["nivel"] or "").lower(),
+            "nivel": normalizar_nivel_vaga(vaga["nivel"]),
             "modalidade": vaga["modalidade"],
             "cidade": vaga["cidade"],
             "estado": vaga["uf"],
@@ -1438,7 +1445,7 @@ def editar_vaga_empresa(
             """,
             (
                 titulo,
-                dados.nivel,
+                {"estagiario": "Estagiário", "junior": "Júnior"}[dados.nivel],
                 descricao,
                 requisitos,
                 dados.beneficios,
