@@ -166,9 +166,17 @@ def obter_habilidades_para_score(id_candidato: int, id_vaga: int):
             )
             tags_candidato = {int(t["id_tag"]) for t in cursor.fetchall()}
             cursor.execute(
-                """SELECT id_tag, obrigatorio, peso FROM vaga_tags
-                   WHERE id_vaga = %s""",
-                (id_vaga,),
+                """SELECT vt.id_tag, vt.obrigatorio, vt.peso,
+                          t.nome AS nome,
+                          ct.nivel AS nivel_candidato
+                   FROM vaga_tags AS vt
+                   JOIN tags_conhecimento AS t
+                     ON t.id_tag = vt.id_tag
+                   LEFT JOIN candidato_tags AS ct
+                     ON ct.id_tag = vt.id_tag
+                    AND ct.id_candidato = %s
+                   WHERE vt.id_vaga = %s""",
+                (id_candidato, id_vaga),
             )
             requisitos = cursor.fetchall()
     return tags_candidato, requisitos
@@ -274,6 +282,94 @@ O veredito deve ser uma análise neutra, não "Aprovado" ou "Reprovado".
     return resposta["message"]["content"]
 
 
+
+def _parecer_objetivo(
+    tags_candidato: set[int],
+    requisitos: list[dict],
+    perfil_candidato: str,
+    score: int,
+) -> dict:
+    """Monta parecer a partir de requisitos verificaveis."""
+    presentes = []
+    ausentes = []
+    ausentes_sem_nome = 0
+
+    for requisito in requisitos:
+        nome = str(
+            requisito.get("nome")
+            or requisito.get("habilidade")
+            or ""
+        ).strip()
+
+        corresponde = int(requisito["id_tag"]) in tags_candidato
+
+        if corresponde:
+            if nome:
+                nivel = str(
+                    requisito.get("nivel_candidato") or ""
+                ).strip()
+
+                if nivel in ("Básico", "Intermediário", "Avançado"):
+                    presentes.append(
+                        f"{nome} (nível informado: {nivel})"
+                    )
+                else:
+                    presentes.append(nome)
+        else:
+            if nome:
+                obrigatorio = bool(int(requisito.get("obrigatorio") or 0))
+                tipo = "obrigatorio" if obrigatorio else "desejavel"
+                ausentes.append(f"{nome} ({tipo})")
+            else:
+                ausentes_sem_nome += 1
+
+    if presentes:
+        fortes = "Requisitos atendidos: " + ", ".join(presentes) + "."
+    elif score == 100:
+        habilidades = ""
+        for linha in perfil_candidato.splitlines():
+            if linha.strip().lower().startswith("habilidades:"):
+                habilidades = linha.split(":", 1)[1].strip()
+                break
+
+        if habilidades and habilidades.lower() != "nenhuma cadastrada":
+            fortes = "Habilidades informadas no perfil: " + habilidades + "."
+        else:
+            fortes = "Todos os requisitos estruturados possuem correspondencia."
+    elif score > 0:
+        fortes = "Parte dos requisitos possui correspondencia nas tags."
+    else:
+        fortes = "Nenhum requisito estruturado foi identificado nas tags."
+
+    if ausentes:
+        atencao = "Requisitos sem correspondencia: " + ", ".join(ausentes) + "."
+    elif score == 100:
+        atencao = (
+            "Nenhuma lacuna identificada nas tags cadastradas. "
+            "A experiencia e a proficiencia ainda devem ser confirmadas."
+        )
+    else:
+        atencao = "Ha requisitos sem correspondencia nas tags cadastradas."
+
+    if ausentes_sem_nome:
+        atencao += (
+            f" {ausentes_sem_nome} requisito(s) ausente(s) "
+            "nao possuem nome disponivel."
+        )
+
+    atencao += " Ausencia de cadastro nao comprova falta de conhecimento."
+
+    return {
+        "pontos_fortes": fortes,
+        "pontos_atencao": atencao,
+        "veredito": (
+            f"Compatibilidade objetiva: {score}%. "
+            "Analise informativa, sujeita a verificacao humana. "
+            "Nao representa aprovacao ou rejeicao automatica."
+        ),
+    }
+
+
 def avaliar_candidatura(id_candidatura: int) -> dict:
     """Executa a análise em memória, sem INSERT/UPDATE."""
     candidatura = obter_candidatura(id_candidatura)
@@ -287,15 +383,25 @@ def avaliar_candidatura(id_candidatura: int) -> dict:
     if not perfil_candidato or not perfil_vaga:
         raise ValueError("Candidato ou vaga sem perfil válido.")
 
-    dados = validar_resposta_ia(analisar_com_llama(perfil_candidato, perfil_vaga))
     tags_candidato, requisitos = obter_habilidades_para_score(candidato_id, vaga_id)
+
+    if not requisitos:
+        raise ValueError(
+            "Vaga sem requisitos estruturados: avaliacao indisponivel "
+            "ate o cadastro dos requisitos."
+        )
+
     score_objetivo = calcular_score_ponderado(tags_candidato, requisitos)
+    dados = validar_resposta_ia(analisar_com_llama(perfil_candidato, perfil_vaga))
     if score_objetivo is not None:
-        # Requisitos e pesos cadastrados prevalecem sobre a nota subjetiva do LLM.
         dados["match_score"] = score_objetivo
-        dados["pontos_atencao"] += (
-            " | Nota calculada pelas habilidades cadastradas e seus pesos; "
-            "a ausência de cadastro pode reduzir a nota."
+        dados.update(
+            _parecer_objetivo(
+                tags_candidato,
+                requisitos,
+                perfil_candidato,
+                score_objetivo,
+            )
         )
     dados["id_candidatura"] = candidatura["id_candidatura"]
     dados["id_candidato"] = candidato_id
