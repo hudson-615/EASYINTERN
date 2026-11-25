@@ -111,6 +111,14 @@ def obter_chat_autorizado(
             ON e.id_empresa = v.id_empresa
         JOIN usuarios u
             ON u.id_usuario = p.id_usuario
+        JOIN usuarios uc
+            ON uc.id_usuario = c.id_usuario
+            AND uc.ativo = 1
+            AND uc.deletado_em IS NULL
+        JOIN usuarios ue
+            ON ue.id_usuario = e.id_usuario
+            AND ue.ativo = 1
+            AND ue.deletado_em IS NULL
         WHERE ch.id_chat = %s
           AND p.id_usuario = %s
           AND (c.id_usuario = %s OR e.id_usuario = %s)

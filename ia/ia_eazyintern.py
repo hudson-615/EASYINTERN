@@ -119,6 +119,12 @@ def listar_candidaturas_para_ia(*, pendentes: bool = False, limite: int = 100):
             cursor.execute(
                 """SELECT c.id_candidatura, c.id_candidato, c.id_vaga, c.status
                    FROM candidaturas AS c
+                   JOIN candidatos AS cand
+                       ON cand.id_candidato = c.id_candidato
+                   JOIN usuarios AS uc
+                       ON uc.id_usuario = cand.id_usuario
+                       AND uc.ativo = 1
+                       AND uc.deletado_em IS NULL
                    WHERE (%s = 0 OR NOT EXISTS (
                        SELECT 1 FROM avaliacoes_ia AS a
                        WHERE a.id_candidatura = c.id_candidatura
@@ -138,6 +144,10 @@ def obter_candidatura(id_candidatura: int):
                           v.versao_avaliacao
                    FROM candidaturas AS c
                    JOIN candidatos AS cand ON cand.id_candidato = c.id_candidato
+                   JOIN usuarios AS uc
+                       ON uc.id_usuario = cand.id_usuario
+                       AND uc.ativo = 1
+                       AND uc.deletado_em IS NULL
                    JOIN vagas AS v ON v.id_vaga = c.id_vaga
                    WHERE c.id_candidatura = %s""",
                 (id_candidatura,),
@@ -315,6 +325,10 @@ def salvar_avaliacao_no_banco(id_candidatura: int, avaliacao: dict | str) -> Non
                     """SELECT c.id_candidato, c.id_vaga, v.versao_avaliacao
                        FROM candidaturas AS c
                        JOIN candidatos AS cand ON cand.id_candidato = c.id_candidato
+                       JOIN usuarios AS uc
+                           ON uc.id_usuario = cand.id_usuario
+                           AND uc.ativo = 1
+                           AND uc.deletado_em IS NULL
                        JOIN vagas AS v ON v.id_vaga = c.id_vaga
                        WHERE c.id_candidatura = %s FOR UPDATE""",
                     (id_candidatura,),

@@ -296,12 +296,12 @@ def estatisticas_empresa(
             """
             SELECT
                 COUNT(
-                    DISTINCT ca.id_candidato
+                    DISTINCT CASE WHEN uc.id_usuario IS NOT NULL THEN ca.id_candidato END
                 ) AS total_candidatos,
 
                 COALESCE(
                     SUM(
-                        ca.status = 'Aprovado'
+                        ca.status = 'Aprovado' AND uc.id_usuario IS NOT NULL
                     ),
                     0
                 ) AS aprovados
@@ -309,6 +309,12 @@ def estatisticas_empresa(
             FROM vagas AS v
             LEFT JOIN candidaturas AS ca
                 ON ca.id_vaga = v.id_vaga
+            LEFT JOIN candidatos AS cand
+                ON cand.id_candidato = ca.id_candidato
+            LEFT JOIN usuarios AS uc
+                ON uc.id_usuario = cand.id_usuario
+                AND uc.ativo = 1
+                AND uc.deletado_em IS NULL
 
             WHERE v.id_empresa = %s
             """,
@@ -450,6 +456,12 @@ def listar_vagas_empresa(
                 (
                     SELECT COUNT(*)
                     FROM candidaturas AS c
+                    JOIN candidatos AS cand
+                        ON cand.id_candidato = c.id_candidato
+                    JOIN usuarios AS uc
+                        ON uc.id_usuario = cand.id_usuario
+                        AND uc.ativo = 1
+                        AND uc.deletado_em IS NULL
                     WHERE c.id_vaga = v.id_vaga
                 ) AS total_candidatos
             FROM vagas AS v
@@ -650,6 +662,12 @@ def listar_vagas_empresa_paginadas(
                 (
                     SELECT COUNT(*)
                     FROM candidaturas AS c
+                    JOIN candidatos AS cand
+                        ON cand.id_candidato = c.id_candidato
+                    JOIN usuarios AS uc
+                        ON uc.id_usuario = cand.id_usuario
+                        AND uc.ativo = 1
+                        AND uc.deletado_em IS NULL
                     WHERE c.id_vaga = v.id_vaga
                 ) AS total_candidatos
             FROM vagas AS v
@@ -2049,6 +2067,10 @@ def listar_candidatos_vaga_empresa(
             FROM candidaturas AS ca
             INNER JOIN candidatos AS c
                 ON c.id_candidato = ca.id_candidato
+            INNER JOIN usuarios AS uc
+                ON uc.id_usuario = c.id_usuario
+                AND uc.ativo = 1
+                AND uc.deletado_em IS NULL
             INNER JOIN vagas AS v
                 ON v.id_vaga = ca.id_vaga
             WHERE ca.id_vaga = %s
@@ -2075,6 +2097,12 @@ def listar_candidatos_vaga_empresa(
                     a.pontos_fortes,
                     a.pontos_atencao
                 FROM candidaturas AS ca
+                INNER JOIN candidatos AS c
+                    ON c.id_candidato = ca.id_candidato
+                INNER JOIN usuarios AS uc
+                    ON uc.id_usuario = c.id_usuario
+                    AND uc.ativo = 1
+                    AND uc.deletado_em IS NULL
                 INNER JOIN vagas AS v ON v.id_vaga = ca.id_vaga
                 INNER JOIN avaliacoes_ia AS a
                     ON a.id_avaliacao = (
@@ -2250,6 +2278,12 @@ def atualizar_status_candidatura_empresa(
                 ca.id_vaga,
                 ca.status
             FROM candidaturas AS ca
+            INNER JOIN candidatos AS c
+                ON c.id_candidato = ca.id_candidato
+            INNER JOIN usuarios AS uc
+                ON uc.id_usuario = c.id_usuario
+                AND uc.ativo = 1
+                AND uc.deletado_em IS NULL
             INNER JOIN vagas AS v
                 ON v.id_vaga = ca.id_vaga
             WHERE ca.id_candidatura = %s
