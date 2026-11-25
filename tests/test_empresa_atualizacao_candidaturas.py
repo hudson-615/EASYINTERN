@@ -177,3 +177,46 @@ def test_status_repetido_em_qualquer_etapa(atual, mesmo):
     assert resposta["status"] == mesmo
     assert cursor.execute.call_count == 2
     conexao.commit.assert_called_once()
+
+
+def test_e08_falha_auditoria_desfaz_atualizacao():
+    conexao, cursor = preparar_conexao({
+        "id_candidatura": 10,
+        "id_vaga": 20,
+        "status": "Entrevista"
+    })
+
+    def executar_sql(sql, parametros=None):
+        if "INSERT INTO auditoria" in sql:
+            raise Error("Falha simulada na auditoria")
+
+    cursor.execute.side_effect = executar_sql
+
+    with pytest.raises(HTTPException) as erro:
+        executar(conexao, "aprovado")
+
+    assert erro.value.status_code == 503
+    conexao.rollback.assert_called_once()
+    conexao.commit.assert_not_called()
+
+
+@pytest.mark.parametrize("atual,novo", [
+    ("Aprovado", "em_analise"),
+    ("Aprovado", "entrevista"),
+    ("Reprovado", "em_analise"),
+    ("Reprovado", "entrevista"),
+])
+def test_e08_bloqueia_reabertura_de_candidaturas(atual, novo):
+    conexao, cursor = preparar_conexao({
+        "id_candidatura": 10,
+        "id_vaga": 20,
+        "status": atual
+    })
+
+    with pytest.raises(HTTPException) as erro:
+        executar(conexao, novo)
+
+    assert erro.value.status_code == 409
+    assert cursor.execute.call_count == 2
+    conexao.rollback.assert_called_once()
+    conexao.commit.assert_not_called()
