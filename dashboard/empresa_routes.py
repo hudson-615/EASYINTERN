@@ -159,6 +159,31 @@ class EdicaoPerfilEmpresa(BaseModel):
     uf: str | None = Field(default=None, max_length=2)
     descricao: str | None = Field(default=None, max_length=2000)
 
+    cep: str | None = Field(default=None, max_length=9)
+    logradouro: str | None = Field(default=None, max_length=150)
+    numero: str | None = Field(default=None, max_length=20)
+    bairro: str | None = Field(default=None, max_length=100)
+    complemento: str | None = Field(default=None, max_length=100)
+
+    @field_validator("cep", mode="before")
+    @classmethod
+    def validar_cep(cls, valor):
+        if valor is None:
+            return None
+        if not isinstance(valor, str):
+            raise ValueError("CEP invalido.")
+        valor = valor.strip().replace("-", "")
+        if not valor:
+            return None
+        if len(valor) != 8 or not valor.isascii() or not valor.isdigit():
+            raise ValueError("CEP deve conter oito digitos.")
+        return valor[:5] + "-" + valor[5:]
+
+    @field_validator("logradouro", "numero", "bairro", "complemento")
+    @classmethod
+    def normalizar_endereco(cls, valor):
+        return valor.strip() or None if valor else None
+
     @field_validator("nome_fantasia", "setor", "cidade", "uf", "descricao")
     @classmethod
     def normalizar(cls, valor):
@@ -169,7 +194,7 @@ class EdicaoPerfilEmpresa(BaseModel):
     @field_validator("uf")
     @classmethod
     def validar_uf(cls, valor):
-        if valor is not None and (len(valor) != 2 or not valor.isalpha()):
+        if valor is not None and valor.upper() not in UFS_VALIDAS:
             raise ValueError("A UF precisa ter duas letras.")
         return valor.upper() if valor else None
 
@@ -209,6 +234,18 @@ def editar_perfil_empresa(
             (dados.nome_fantasia, dados.setor, dados.cidade,
              dados.uf, dados.descricao, empresa["id_empresa"], id_usuario)
         )
+        campos_endereco = (
+            "cep", "logradouro", "numero", "bairro", "complemento"
+        )
+
+        for campo in campos_endereco:
+            if campo in dados.model_fields_set:
+                cursor.execute(
+                    f"UPDATE empresas SET {campo}=%s "
+                    "WHERE id_empresa=%s AND id_usuario=%s",
+                    (getattr(dados, campo), empresa["id_empresa"], id_usuario)
+                )
+
         conexao.commit()
         return {"mensagem": "Perfil empresarial atualizado com sucesso."}
     except HTTPException:
@@ -257,6 +294,11 @@ def estatisticas_empresa(
                 e.cidade,
                 e.uf,
                 e.descricao,
+                e.cep,
+                e.logradouro,
+                e.numero,
+                e.bairro,
+                e.complemento,
                 u.email,
                 u.tipo_usuario,
                 u.ativo,
@@ -366,6 +408,11 @@ def estatisticas_empresa(
             "cidade": empresa["cidade"],
             "uf": empresa["uf"],
             "descricao": empresa["descricao"],
+            "cep": empresa.get("cep"),
+            "logradouro": empresa.get("logradouro"),
+            "numero": empresa.get("numero"),
+            "bairro": empresa.get("bairro"),
+            "complemento": empresa.get("complemento"),
             "total_vagas": int(
                 indicadores_vagas["total_vagas"]
             ),
