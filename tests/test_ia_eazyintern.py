@@ -39,6 +39,7 @@ def test_ia08_parecer_sem_contradicao(monkeypatch):
             "id_candidatura": 1,
             "id_candidato": 10,
             "id_vaga": 20,
+            "versao_avaliacao": 1,
         },
     )
 
