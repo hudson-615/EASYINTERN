@@ -127,6 +127,12 @@ def listar_candidaturas_para_ia(*, pendentes=True, limite=20):
                 """
                 SELECT c.id_candidatura
                 FROM candidaturas c
+                JOIN candidatos cand
+                    ON cand.id_candidato = c.id_candidato
+                JOIN usuarios uc
+                    ON uc.id_usuario = cand.id_usuario
+                    AND uc.ativo = 1
+                    AND uc.deletado_em IS NULL
                 LEFT JOIN avaliacoes_ia a
                     ON a.id_candidatura = c.id_candidatura
                 LEFT JOIN controle_avaliacoes_ia ct

@@ -94,6 +94,14 @@ def listar_conversas(
                 ON v.id_vaga = ca.id_vaga
             JOIN empresas e
                 ON e.id_empresa = v.id_empresa
+            JOIN usuarios uc
+                ON uc.id_usuario = c.id_usuario
+                AND uc.ativo = 1
+                AND uc.deletado_em IS NULL
+            JOIN usuarios ue
+                ON ue.id_usuario = e.id_usuario
+                AND ue.ativo = 1
+                AND ue.deletado_em IS NULL
             WHERE p.id_usuario = %s
               AND (
                   c.id_usuario = %s
@@ -429,6 +437,14 @@ def listar_notificacoes(
                 ON c.id_candidato = ca.id_candidato
             JOIN vagas v ON v.id_vaga = ca.id_vaga
             JOIN empresas e ON e.id_empresa = v.id_empresa
+            JOIN usuarios uc
+                ON uc.id_usuario = c.id_usuario
+                AND uc.ativo = 1
+                AND uc.deletado_em IS NULL
+            JOIN usuarios ue
+                ON ue.id_usuario = e.id_usuario
+                AND ue.ativo = 1
+                AND ue.deletado_em IS NULL
             WHERE n.id_usuario = %s
               AND n.tipo_evento = 'NOVA_MENSAGEM'
               AND (

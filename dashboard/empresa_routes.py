@@ -67,22 +67,49 @@ from pydantic import model_validator
 from dashboard.geolocalizacao import validar_coordenadas
 
 
+UFS_VALIDAS = frozenset(
+    "AC AL AP AM BA CE DF ES GO MA MT MS MG PA PB PR PE "
+    "PI RJ RN RS RO RR SC SP SE TO".split()
+)
+
+
 class NovaVaga(BaseModel):
     titulo: str = Field(min_length=3, max_length=150)
-    descricao: str = Field(min_length=10)
+    descricao: str = Field(min_length=10, max_length=5000)
     nivel: Literal["estagiario", "junior"]
     modalidade: Literal["presencial", "remoto", "hibrido"]
 
-    requisitos: str | None = None
-    beneficios: str | None = None
-    tags: str | None = None
-    habilidades: list[HabilidadeVaga] | None = None
+    requisitos: str | None = Field(default=None, max_length=5000)
+    beneficios: str | None = Field(default=None, max_length=2000)
+    tags: str | None = Field(default=None, max_length=1020)
+    habilidades: list[HabilidadeVaga] | None = Field(default=None, max_length=20)
     cidade: str | None = Field(default=None, max_length=100)
     estado: str | None = Field(default=None, max_length=2)
     salario_min: Decimal | None = Field(default=None, ge=0, max_digits=10, decimal_places=2)
 
     latitude: float | None = Field(default=None, ge=-90, le=90)
     longitude: float | None = Field(default=None, ge=-180, le=180)
+
+    @field_validator("cidade", "requisitos", "beneficios", mode="before")
+    @classmethod
+    def normalizar_opcionais(cls, valor):
+        if isinstance(valor, str):
+            return valor.strip() or None
+        return valor
+
+    @field_validator("estado", mode="before")
+    @classmethod
+    def validar_estado(cls, valor):
+        if valor is None:
+            return None
+        if not isinstance(valor, str):
+            raise ValueError("UF invalida.")
+        valor = valor.strip().upper()
+        if not valor:
+            return None
+        if valor not in UFS_VALIDAS:
+            raise ValueError("UF brasileira invalida.")
+        return valor
 
     @model_validator(mode="after")
     def validar_localizacao(self):
@@ -91,9 +118,12 @@ class NovaVaga(BaseModel):
 
     prazo_encerramento: date
 
-    @field_validator("titulo", "descricao")
+    @field_validator("titulo", "descricao", mode="before")
     @classmethod
     def validar_texto(cls, valor: str):
+        if not isinstance(valor, str):
+            raise ValueError("Informe um texto valido.")
+
         valor = valor.strip()
 
         if not valor:
@@ -129,6 +159,31 @@ class EdicaoPerfilEmpresa(BaseModel):
     uf: str | None = Field(default=None, max_length=2)
     descricao: str | None = Field(default=None, max_length=2000)
 
+    cep: str | None = Field(default=None, max_length=9)
+    logradouro: str | None = Field(default=None, max_length=150)
+    numero: str | None = Field(default=None, max_length=20)
+    bairro: str | None = Field(default=None, max_length=100)
+    complemento: str | None = Field(default=None, max_length=100)
+
+    @field_validator("cep", mode="before")
+    @classmethod
+    def validar_cep(cls, valor):
+        if valor is None:
+            return None
+        if not isinstance(valor, str):
+            raise ValueError("CEP invalido.")
+        valor = valor.strip().replace("-", "")
+        if not valor:
+            return None
+        if len(valor) != 8 or not valor.isascii() or not valor.isdigit():
+            raise ValueError("CEP deve conter oito digitos.")
+        return valor[:5] + "-" + valor[5:]
+
+    @field_validator("logradouro", "numero", "bairro", "complemento")
+    @classmethod
+    def normalizar_endereco(cls, valor):
+        return valor.strip() or None if valor else None
+
     @field_validator("nome_fantasia", "setor", "cidade", "uf", "descricao")
     @classmethod
     def normalizar(cls, valor):
@@ -139,7 +194,7 @@ class EdicaoPerfilEmpresa(BaseModel):
     @field_validator("uf")
     @classmethod
     def validar_uf(cls, valor):
-        if valor is not None and (len(valor) != 2 or not valor.isalpha()):
+        if valor is not None and valor.upper() not in UFS_VALIDAS:
             raise ValueError("A UF precisa ter duas letras.")
         return valor.upper() if valor else None
 
@@ -179,6 +234,18 @@ def editar_perfil_empresa(
             (dados.nome_fantasia, dados.setor, dados.cidade,
              dados.uf, dados.descricao, empresa["id_empresa"], id_usuario)
         )
+        campos_endereco = (
+            "cep", "logradouro", "numero", "bairro", "complemento"
+        )
+
+        for campo in campos_endereco:
+            if campo in dados.model_fields_set:
+                cursor.execute(
+                    f"UPDATE empresas SET {campo}=%s "
+                    "WHERE id_empresa=%s AND id_usuario=%s",
+                    (getattr(dados, campo), empresa["id_empresa"], id_usuario)
+                )
+
         conexao.commit()
         return {"mensagem": "Perfil empresarial atualizado com sucesso."}
     except HTTPException:
@@ -227,6 +294,11 @@ def estatisticas_empresa(
                 e.cidade,
                 e.uf,
                 e.descricao,
+                e.cep,
+                e.logradouro,
+                e.numero,
+                e.bairro,
+                e.complemento,
                 u.email,
                 u.tipo_usuario,
                 u.ativo,
@@ -296,12 +368,12 @@ def estatisticas_empresa(
             """
             SELECT
                 COUNT(
-                    DISTINCT ca.id_candidato
+                    DISTINCT CASE WHEN uc.id_usuario IS NOT NULL THEN ca.id_candidato END
                 ) AS total_candidatos,
 
                 COALESCE(
                     SUM(
-                        ca.status = 'Aprovado'
+                        ca.status = 'Aprovado' AND uc.id_usuario IS NOT NULL
                     ),
                     0
                 ) AS aprovados
@@ -309,6 +381,12 @@ def estatisticas_empresa(
             FROM vagas AS v
             LEFT JOIN candidaturas AS ca
                 ON ca.id_vaga = v.id_vaga
+            LEFT JOIN candidatos AS cand
+                ON cand.id_candidato = ca.id_candidato
+            LEFT JOIN usuarios AS uc
+                ON uc.id_usuario = cand.id_usuario
+                AND uc.ativo = 1
+                AND uc.deletado_em IS NULL
 
             WHERE v.id_empresa = %s
             """,
@@ -330,6 +408,11 @@ def estatisticas_empresa(
             "cidade": empresa["cidade"],
             "uf": empresa["uf"],
             "descricao": empresa["descricao"],
+            "cep": empresa.get("cep"),
+            "logradouro": empresa.get("logradouro"),
+            "numero": empresa.get("numero"),
+            "bairro": empresa.get("bairro"),
+            "complemento": empresa.get("complemento"),
             "total_vagas": int(
                 indicadores_vagas["total_vagas"]
             ),
@@ -450,6 +533,12 @@ def listar_vagas_empresa(
                 (
                     SELECT COUNT(*)
                     FROM candidaturas AS c
+                    JOIN candidatos AS cand
+                        ON cand.id_candidato = c.id_candidato
+                    JOIN usuarios AS uc
+                        ON uc.id_usuario = cand.id_usuario
+                        AND uc.ativo = 1
+                        AND uc.deletado_em IS NULL
                     WHERE c.id_vaga = v.id_vaga
                 ) AS total_candidatos
             FROM vagas AS v
@@ -650,6 +739,12 @@ def listar_vagas_empresa_paginadas(
                 (
                     SELECT COUNT(*)
                     FROM candidaturas AS c
+                    JOIN candidatos AS cand
+                        ON cand.id_candidato = c.id_candidato
+                    JOIN usuarios AS uc
+                        ON uc.id_usuario = cand.id_usuario
+                        AND uc.ativo = 1
+                        AND uc.deletado_em IS NULL
                     WHERE c.id_vaga = v.id_vaga
                 ) AS total_candidatos
             FROM vagas AS v
@@ -775,11 +870,7 @@ def publicar_vaga_empresa(
             )
 
         # Conserva os requisitos livres na descrição.
-        if dados.requisitos and dados.requisitos.strip():
-            descricao += (
-                "\n\nRequisitos / Habilidades:\n"
-                + dados.requisitos.strip()
-            )
+        requisitos = dados.requisitos
 
         estado = (
             dados.estado.strip().upper()
@@ -858,6 +949,7 @@ def publicar_vaga_empresa(
                 titulo,
                 nivel,
                 descricao,
+                requisitos,
                 beneficios,
                 modalidade,
                 cidade,
@@ -869,7 +961,7 @@ def publicar_vaga_empresa(
                 status
             )
             VALUES (
-                %s, %s, %s, %s, %s,
+                %s, %s, %s, %s, %s, %s,
                 %s, %s, %s, %s, %s, %s, %s, 'Aberta'
             )
             """,
@@ -878,6 +970,7 @@ def publicar_vaga_empresa(
                 titulo,
                 dados.nivel,
                 descricao,
+                requisitos,
                 dados.beneficios,
                 modalidades[dados.modalidade],
                 cidade,
@@ -1034,6 +1127,7 @@ def detalhes_vaga_empresa(
                 id_vaga,
                 titulo,
                 descricao,
+                requisitos,
                 beneficios,
                 nivel,
                 modalidade,
@@ -1082,14 +1176,7 @@ def detalhes_vaga_empresa(
         tags = [item["nome"] for item in habilidades_vaga]
 
         descricao = vaga["descricao"] or ""
-        requisitos = ""
-
-        separador = "\n\nRequisitos / Habilidades:\n"
-
-        if separador in descricao:
-            descricao, _, requisitos = descricao.rpartition(
-                separador
-            )
+        requisitos = vaga.get("requisitos") or ""
 
         return {
             "id": vaga["id_vaga"],
@@ -1210,11 +1297,7 @@ def editar_vaga_empresa(
             )
 
         # Preserva os requisitos dentro da descrição.
-        if dados.requisitos and dados.requisitos.strip():
-            descricao += (
-                "\n\nRequisitos / Habilidades:\n"
-                + dados.requisitos.strip()
-            )
+        requisitos = dados.requisitos
 
         cidade = dados.cidade.strip() if dados.cidade else None
         estado = dados.estado.strip().upper() if dados.estado else None
@@ -1278,7 +1361,7 @@ def editar_vaga_empresa(
         # Bloqueia a vaga e verifica sua propriedade.
         cursor.execute(
             """
-            SELECT id_vaga
+            SELECT id_vaga, titulo, descricao, requisitos, modalidade, bolsa
             FROM vagas
             WHERE id_vaga = %s
               AND id_empresa = %s
@@ -1287,11 +1370,42 @@ def editar_vaga_empresa(
             (id_vaga, empresa["id_empresa"])
         )
 
-        if not cursor.fetchone():
+        vaga_anterior = cursor.fetchone()
+        if not vaga_anterior:
             raise HTTPException(
                 status_code=404,
                 detail="Vaga não encontrada."
             )
+
+        cursor.execute(
+            """
+            SELECT t.nome, vt.obrigatorio, vt.peso
+            FROM vaga_tags AS vt
+            JOIN tags_conhecimento AS t
+                ON t.id_tag = vt.id_tag
+            WHERE vt.id_vaga = %s
+            """,
+            (id_vaga,)
+        )
+
+        habilidades_anteriores = {
+            (h["nome"].casefold(), bool(h["obrigatorio"]), int(h["peso"]))
+            for h in cursor.fetchall()
+        }
+
+        habilidades_novas = {
+            (h["nome"].casefold(), bool(h["obrigatorio"]), int(h["peso"]))
+            for h in habilidades_normalizadas
+        }
+
+        alterou_avaliacao = (
+            vaga_anterior["titulo"] != titulo
+            or vaga_anterior["descricao"] != descricao
+            or vaga_anterior.get("requisitos") != requisitos
+            or vaga_anterior["modalidade"] != modalidades[dados.modalidade]
+            or vaga_anterior["bolsa"] != dados.salario_min
+            or habilidades_anteriores != habilidades_novas
+        )
 
         # Atualiza apenas os campos permitidos.
         # O status da vaga permanece inalterado.
@@ -1302,6 +1416,7 @@ def editar_vaga_empresa(
                 titulo = %s,
                 nivel = %s,
                 descricao = %s,
+                requisitos = %s,
                 beneficios = %s,
                 modalidade = %s,
                 latitude = CASE
@@ -1325,6 +1440,7 @@ def editar_vaga_empresa(
                 titulo,
                 dados.nivel,
                 descricao,
+                requisitos,
                 dados.beneficios,
                 modalidades[dados.modalidade],
                 bool({"latitude", "longitude"} & dados.model_fields_set),
@@ -1377,6 +1493,37 @@ def editar_vaga_empresa(
                 VALUES (%s, %s, %s, %s)
                 """,
                 (id_vaga, id_tag, int(habilidade["obrigatorio"]), habilidade["peso"])
+            )
+
+        if alterou_avaliacao:
+            cursor.execute(
+                """
+                UPDATE vagas
+                SET versao_avaliacao = versao_avaliacao + 1
+                WHERE id_vaga = %s
+                  AND id_empresa = %s
+                """,
+                (id_vaga, empresa["id_empresa"])
+            )
+
+            cursor.execute(
+                """
+                DELETE a FROM avaliacoes_ia AS a
+                JOIN candidaturas AS c
+                    ON c.id_candidatura = a.id_candidatura
+                WHERE c.id_vaga = %s
+                """,
+                (id_vaga,)
+            )
+
+            cursor.execute(
+                """
+                DELETE ct FROM controle_avaliacoes_ia AS ct
+                JOIN candidaturas AS c
+                    ON c.id_candidatura = ct.id_candidatura
+                WHERE c.id_vaga = %s
+                """,
+                (id_vaga,)
             )
 
         conexao.commit()
@@ -1988,6 +2135,10 @@ def listar_candidatos_vaga_empresa(
             FROM candidaturas AS ca
             INNER JOIN candidatos AS c
                 ON c.id_candidato = ca.id_candidato
+            INNER JOIN usuarios AS uc
+                ON uc.id_usuario = c.id_usuario
+                AND uc.ativo = 1
+                AND uc.deletado_em IS NULL
             INNER JOIN vagas AS v
                 ON v.id_vaga = ca.id_vaga
             WHERE ca.id_vaga = %s
@@ -2014,6 +2165,12 @@ def listar_candidatos_vaga_empresa(
                     a.pontos_fortes,
                     a.pontos_atencao
                 FROM candidaturas AS ca
+                INNER JOIN candidatos AS c
+                    ON c.id_candidato = ca.id_candidato
+                INNER JOIN usuarios AS uc
+                    ON uc.id_usuario = c.id_usuario
+                    AND uc.ativo = 1
+                    AND uc.deletado_em IS NULL
                 INNER JOIN vagas AS v ON v.id_vaga = ca.id_vaga
                 INNER JOIN avaliacoes_ia AS a
                     ON a.id_avaliacao = (
@@ -2189,6 +2346,12 @@ def atualizar_status_candidatura_empresa(
                 ca.id_vaga,
                 ca.status
             FROM candidaturas AS ca
+            INNER JOIN candidatos AS c
+                ON c.id_candidato = ca.id_candidato
+            INNER JOIN usuarios AS uc
+                ON uc.id_usuario = c.id_usuario
+                AND uc.ativo = 1
+                AND uc.deletado_em IS NULL
             INNER JOIN vagas AS v
                 ON v.id_vaga = ca.id_vaga
             WHERE ca.id_candidatura = %s

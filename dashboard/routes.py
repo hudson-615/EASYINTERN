@@ -709,10 +709,11 @@ def _consultar_vagas_candidato(
                 condicoes.append("""(
                     v.titulo LIKE %s ESCAPE '!'
                     OR v.descricao LIKE %s ESCAPE '!'
+                    OR v.requisitos LIKE %s ESCAPE '!'
                     OR e.nome_fantasia LIKE %s ESCAPE '!'
                     OR e.razao_social LIKE %s ESCAPE '!'
                 )""")
-                parametros.extend([f"%{palavra}%"] * 4)
+                parametros.extend([f"%{palavra}%"] * 5)
         if cidade and cidade.strip():
             condicoes.append("v.cidade = %s")
             parametros.append(cidade.strip())
@@ -785,7 +786,7 @@ def _consultar_vagas_candidato(
 
         sql = """
             SELECT
-                v.id_vaga AS id, v.titulo, v.nivel, v.descricao,
+                v.id_vaga AS id, v.titulo, v.nivel, v.descricao, v.requisitos,
                 v.beneficios, v.modalidade, v.cidade, v.uf AS estado,
                 v.bolsa AS salario_min,
                 COALESCE(NULLIF(e.nome_fantasia, ''), e.razao_social) AS empresa,
@@ -888,7 +889,7 @@ def _consultar_vagas_candidato(
                 ),
                 "salario_min": float(vaga["salario_min"]) if vaga["salario_min"] is not None else None,
                 "descricao": vaga["descricao"], "beneficios": vaga["beneficios"],
-                "requisitos": None, "tags": vaga.get("tags") or "",
+                "requisitos": vaga.get("requisitos"), "tags": vaga.get("tags") or "",
                 "ja_candidatou": bool(vaga["ja_candidatou"]),
                 "match": {
                     "score": score,
@@ -2086,7 +2087,7 @@ def detalhar_vaga_candidato(
 
         cursor.execute("""
             SELECT
-                v.id_vaga AS id, v.titulo, v.descricao, v.beneficios,
+                v.id_vaga AS id, v.titulo, v.descricao, v.requisitos, v.beneficios,
                 v.modalidade, v.nivel, v.cidade, v.uf AS estado,
                 v.bolsa AS salario_min, v.prazo_encerramento, v.status,
                 COALESCE(NULLIF(e.nome_fantasia, ''), e.razao_social) AS empresa,

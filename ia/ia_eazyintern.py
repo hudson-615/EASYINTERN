@@ -73,7 +73,7 @@ def montar_perfil_vaga(id_vaga: int) -> str:
     with closing(conectar_banco()) as conn:
         with closing(conn.cursor(dictionary=True)) as cursor:
             cursor.execute(
-                """SELECT titulo, descricao, modalidade, bolsa
+                """SELECT titulo, descricao, requisitos, modalidade, bolsa
                    FROM vagas WHERE id_vaga = %s""",
                 (id_vaga,),
             )
@@ -102,7 +102,8 @@ def montar_perfil_vaga(id_vaga: int) -> str:
         f"Modalidade: {_texto(vaga['modalidade'])}\n"
         f"Bolsa: R$ {_texto(vaga['bolsa'])}\n"
         f"Descrição: {_texto(vaga['descricao'])}\n"
-        f"Requisitos: {requisitos_txt}\n"
+        f"Requisitos textuais: {_texto(vaga.get('requisitos'))}\n"
+        f"Requisitos tecnicos: {requisitos_txt}\n"
     )
 
 
@@ -119,6 +120,12 @@ def listar_candidaturas_para_ia(*, pendentes: bool = False, limite: int = 100):
             cursor.execute(
                 """SELECT c.id_candidatura, c.id_candidato, c.id_vaga, c.status
                    FROM candidaturas AS c
+                   JOIN candidatos AS cand
+                       ON cand.id_candidato = c.id_candidato
+                   JOIN usuarios AS uc
+                       ON uc.id_usuario = cand.id_usuario
+                       AND uc.ativo = 1
+                       AND uc.deletado_em IS NULL
                    WHERE (%s = 0 OR NOT EXISTS (
                        SELECT 1 FROM avaliacoes_ia AS a
                        WHERE a.id_candidatura = c.id_candidatura
@@ -134,9 +141,14 @@ def obter_candidatura(id_candidatura: int):
     with closing(conectar_banco()) as conn:
         with closing(conn.cursor(dictionary=True)) as cursor:
             cursor.execute(
-                """SELECT c.id_candidatura, c.id_candidato, c.id_vaga, c.status
+                """SELECT c.id_candidatura, c.id_candidato, c.id_vaga, c.status,
+                          v.versao_avaliacao
                    FROM candidaturas AS c
                    JOIN candidatos AS cand ON cand.id_candidato = c.id_candidato
+                   JOIN usuarios AS uc
+                       ON uc.id_usuario = cand.id_usuario
+                       AND uc.ativo = 1
+                       AND uc.deletado_em IS NULL
                    JOIN vagas AS v ON v.id_vaga = c.id_vaga
                    WHERE c.id_candidatura = %s""",
                 (id_candidatura,),
@@ -288,6 +300,7 @@ def avaliar_candidatura(id_candidatura: int) -> dict:
     dados["id_candidatura"] = candidatura["id_candidatura"]
     dados["id_candidato"] = candidato_id
     dados["id_vaga"] = vaga_id
+    dados["versao_avaliacao"] = candidatura["versao_avaliacao"]
     return dados
 
 
@@ -310,9 +323,13 @@ def salvar_avaliacao_no_banco(id_candidatura: int, avaliacao: dict | str) -> Non
         try:
             with closing(conn.cursor(dictionary=True)) as cursor:
                 cursor.execute(
-                    """SELECT c.id_candidato, c.id_vaga
+                    """SELECT c.id_candidato, c.id_vaga, v.versao_avaliacao
                        FROM candidaturas AS c
                        JOIN candidatos AS cand ON cand.id_candidato = c.id_candidato
+                       JOIN usuarios AS uc
+                           ON uc.id_usuario = cand.id_usuario
+                           AND uc.ativo = 1
+                           AND uc.deletado_em IS NULL
                        JOIN vagas AS v ON v.id_vaga = c.id_vaga
                        WHERE c.id_candidatura = %s FOR UPDATE""",
                     (id_candidatura,),
@@ -320,6 +337,12 @@ def salvar_avaliacao_no_banco(id_candidatura: int, avaliacao: dict | str) -> Non
                 vinculo = cursor.fetchone()
                 if not vinculo:
                     raise ValueError("Candidatura não encontrada: avaliação não gravada.")
+                if not isinstance(avaliacao, dict) or (
+                    avaliacao.get("versao_avaliacao")
+                    != vinculo["versao_avaliacao"]
+                ):
+                    raise ValueError("Avaliacao desatualizada ou sem versao.")
+
                 if isinstance(avaliacao, dict):
                     if ("id_candidato" in avaliacao and
                         int(avaliacao["id_candidato"]) != int(vinculo["id_candidato"])):

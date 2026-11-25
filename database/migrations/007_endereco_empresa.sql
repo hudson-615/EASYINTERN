@@ -1,0 +1,6 @@
+﻿ALTER TABLE empresas
+    ADD COLUMN cep VARCHAR(9) NULL,
+    ADD COLUMN logradouro VARCHAR(150) NULL,
+    ADD COLUMN numero VARCHAR(20) NULL,
+    ADD COLUMN bairro VARCHAR(100) NULL,
+    ADD COLUMN complemento VARCHAR(100) NULL;
