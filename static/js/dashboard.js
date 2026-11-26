@@ -4538,6 +4538,15 @@ async function init() {
   initSidebar();
   initNavigation();
 
+  initThemeControl();
+  initLogout();
+  initFilters();
+  initMobileModal();
+
+  if (dashPanel === 'candidato') {
+    initCandidaturaModal();
+    await loadCandidatoDashboard();
+
   // EasyIntern 2.0: abrir diretamente a secao solicitada
   if (dashPanel === 'candidato') {
     const parametros = new URLSearchParams(window.location.search);
@@ -4555,14 +4564,6 @@ async function init() {
       navigateTo(secaoInicial);
     }
   }
-  initThemeControl();
-  initLogout();
-  initFilters();
-  initMobileModal();
-
-  if (dashPanel === 'candidato') {
-    initCandidaturaModal();
-    await loadCandidatoDashboard();
   } else if (dashPanel === 'empresa') {
     initFormNovaVaga();
     initCandidatoModal();
