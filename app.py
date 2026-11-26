@@ -128,3 +128,10 @@ def teste_banco():
     return {
         "mensagem": "Conexão com o banco realizada com sucesso!"
     }
+
+@app.get("/conexoes", response_class=HTMLResponse)
+def pagina_conexoes(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="conexoes.html"
+    )
