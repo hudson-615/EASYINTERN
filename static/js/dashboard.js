@@ -4537,6 +4537,24 @@ async function init() {
 
   initSidebar();
   initNavigation();
+
+  // EasyIntern 2.0: abrir diretamente a secao solicitada
+  if (dashPanel === 'candidato') {
+    const parametros = new URLSearchParams(window.location.search);
+    const secaoInicial = parametros.get('secao');
+
+    const secoesPermitidas = [
+      'overview',
+      'recomendadas',
+      'candidaturas',
+      'perfil',
+      'chat'
+    ];
+
+    if (secoesPermitidas.includes(secaoInicial)) {
+      navigateTo(secaoInicial);
+    }
+  }
   initThemeControl();
   initLogout();
   initFilters();
