@@ -1,0 +1,436 @@
+﻿/* EasyIntern 2.0 - Dashboard do candidato */
+/* Sobrescritas visuais isoladas. Nao alterar regras de negocio. */
+
+body.dash-body[data-panel="candidato"] {
+  --ei2-purple: #7c3aed;
+  --ei2-lavender: #a78bfa;
+  --ei2-border: #e7ddf5;
+  --ei2-surface: #ffffff;
+  --ei2-background: #f7f5fc;
+  --ei2-text: #241c38;
+  --ei2-muted: #675c7a;
+  --bg-base: var(--ei2-background);
+  --bg-card: var(--ei2-surface);
+  --card-bg: var(--ei2-surface);
+  --text-primary: var(--ei2-text);
+  --text-muted: var(--ei2-muted);
+  --color-border: var(--ei2-border);
+  background: var(--ei2-background);
+  color: var(--ei2-text);
+}
+
+/* Superficies principais */
+body.dash-body[data-panel="candidato"] .dash-main,
+body.dash-body[data-panel="candidato"] .dash-section {
+  background: var(--ei2-background);
+}
+
+body.dash-body[data-panel="candidato"] .dash-sidebar {
+  background: var(--ei2-surface);
+  border-right-color: var(--ei2-border);
+}
+
+body.dash-body[data-panel="candidato"] .dash-header {
+  background: var(--ei2-surface);
+  border-bottom-color: var(--ei2-border);
+}
+
+/* Cards */
+body.dash-body[data-panel="candidato"] .glass-card,
+body.dash-body[data-panel="candidato"] .stat-card,
+body.dash-body[data-panel="candidato"] .vaga-card,
+body.dash-body[data-panel="candidato"] .cand-card,
+body.dash-body[data-panel="candidato"] .perfil-card,
+body.dash-body[data-panel="candidato"] .settings-card,
+body.dash-body[data-panel="candidato"] .form-card,
+body.dash-body[data-panel="candidato"] .ranking-card {
+  background: var(--ei2-surface);
+  border: 1px solid var(--ei2-border);
+  box-shadow: 0 5px 22px rgba(71, 36, 112, .06);
+}
+
+/* Identidade */
+body.dash-body[data-panel="candidato"] .brand-name,
+body.dash-body[data-panel="candidato"] .brand-icon-sm {
+  color: var(--ei2-purple);
+}
+
+body.dash-body[data-panel="candidato"] .nav-item {
+  color: var(--ei2-muted);
+}
+
+body.dash-body[data-panel="candidato"] .nav-item:hover {
+  background: rgba(124, 58, 237, .08);
+  color: var(--ei2-purple);
+}
+
+body.dash-body[data-panel="candidato"] .nav-item.active {
+  background: rgba(124, 58, 237, .12);
+  border-color: rgba(124, 58, 237, .25);
+  color: var(--ei2-purple);
+}
+
+body.dash-body[data-panel="candidato"] .nav-item.active i {
+  color: var(--ei2-purple);
+}
+
+body.dash-body[data-panel="candidato"] .nav-badge:not(.ai) {
+  background: rgba(124, 58, 237, .10);
+  border-color: rgba(124, 58, 237, .25);
+  color: var(--ei2-purple);
+}
+
+/* Acoes principais */
+body.dash-body[data-panel="candidato"] .btn-primary,
+body.dash-body[data-panel="candidato"] .btn-violet-sm,
+body.dash-body[data-panel="candidato"] .btn-menu-toggle {
+  background: var(--ei2-purple);
+  border-color: var(--ei2-purple);
+  color: #fff;
+}
+
+body.dash-body[data-panel="candidato"] .btn-primary:hover,
+body.dash-body[data-panel="candidato"] .btn-violet-sm:hover,
+body.dash-body[data-panel="candidato"] .btn-menu-toggle:hover {
+  background: #6d28d9;
+  border-color: #6d28d9;
+  color: #fff;
+}
+
+/* Tema escuro */
+body.dash-body[data-panel="candidato"][data-theme="dark"] {
+  --ei2-purple: #a78bfa;
+  --ei2-border: #342a4a;
+  --ei2-surface: #1b172b;
+  --ei2-background: #100f1e;
+  --ei2-text: #f5f2ff;
+  --ei2-muted: #c4b9d8;
+}
+
+body.dash-body[data-panel="candidato"][data-theme="dark"] .btn-primary,
+body.dash-body[data-panel="candidato"][data-theme="dark"] .btn-violet-sm,
+body.dash-body[data-panel="candidato"][data-theme="dark"] .btn-menu-toggle {
+  background: #7c3aed;
+  border-color: #7c3aed;
+  color: #fff;
+}
+
+/* Foco visivel */
+body.dash-body[data-panel="candidato"] a:focus-visible,
+body.dash-body[data-panel="candidato"] button:focus-visible {
+  outline: 2px solid var(--ei2-purple);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.dash-body[data-panel="candidato"] * {
+    scroll-behavior: auto;
+  }
+}
+
+/* EI2 - CORES ESCURAS */
+
+body.dash-body[data-panel="candidato"][data-theme="dark"] .stat-card,
+body.dash-body[data-panel="candidato"][data-theme="dark"] .glass-card {
+  background: #1b172b;
+  border-color: #342a4a;
+}
+
+body.dash-body[data-panel="candidato"] .stat-card::before {
+  background: #8b5cf6 !important;
+}
+
+body.dash-body[data-panel="candidato"] .stat-icon,
+body.dash-body[data-panel="candidato"] .stat-icon i,
+body.dash-body[data-panel="candidato"] .card-header h3 i {
+  color: #a78bfa;
+}
+
+body.dash-body[data-panel="candidato"] .stat-icon {
+  background: rgba(124,58,237,.14);
+}
+
+body.dash-body[data-panel="candidato"][data-theme="dark"] .stat-value,
+body.dash-body[data-panel="candidato"][data-theme="dark"] .dash-page-title {
+  color: #f5f2ff;
+}
+
+
+/* EI2 - PALETA COMPARTILHADA COM CONEXOES */
+
+/* Importa somente as variaveis oficiais, sem importar
+   os estilos globais da pagina Conexoes. */
+body.dash-body[data-panel="candidato"] {
+  --ei2-background: #f7f6fb;
+  --ei2-surface: #ffffff;
+  --ei2-border: #e3def1;
+  --ei2-text: #171426;
+  --ei2-muted: #706a85;
+  --ei2-purple: #7535e7;
+  --ei2-lavender: #8454e9;
+}
+
+body.dash-body[data-panel="candidato"][data-theme="dark"] {
+  --ei2-background: #10101d;
+  --ei2-surface: #1b1a2b;
+  --ei2-border: #35314f;
+  --ei2-text: #f8f7ff;
+  --ei2-muted: #aaa6c4;
+  --ei2-purple: #8d43f8;
+  --ei2-lavender: #b58cff;
+}
+
+/* A sidebar tem uma cor propria no tema escuro */
+body.dash-body[data-panel="candidato"][data-theme="dark"] .dash-sidebar {
+  background: #141424;
+}
+
+/* Remover as cores verdes decorativas */
+body.dash-body[data-panel="candidato"] .stat-card::before {
+  background: var(--ei2-purple) !important;
+}
+
+body.dash-body[data-panel="candidato"] .stat-icon,
+body.dash-body[data-panel="candidato"] .stat-icon i,
+body.dash-body[data-panel="candidato"] .card-header h3 i {
+  color: var(--ei2-purple);
+}
+
+body.dash-body[data-panel="candidato"] .stat-icon {
+  background: rgba(141, 67, 248, .14);
+}
+
+body.dash-body[data-panel="candidato"] .brand-name,
+body.dash-body[data-panel="candidato"] .brand-icon-sm,
+body.dash-body[data-panel="candidato"] .nav-item.active {
+  color: var(--ei2-purple);
+}
+
+
+/* EI2 - ACABAMENTO CANDIDATURAS */
+
+/* Cards e campos do modo escuro */
+body.dash-body[data-panel="candidato"][data-theme="dark"] .cand-card,
+body.dash-body[data-panel="candidato"][data-theme="dark"] .cand-card:hover,
+body.dash-body[data-panel="candidato"][data-theme="dark"] .vaga-card,
+body.dash-body[data-panel="candidato"][data-theme="dark"] .vaga-card:hover,
+body.dash-body[data-panel="candidato"][data-theme="dark"] .stat-card,
+body.dash-body[data-panel="candidato"][data-theme="dark"] .stat-card:hover,
+body.dash-body[data-panel="candidato"][data-theme="dark"] .glass-card {
+  background: #1b1a2b;
+  border-color: #35314f;
+  color: #f8f7ff;
+}
+
+/* Botoes de filtros */
+body.dash-body[data-panel="candidato"] .filter-btn {
+  background: var(--ei2-surface);
+  border-color: var(--ei2-border);
+  color: var(--ei2-muted);
+}
+
+body.dash-body[data-panel="candidato"] .filter-btn:hover {
+  background: rgba(141,67,248,.12);
+  border-color: var(--ei2-purple);
+  color: var(--ei2-purple);
+}
+
+/* Filtro Todas ativo */
+body.dash-body[data-panel="candidato"] .filter-btn[data-filter="todos"].active,
+body.dash-body[data-panel="candidato"] .filter-btn[data-rec-filter="todos"].active {
+  background: rgba(141,67,248,.15);
+  border-color: var(--ei2-purple);
+  color: var(--ei2-purple);
+}
+
+/* Elementos decorativos */
+body.dash-body[data-panel="candidato"] .card-header h3 i,
+body.dash-body[data-panel="candidato"] .card-link {
+  color: var(--ei2-purple);
+}
+
+/* Formulario do modo escuro */
+body.dash-body[data-panel="candidato"][data-theme="dark"] .field-input,
+body.dash-body[data-panel="candidato"][data-theme="dark"] .field-select,
+body.dash-body[data-panel="candidato"][data-theme="dark"] select {
+  background-color: #232138;
+  border-color: #35314f;
+  color: #f8f7ff;
+}
+
+/* Preservar foco acessivel */
+body.dash-body[data-panel="candidato"] .filter-btn:focus-visible {
+  outline: 2px solid var(--ei2-purple);
+  outline-offset: 2px;
+}
+
+
+/* =========================================================
+   EI2 - PADRAO VISUAL GLOBAL DO CANDIDATO
+   Baseado na aba Conexoes
+   ========================================================= */
+
+:root {
+  --ei2-bg-dark: #0a0920;
+  --ei2-surface-dark: #17162b;
+  --ei2-surface-dark-2: #1d1b35;
+  --ei2-border-dark: #4b2c82;
+  --ei2-purple: #8d43f8;
+  --ei2-purple-2: #a56bff;
+  --ei2-text-dark: #f8f7ff;
+  --ei2-muted-dark: #beb7e6;
+}
+
+/* Fundo geral do candidato */
+body.dash-body[data-panel="candidato"][data-theme="dark"] {
+  background:
+    radial-gradient(circle at top right, rgba(141,67,248,.18), transparent 24%),
+    linear-gradient(180deg, #0f0d24 0%, #0a0920 100%);
+  color: var(--ei2-text-dark);
+}
+
+/* Topo */
+body.dash-body[data-panel="candidato"][data-theme="dark"] .topbar,
+body.dash-body[data-panel="candidato"][data-theme="dark"] .panel-top,
+body.dash-body[data-panel="candidato"][data-theme="dark"] .dashboard-top {
+  background: rgba(23,22,43,.92);
+  border-bottom: 1px solid rgba(141,67,248,.25);
+  color: var(--ei2-text-dark);
+}
+
+/* Cards gerais */
+body.dash-body[data-panel="candidato"][data-theme="dark"] .cand-card,
+body.dash-body[data-panel="candidato"][data-theme="dark"] .vaga-card,
+body.dash-body[data-panel="candidato"][data-theme="dark"] .stat-card,
+body.dash-body[data-panel="candidato"][data-theme="dark"] .glass-card,
+body.dash-body[data-panel="candidato"][data-theme="dark"] .profile-card,
+body.dash-body[data-panel="candidato"][data-theme="dark"] .config-card,
+body.dash-body[data-panel="candidato"][data-theme="dark"] .chat-card,
+body.dash-body[data-panel="candidato"][data-theme="dark"] .dashboard-card,
+body.dash-body[data-panel="candidato"][data-theme="dark"] .section-card,
+body.dash-body[data-panel="candidato"][data-theme="dark"] .panel-card {
+  background: linear-gradient(180deg, rgba(29,27,53,.96), rgba(23,22,43,.98));
+  border: 1px solid rgba(141,67,248,.26);
+  color: var(--ei2-text-dark);
+  box-shadow: 0 10px 30px rgba(0,0,0,.22);
+}
+
+/* Hover dos cards */
+body.dash-body[data-panel="candidato"][data-theme="dark"] .cand-card:hover,
+body.dash-body[data-panel="candidato"][data-theme="dark"] .vaga-card:hover,
+body.dash-body[data-panel="candidato"][data-theme="dark"] .stat-card:hover,
+body.dash-body[data-panel="candidato"][data-theme="dark"] .dashboard-card:hover {
+  border-color: rgba(141,67,248,.45);
+  box-shadow: 0 14px 36px rgba(0,0,0,.28);
+}
+
+/* Titulos e textos */
+body.dash-body[data-panel="candidato"][data-theme="dark"] h1,
+body.dash-body[data-panel="candidato"][data-theme="dark"] h2,
+body.dash-body[data-panel="candidato"][data-theme="dark"] h3,
+body.dash-body[data-panel="candidato"][data-theme="dark"] h4,
+body.dash-body[data-panel="candidato"][data-theme="dark"] .section-title,
+body.dash-body[data-panel="candidato"][data-theme="dark"] .card-title {
+  color: var(--ei2-text-dark);
+}
+
+body.dash-body[data-panel="candidato"][data-theme="dark"] p,
+body.dash-body[data-panel="candidato"][data-theme="dark"] span,
+body.dash-body[data-panel="candidato"][data-theme="dark"] small,
+body.dash-body[data-panel="candidato"][data-theme="dark"] .muted,
+body.dash-body[data-panel="candidato"][data-theme="dark"] .subtitle,
+body.dash-body[data-panel="candidato"][data-theme="dark"] .card-subtitle {
+  color: var(--ei2-muted-dark);
+}
+
+/* Chips / filtros / tabs */
+body.dash-body[data-panel="candidato"][data-theme="dark"] .filter-btn,
+body.dash-body[data-panel="candidato"][data-theme="dark"] .tab-btn,
+body.dash-body[data-panel="candidato"][data-theme="dark"] .chip,
+body.dash-body[data-panel="candidato"][data-theme="dark"] .page-btn {
+  background: rgba(255,255,255,.02);
+  border: 1px solid rgba(141,67,248,.28);
+  color: var(--ei2-text-dark);
+}
+
+body.dash-body[data-panel="candidato"][data-theme="dark"] .filter-btn:hover,
+body.dash-body[data-panel="candidato"][data-theme="dark"] .tab-btn:hover,
+body.dash-body[data-panel="candidato"][data-theme="dark"] .chip:hover,
+body.dash-body[data-panel="candidato"][data-theme="dark"] .page-btn:hover {
+  background: rgba(141,67,248,.14);
+  border-color: rgba(141,67,248,.55);
+  color: #ffffff;
+}
+
+body.dash-body[data-panel="candidato"][data-theme="dark"] .filter-btn.active,
+body.dash-body[data-panel="candidato"][data-theme="dark"] .tab-btn.active,
+body.dash-body[data-panel="candidato"][data-theme="dark"] .chip.active {
+  background: linear-gradient(135deg, rgba(141,67,248,.28), rgba(165,107,255,.18));
+  border-color: var(--ei2-purple);
+  color: #ffffff;
+}
+
+/* Botao principal */
+body.dash-body[data-panel="candidato"][data-theme="dark"] .btn-primary,
+body.dash-body[data-panel="candidato"][data-theme="dark"] .primary-btn {
+  background: linear-gradient(135deg, #7f39f2, #a56bff);
+  border: 1px solid rgba(255,255,255,.10);
+  color: #ffffff;
+}
+
+body.dash-body[data-panel="candidato"][data-theme="dark"] .btn-primary:hover,
+body.dash-body[data-panel="candidato"][data-theme="dark"] .primary-btn:hover {
+  filter: brightness(1.06);
+}
+
+/* Botao secundario */
+body.dash-body[data-panel="candidato"][data-theme="dark"] .btn-secondary,
+body.dash-body[data-panel="candidato"][data-theme="dark"] .secondary-btn {
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(141,67,248,.30);
+  color: var(--ei2-text-dark);
+}
+
+/* Inputs */
+body.dash-body[data-panel="candidato"][data-theme="dark"] input,
+body.dash-body[data-panel="candidato"][data-theme="dark"] select,
+body.dash-body[data-panel="candidato"][data-theme="dark"] textarea {
+  background: #232138;
+  border: 1px solid rgba(141,67,248,.22);
+  color: var(--ei2-text-dark);
+}
+
+body.dash-body[data-panel="candidato"][data-theme="dark"] input::placeholder,
+body.dash-body[data-panel="candidato"][data-theme="dark"] textarea::placeholder {
+  color: #a7a0cd;
+}
+
+body.dash-body[data-panel="candidato"][data-theme="dark"] input:focus,
+body.dash-body[data-panel="candidato"][data-theme="dark"] select:focus,
+body.dash-body[data-panel="candidato"][data-theme="dark"] textarea:focus {
+  outline: none;
+  border-color: var(--ei2-purple);
+  box-shadow: 0 0 0 3px rgba(141,67,248,.18);
+}
+
+/* Links e destaques */
+body.dash-body[data-panel="candidato"][data-theme="dark"] a,
+body.dash-body[data-panel="candidato"][data-theme="dark"] .link,
+body.dash-body[data-panel="candidato"][data-theme="dark"] .card-link {
+  color: #b487ff;
+}
+
+/* Sidebar no mesmo estilo */
+body.dash-body[data-panel="candidato"][data-theme="dark"] .sidebar,
+body.dash-body[data-panel="candidato"][data-theme="dark"] .side-menu {
+  background: linear-gradient(180deg, rgba(21,20,40,.98), rgba(14,13,30,.99));
+  border-right: 1px solid rgba(141,67,248,.22);
+}
+
+body.dash-body[data-panel="candidato"][data-theme="dark"] .sidebar .active,
+body.dash-body[data-panel="candidato"][data-theme="dark"] .side-menu .active {
+  background: linear-gradient(135deg, rgba(141,67,248,.20), rgba(165,107,255,.10));
+  border: 1px solid rgba(141,67,248,.36);
+  color: #ffffff;
+}
+

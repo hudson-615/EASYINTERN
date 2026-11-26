@@ -4537,6 +4537,7 @@ async function init() {
 
   initSidebar();
   initNavigation();
+
   initThemeControl();
   initLogout();
   initFilters();
@@ -4545,6 +4546,24 @@ async function init() {
   if (dashPanel === 'candidato') {
     initCandidaturaModal();
     await loadCandidatoDashboard();
+
+  // EasyIntern 2.0: abrir diretamente a secao solicitada
+  if (dashPanel === 'candidato') {
+    const parametros = new URLSearchParams(window.location.search);
+    const secaoInicial = parametros.get('secao');
+
+    const secoesPermitidas = [
+      'overview',
+      'recomendadas',
+      'candidaturas',
+      'perfil',
+      'chat'
+    ];
+
+    if (secoesPermitidas.includes(secaoInicial)) {
+      navigateTo(secaoInicial);
+    }
+  }
   } else if (dashPanel === 'empresa') {
     initFormNovaVaga();
     initCandidatoModal();
