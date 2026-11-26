@@ -1,8 +1,130 @@
-from fastapi import FastAPI
+from pathlib import Path
 
-app = FastAPI(title="EasyIntern")
+from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.exceptions import RequestValidationError
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 
+from database.connection import conectar
+from usuarios.routes import router as usuarios_router
+from usuarios.recuperacao_routes import router as recuperacao_router
+from dados.routes import router as dados_router
+from dashboard.routes import router as dashboard_router
+from dashboard.empresa_routes import router as empresa_router
+
+from dashboard.formacoes_routes import router as formacoes_router
+from dashboard.curriculo_routes import router as curriculo_router
+from dashboard.feedback_routes import router as feedback_router
+from chat.routes import router as chat_router
+from chat.websocket import router as chat_ws_router
+
+
+BASE_DIR = Path(__file__).resolve().parent
+
+
+app = FastAPI(
+    title="EasyIntern",
+    description="Backend da plataforma EasyIntern",
+    version="1.0.0",
+    docs_url="/api/docs",
+    redoc_url=None
+)
+
+@app.exception_handler(RequestValidationError)
+async def tratar_erro_validacao(
+    request: Request,
+    exc: RequestValidationError
+):
+    mensagens = {
+        "missing": "Campo obrigat\u00f3rio.",
+        "string_too_short": "Valor menor que o tamanho permitido.",
+        "string_too_long": "Valor maior que o tamanho permitido.",
+        "value_error": "Valor informado inv\u00e1lido.",
+        "literal_error": "Op\u00e7\u00e3o inv\u00e1lida.",
+        "json_invalid": "JSON inv\u00e1lido."
+    }
+
+    detalhe = [
+        {
+            "msg": mensagens.get(
+                erro.get("type"),
+                "Dados inv\u00e1lidos. Verifique os campos informados."
+            )
+        }
+        for erro in exc.errors()
+    ]
+
+    return JSONResponse(
+        status_code=422,
+        content={"detail": detalhe}
+    )
+
+
+
+# Arquivos estáticos: CSS, JavaScript e imagens
+app.mount(
+    "/static",
+    StaticFiles(directory=str(BASE_DIR / "static")),
+    name="static"
+)
+
+
+# Arquivos HTML localizados na raiz do projeto
+templates = Jinja2Templates(
+    directory=str(BASE_DIR)
+)
+
+
+# Rotas da API
+app.include_router(usuarios_router)
+app.include_router(recuperacao_router)
+app.include_router(dados_router)
+app.include_router(dashboard_router)
+app.include_router(empresa_router)
+
+app.include_router(formacoes_router)
+app.include_router(curriculo_router)
+app.include_router(feedback_router)
+app.include_router(chat_router)
+app.include_router(chat_ws_router)
 
 @app.get("/")
 def inicio():
-    return {"mensagem": "EasyIntern - Backend funcionando!"}
+    return {
+        "mensagem": "EasyIntern - Backend funcionando!"
+    }
+
+
+@app.get("/auth", response_class=HTMLResponse)
+def pagina_autenticacao(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="auth.html"
+    )
+
+
+@app.get("/dashboard/candidato", response_class=HTMLResponse)
+def pagina_dashboard_candidato(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="candidato_dashboard.html"
+    )
+
+
+@app.get("/dashboard/empresa", response_class=HTMLResponse)
+def pagina_dashboard_empresa(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="recrutador_painel.html"
+    )
+
+
+@app.get("/teste-banco")
+def teste_banco():
+    conexao = conectar()
+    conexao.close()
+
+    return {
+        "mensagem": "Conexão com o banco realizada com sucesso!"
+    }

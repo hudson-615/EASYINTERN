@@ -8,8 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
-  <link rel="stylesheet" href="./static/css/easyintern.css" />
-  <link rel="stylesheet" href="./static/css/dashboard.css?v=6" />
+  <link rel="stylesheet" href="/static/css/easyintern.css" />
+  <link rel="stylesheet" href="/static/css/dashboard.css?v=13" />
+<link rel="stylesheet" href="/static/css/chat.css?v=2">
 </head>
 <body class="dash-body" data-panel="empresa">
 
@@ -39,6 +40,13 @@
       <i class="bi bi-plus-circle-fill"></i>
       <span>Nova Vaga</span>
     </a>
+
+      <a href="#" class="nav-item" data-section="chat" id="nav-chat">
+        <i class="bi bi-chat-dots-fill" aria-hidden="true"></i>
+        <span>Mensagens</span>
+        <span class="nav-badge" id="badge-chat" hidden>0</span>
+      </a>
+
     <a href="#" class="nav-item" data-section="perfil" id="nav-perfil">
       <i class="bi bi-building"></i>
       <span>Perfil da Empresa</span>
@@ -160,7 +168,7 @@
       <div class="section-filters">
         <button class="filter-btn active" data-vaga-filter="todas">Todas</button>
         <button class="filter-btn" data-vaga-filter="aberta">Abertas</button>
-        <button class="filter-btn" data-vaga-filter="fechada">Encerradas</button>
+        <button class="filter-btn" data-vaga-filter="encerrada">Encerradas</button>
       </div>
       <button class="btn btn-primary btn-sm" id="btn-nova-vaga-section">
         <i class="bi bi-plus-lg"></i> Nova Vaga
@@ -171,6 +179,8 @@
         <i class="bi bi-arrow-repeat spin"></i> Carregando vagas...
       </div>
     </div>
+    <div id="paginacao-vagas-empresa" aria-live="polite"
+         style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin:18px 0 8px;" hidden></div>
   </section>
 
   <!-- ── Seção: Candidatos ─────────────────────────────────────────────── -->
@@ -189,7 +199,7 @@
       <div class="empty-state">
         <i class="bi bi-cpu" style="font-size:2rem;color:var(--violet-light);"></i>
         <h4>Selecione uma vaga para ver os candidatos ranqueados pela IA.</h4>
-        <p>O Motor Zero-G AI analisa compatibilidade de habilidades, nível e área de interesse para gerar um ranking automaticamente.</p>
+        <p>O Motor Zero-G AI auxilia na an&aacute;lise da compatibilidade profissional. Os resultados podem conter imprecis&otilde;es e n&atilde;o substituem a avalia&ccedil;&atilde;o humana.</p>
       </div>
     </div>
   </section>
@@ -250,6 +260,11 @@
             </label>
             <input type="text" class="field-input" id="vaga-tags"
               placeholder="python, django, backend, junior" />
+            <!-- MARCO_P2_INTERFACE_PESOS_V1 -->
+            <div id="vaga-habilidades-config" style="display:grid;gap:8px;margin-top:10px;"></div>
+            <small style="opacity:.75;display:block;margin-top:6px;">
+              Digite as habilidades separadas por vírgula. Para cada uma, escolha se é obrigatória e o peso (1 a 5).
+            </small>
           </div>
           <div class="field-group">
             <label class="field-label" for="vaga-modalidade">
@@ -284,6 +299,43 @@
           </div>
         </div>
 
+
+        <div class="form-grid-2">
+          <div class="field-group">
+            <label class="field-label" for="vaga-latitude">
+              Latitude do local de trabalho
+            </label>
+            <input type="number" class="field-input"
+              id="vaga-latitude" min="-90" max="90"
+              step="0.000001" placeholder="-23.550520" />
+          </div>
+
+          <div class="field-group">
+            <label class="field-label" for="vaga-longitude">
+              Longitude do local de trabalho
+            </label>
+            <input type="number" class="field-input"
+              id="vaga-longitude" min="-180" max="180"
+              step="0.000001" placeholder="-46.633308" />
+          </div>
+        </div>
+
+        <div class="field-group">
+          <small>
+            Coordenadas opcionais. Informe a localizacao real
+            do local de trabalho. Voce pode copiar as coordenadas
+            de um mapa.
+          </small>
+        </div>
+
+        <div class="field-group">
+            <label class="field-label" for="vaga-prazo">
+              <i class="bi bi-calendar-event"></i>
+              Prazo de Encerramento *
+            </label>
+            <input type="date" class="field-input" id="vaga-prazo" required />
+          </div>
+
         <div class="form-actions">
           <button type="button" class="btn btn-ghost" id="btn-cancelar-vaga">Cancelar</button>
           <button type="submit" class="btn btn-primary" id="btn-publicar-vaga">
@@ -304,14 +356,13 @@
           <div class="perfil-avatar-lg" aria-hidden="true">
             <i class="bi bi-building"></i>
           </div>
-          <h2 class="perfil-nome" id="empresa-perfil-nome">TechNova Soluções</h2>
-          <span class="perfil-nivel-tag" id="empresa-perfil-setor">Tecnologia & Inovação</span>
+          <h2 class="perfil-nome" id="empresa-perfil-nome">Carregando...</h2>
+          <span class="perfil-nivel-tag" id="empresa-perfil-setor">Carregando...</span>
         </div>
         <div class="perfil-info-list" id="empresa-info-list">
-          <div class="perfil-info-item"><i class="bi bi-card-heading"></i>CNPJ: 12.345.678/0001-90</div>
-          <div class="perfil-info-item"><i class="bi bi-envelope-fill"></i>recrutamento@technova.com</div>
-          <div class="perfil-info-item"><i class="bi bi-geo-alt-fill"></i>São Paulo, SP</div>
-          <div class="perfil-info-item"><i class="bi bi-briefcase-fill"></i>5 vagas publicadas</div>
+              <div class="perfil-info-list" id="empresa-info-list">
+                <div class="perfil-info-item">Carregando informações...</div>
+              </div>
         </div>
       </div>
       <div class="glass-card perfil-area-card">
@@ -319,10 +370,32 @@
           <h3><i class="bi bi-info-circle-fill"></i> Sobre a Empresa</h3>
         </div>
         <div class="card-body">
-          <p class="perfil-area">Empresa focada em transformação digital, engenharia de software e desenvolvimento de novos talentos.</p>
+          <p class="perfil-area" id="empresa-perfil-descricao">Carregando descrição...</p>
           <p class="perfil-hint">As informações da sua organização são integradas às vagas recomendadas para gerar compatibilidade com os candidatos.</p>
         </div>
       </div>
+    </div>
+    <!-- MARCO_P2_TOGGLE_PERFIL_V1 -->
+    <div style="margin-top:18px">
+      <button type="button" id="btn-abrir-edicao-empresa" class="btn btn-primary"
+              aria-controls="painel-editar-perfil-empresa" aria-expanded="false">
+        <i class="bi bi-pencil-square" aria-hidden="true"></i> Editar perfil
+      </button>
+    </div>
+    <!-- MARCO_P2_PERFIL_EMPRESA_V1 -->
+    <div id="painel-editar-perfil-empresa" class="glass-card dash-card" style="margin-top:18px;max-width:850px;display:none">
+      <div class="card-header"><h3><i class="bi bi-pencil-square"></i> Editar dados da empresa</h3></div>
+      <form class="card-body form-vaga" id="form-editar-perfil-empresa">
+        <div class="field-group"><label class="field-label" for="emp-nome">Nome fantasia *</label><input id="emp-nome" class="field-input" maxlength="150" required /></div>
+        <div class="field-group"><label class="field-label" for="emp-setor">Setor</label><input id="emp-setor" class="field-input" maxlength="100" /></div>
+        <div class="form-grid-2">
+          <div class="field-group"><label class="field-label" for="emp-cidade">Cidade</label><input id="emp-cidade" class="field-input" maxlength="100" /></div>
+          <div class="field-group"><label class="field-label" for="emp-uf">UF</label><input id="emp-uf" class="field-input" maxlength="2" placeholder="SP" /></div>
+        </div>
+        <div class="field-group"><label class="field-label" for="emp-descricao">Descrição da empresa</label><textarea id="emp-descricao" class="field-input" rows="4" maxlength="2000"></textarea></div>
+        <div class="form-actions"><button type="button" id="btn-cancelar-perfil-empresa" class="btn btn-ghost">Cancelar</button><button type="submit" id="btn-salvar-perfil-empresa" class="btn btn-primary">Salvar perfil</button></div>
+        <div id="emp-feedback" class="form-feedback" hidden role="status"></div>
+      </form>
     </div>
   </section>
 
@@ -337,8 +410,8 @@
           <p class="settings-theme-description">Escolha a paleta que prefere para o painel.</p>
         </div>
         <button type="button" class="theme-toggle-button" id="btn-theme-toggle" aria-pressed="false">
-          <img src="./static/img/moon.png" class="theme-icon theme-icon--moon" alt="Lua" width="18" height="18" style="vertical-align:middle;margin-right:6px;">
-          <img src="./static/img/sun.svg" class="theme-icon theme-icon--sun" alt="Sol" width="18" height="18" hidden style="vertical-align:middle;margin-right:6px;">
+          <img src="/static/img/moon.png" class="theme-icon theme-icon--moon" alt="Lua" width="18" height="18" style="vertical-align:middle;margin-right:6px;">
+          <img src="/static/img/sun.svg" class="theme-icon theme-icon--sun" alt="Sol" width="18" height="18" hidden style="vertical-align:middle;margin-right:6px;">
           <span>Ativar modo escuro</span>
         </button>
       </div>
@@ -469,6 +542,61 @@
     </div>
   </section>
 
+
+<section class="dash-section" id="section-chat">
+  <div class="ei-chat-layout">
+    <aside class="ei-chat-sidebar">
+      <h2>Conversas</h2>
+      <button type="button" id="chat-atualizar">Atualizar conversas</button>
+      <div id="chat-conversas" aria-label="Conversas dispon?veis">
+        Carregando conversas...
+      </div>
+      <button type="button" id="chat-mais-conversas" hidden>
+        Mais conversas
+      </button>
+    </aside>
+
+    <div class="ei-chat-principal">
+      <header class="ei-chat-header">
+        <div>
+          <h2 id="chat-nome">Mensagens</h2>
+          <p id="chat-status">Selecione uma conversa.</p>
+        </div>
+
+        <div class="ei-chat-acoes">
+          <button type="button" id="chat-bloquear" disabled>Bloquear</button>
+          <button type="button" id="chat-encerrar" disabled>Encerrar</button>
+        </div>
+      </header>
+
+      <button type="button" id="chat-mais-mensagens" hidden>
+        Carregar mensagens anteriores
+      </button>
+
+      <div id="chat-mensagens" role="log"
+           aria-live="polite" aria-label="Hist?rico de mensagens">
+        <p>Nenhuma conversa selecionada.</p>
+      </div>
+
+      <p id="chat-aviso" role="status" aria-live="polite"></p>
+
+      <form id="chat-form" class="ei-chat-form">
+        <textarea id="chat-conteudo" maxlength="4000"
+          aria-label="Digite sua mensagem"
+          placeholder="Digite sua mensagem..."
+          rows="2" required disabled></textarea>
+
+        <button type="submit" id="chat-enviar" disabled>
+          <i class="bi bi-send-fill" aria-hidden="true"></i>
+          Enviar
+        </button>
+      </form>
+
+      <p id="chat-conexao" role="status">Desconectado</p>
+    </div>
+  </div>
+</section>
+
 </main>
 
 <!-- ── Modal: Candidato Detalhe ───────────────────────────────────────────── -->
@@ -489,6 +617,7 @@
         <select class="field-input field-select" id="select-status-cand">
           <option value="pendente">Pendente</option>
           <option value="em_analise">Em Análise</option>
+          <option value="entrevista">Entrevista</option>
           <option value="aprovado">Aprovado ✓</option>
           <option value="reprovado">Reprovado ✗</option>
         </select>
@@ -507,6 +636,7 @@
 
 <!-- Maxwell Barvian's NumberFlow custom element -->
 <script type="module" src="https://esm.sh/number-flow"></script>
-<script src="./static/js/dashboard.js?v=6"></script>
+<script src="/static/js/dashboard.js?v=15"></script>
+<script defer src="/static/js/chat.js?v=4"></script>
 </body>
 </html>
