@@ -1,0 +1,14 @@
+.git
+.venv
+.env
+.env.*
+!.env.example
+__pycache__
+**/__pycache__
+*.pyc
+.pytest_cache
+uploads_privados
+*.log
+*.sql
+CORRIGIR_TESTE_AUTH04.py
+curriculo-perfil.js

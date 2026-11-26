@@ -16,3 +16,4 @@ INSTALAR_*.py
 VERIFICAR_*.py
 
 .pytest_cache/
+.env.docker
