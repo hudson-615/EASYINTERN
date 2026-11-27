@@ -1,4 +1,4 @@
-﻿const $ = id => document.getElementById(id);
+const $ = id => document.getElementById(id);
 
 let pessoas = [];
 let aba = "discover";
@@ -67,6 +67,8 @@ function filtrar() {
   const area = $("areaFilter").value;
 
   const lista = pessoas.filter(p => {
+    if (!atendeFiltrosPessoas(p)) return false;
+
     if (aba === "saved" && !salvos.has(p.id_candidato))
       return false;
 
@@ -107,6 +109,29 @@ function filtrar() {
     );
 
     avatar.style.setProperty("--avatar", "#7134db");
+    // EI2-STUDENT-PHOTO
+    const foto = p.url_foto || p.foto_perfil || '';
+
+    if (foto) {
+      try {
+        const url = new URL(foto, location.origin);
+
+        if (['http:', 'https:'].includes(url.protocol)) {
+          const imagem = document.createElement('img');
+
+          imagem.src = url.href;
+          imagem.alt = '';
+          imagem.loading = 'lazy';
+
+          imagem.addEventListener('error', () => {
+            imagem.remove();
+          });
+
+          avatar.append(imagem);
+        }
+      } catch {}
+    }
+
 
     const dados = criar("div");
     dados.append(
@@ -179,6 +204,7 @@ async function pesquisar() {
     if (numero !== buscaAtual) return;
 
     pessoas = resultado.items || [];
+    atualizarFiltrosPessoas();
     filtrar();
   } catch (erro) {
     if (numero !== buscaAtual) return;
@@ -188,28 +214,186 @@ async function pesquisar() {
   }
 }
 
+
+// EI2-PUBLIC-PROFILE
+
+let consultaPerfil = 0;
+
 async function abrirPerfil(id) {
+  const consulta = ++consultaPerfil;
+
   try {
     const p = await api(`/api/social/candidatos/${id}`);
-    const conteudo = $("dialogContent");
-    conteudo.replaceChildren();
 
-    conteudo.append(
-      criar("h2", "", p.nome),
-      criar("p", "", p.formacao || "Estudante"),
-      criar("p", "", p.biografia || "Sem apresentação."),
-      criar("p", "", [p.cidade, p.uf].filter(Boolean).join(", "))
+    if (consulta !== consultaPerfil) return;
+
+    let pagina = $('ei2PublicProfile');
+
+    if (!pagina) {
+      pagina = criar('section', 'ei2-public-profile');
+      pagina.id = 'ei2PublicProfile';
+      document.querySelector('.discover').after(pagina);
+    }
+
+    pagina.replaceChildren();
+
+    const voltar = criar(
+      'button', 'ei2-profile-back', '\u2190 Voltar para Pessoas'
     );
 
-    const tags = criar("div", "tags");
-    habilidades(p).forEach(h =>
-      tags.append(criar("span", "tag", h))
+    voltar.type = 'button';
+
+    voltar.onclick = () => {
+      consultaPerfil++;
+      pagina.hidden = true;
+      document.body.classList.remove('ei2-viewing-profile');
+      voltarParaTopo();
+    };
+
+    function voltarParaTopo() {
+      if (window.parent !== window) {
+        window.frameElement?.scrollIntoView({block: 'start'});
+      } else {
+        window.scrollTo(0, 0);
+      }
+    }
+
+    const card = criar('article', 'ei2-profile-card');
+    const capa = criar('div', 'ei2-profile-cover');
+    const info = criar('div', 'ei2-profile-info');
+
+    const iniciais = String(p.nome || '?')
+      .trim().split(/\s+/).slice(0, 2)
+      .map(x => x.charAt(0)).join('').toUpperCase();
+
+    const avatar = criar(
+      'div', 'ei2-public-avatar', iniciais
     );
 
-    conteudo.append(tags);
-    $("profileDialog").showModal();
+    const foto = p.url_foto || p.foto_perfil;
+
+    if (foto) {
+      try {
+        const url = new URL(foto, location.origin);
+
+        if (['http:', 'https:'].includes(url.protocol)) {
+          const img = document.createElement('img');
+          img.src = url.href;
+          img.alt = '';
+          img.onerror = () => img.remove();
+          avatar.append(img);
+        }
+      } catch {}
+    }
+
+    const nome = criar('h1', '', p.nome);
+    const curso = criar(
+      'p', 'ei2-profile-course',
+      p.formacao || p.nivel_carreira || 'Estudante'
+    );
+
+    const local = criar(
+      'p', 'ei2-profile-location',
+      [p.cidade, p.uf].filter(Boolean).join(', ')
+    );
+
+    const acoes = criar('div', 'ei2-profile-actions');
+
+    const seguir = criar('button', 'ei2-follow-btn', '\u002b Seguir');
+    const mensagem = criar(
+      'button', 'ei2-message-btn', '\u2709 Mensagem'
+    );
+
+    [seguir, mensagem].forEach(btn => {
+      btn.type = 'button';
+      btn.disabled = true;
+      btn.title = 'Funcionalidade em desenvolvimento';
+    });
+
+    acoes.append(seguir, mensagem);
+
+    info.append(avatar, nome, curso, local, acoes);
+    card.append(capa, info);
+
+    const abas = criar('div', 'ei2-profile-tabs');
+    const conteudo = criar('div', 'ei2-profile-content');
+
+    function exibirAba(aba) {
+      conteudo.replaceChildren();
+
+      abas.querySelectorAll('button').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.view === aba);
+      });
+
+      if (aba === 'Sobre') {
+        const sobre = criar('article', 'ei2-profile-card ei2-profile-block');
+
+        sobre.append(
+          criar('h2', '', 'Sobre mim'),
+          criar('p', '', p.biografia || 'Sem apresentacao cadastrada.')
+        );
+
+        const skills = criar('article', 'ei2-profile-card ei2-profile-block');
+        skills.append(criar('h2', '', 'Habilidades'));
+
+        const tags = criar('div', 'tags');
+
+        habilidades(p).forEach(h => {
+          tags.append(criar('span', 'tag', h));
+        });
+
+        if (!tags.children.length) {
+          skills.append(criar('p', '', 'Nenhuma habilidade cadastrada.'));
+        } else {
+          skills.append(tags);
+        }
+
+        conteudo.append(sobre, skills);
+      }
+
+      if (aba === 'Projetos') {
+        const bloco = criar('article', 'ei2-profile-card ei2-profile-block');
+        bloco.append(
+          criar('h2', '', 'Projetos'),
+          criar('p', '', 'Portfolio em desenvolvimento.')
+        );
+        conteudo.append(bloco);
+      }
+
+      if (aba === 'Formacao') {
+        const bloco = criar('article', 'ei2-profile-card ei2-profile-block');
+
+        bloco.append(
+          criar('h2', '', 'Forma\u00e7\u00e3o acad\u00eamica'),
+          criar('p', '', p.formacao || 'Nenhuma formacao cadastrada.')
+        );
+
+        conteudo.append(bloco);
+      }
+    }
+
+    ['Sobre', 'Projetos', 'Formacao'].forEach(aba => {
+      const btn = criar(
+        'button', '',
+        aba === 'Formacao' ? 'Forma\u00e7\u00e3o' : aba
+      );
+
+      btn.type = 'button';
+      btn.dataset.view = aba;
+      btn.onclick = () => exibirAba(aba);
+      abas.append(btn);
+    });
+
+    pagina.append(voltar, card, abas, conteudo);
+    pagina.hidden = false;
+
+    document.body.classList.add('ei2-viewing-profile');
+
+    exibirAba('Sobre');
+    voltarParaTopo();
+
   } catch (erro) {
-    aviso(erro.message);
+    if (consulta === consultaPerfil) aviso(erro.message);
   }
 }
 
@@ -302,3 +486,118 @@ $("profileVisibility").onclick = alterarPrivacidade;
 
 carregarPrivacidade();
 pesquisar();
+
+
+// EI2-EMBEDDED-THEME
+if (new URLSearchParams(location.search).get('embedded') === '1'
+    && window.parent !== window) {
+
+    function sincronizar() {
+        const tema = window.parent.document.body.dataset.theme;
+        document.documentElement.dataset.theme =
+            tema === 'dark' ? 'dark' : 'light';
+    }
+
+    sincronizar();
+
+    new MutationObserver(sincronizar).observe(
+        window.parent.document.body,
+        { attributes: true, attributeFilter: ['data-theme'] }
+    );
+}
+
+
+// EI2-PEOPLE-DYNAMIC-FILTERS
+
+function atualizarFiltrosPessoas() {
+  const filtros = {
+    filterCourse: pessoas.flatMap(p =>
+      String(p.formacao || '').split(',')
+    ),
+    filterSkill: pessoas.flatMap(p => habilidades(p)),
+    filterLocation: pessoas.map(p =>
+      [p.cidade, p.uf].filter(Boolean).join(', ')
+    )
+  };
+
+  Object.entries(filtros).forEach(([id, valores]) => {
+    const select = $(id);
+    if (!select) return;
+
+    const selecionado = select.value;
+
+    const opcoes = [...new Set(
+      valores.map(v => v.trim()).filter(Boolean)
+    )].sort((a,b) => a.localeCompare(b, 'pt-BR'));
+
+    select.options.length = 1;
+
+    opcoes.forEach(valor => {
+      select.add(new Option(valor, valor));
+    });
+
+    if (selecionado && !opcoes.includes(selecionado)) {
+      select.add(new Option(selecionado, selecionado));
+    }
+
+    select.value = selecionado;
+  });
+}
+
+function atendeFiltrosPessoas(p) {
+  const curso = $('filterCourse')?.value || '';
+  const habilidade = $('filterSkill')?.value || '';
+  const local = $('filterLocation')?.value || '';
+
+  const cursos = String(p.formacao || '')
+    .split(',').map(v => v.trim());
+
+  const localPessoa = [p.cidade, p.uf]
+    .filter(Boolean).join(', ');
+
+  return (!curso || cursos.includes(curso))
+      && (!habilidade || habilidades(p).includes(habilidade))
+      && (!local || localPessoa === local);
+}
+
+['filterCourse', 'filterSkill', 'filterLocation']
+  .forEach(id => {
+    $(id)?.addEventListener('change', filtrar);
+  });
+
+$('clearPeopleFilters')?.addEventListener('click', () => {
+  ['filterCourse', 'filterSkill', 'filterLocation', 'areaFilter']
+    .forEach(id => {
+      if ($(id)) $(id).value = '';
+    });
+
+  filtrar();
+});
+
+
+
+// EI2-PUBLIC-PROFILE-HEADING
+
+if (window.parent !== window) {
+    function atualizarTituloPerfil() {
+        const titulo = window.parent.document.querySelector(
+            '.ei2-people-heading'
+        );
+
+        if (titulo) {
+            titulo.hidden = document.body.classList.contains(
+                'ei2-viewing-profile'
+            );
+        }
+    }
+
+    new MutationObserver(atualizarTituloPerfil).observe(
+        document.body,
+        {
+            attributes: true,
+            attributeFilter: ['class']
+        }
+    );
+
+    atualizarTituloPerfil();
+}

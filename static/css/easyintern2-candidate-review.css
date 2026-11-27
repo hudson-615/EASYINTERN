@@ -1,0 +1,766 @@
+
+/* EasyIntern 2.0 - Revisao visual do candidato */
+
+.dash-sidebar .sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.ei2-sidebar-logo {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.dash-sidebar .brand-name {
+    color: var(--ei-text);
+    font-size: 19px;
+    font-weight: 800;
+    letter-spacing: -.7px;
+}
+
+.dash-sidebar .brand-name small {
+    color: var(--ei-highlight);
+    font-size: inherit;
+}
+
+.dash-sidebar .sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.dash-sidebar .sidebar-nav .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 44px;
+    padding: 12px 14px;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--ei-muted);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: left;
+    box-sizing: border-box;
+}
+
+.dash-sidebar .nav-item > i {
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.dash-sidebar .sidebar-nav .nav-item.active {
+    background: linear-gradient(110deg,#7c3aed,#963bf5);
+    color: #fff !important;
+    border-color: transparent;
+}
+
+.dash-sidebar .nav-item.active > i,
+.dash-sidebar .nav-item.active > span {
+    color: #fff !important;
+}
+
+.dash-sidebar .nav-item.active::before,
+.dash-sidebar .nav-item.active::after {
+    display: none !important;
+}
+
+.dash-sidebar .nav-item:not(.active):not(:disabled):hover {
+    background: var(--ei-surface);
+    color: var(--ei-text);
+}
+
+.dash-sidebar .ei2-nav-pending {
+    opacity: .5;
+    cursor: not-allowed;
+}
+
+.dash-sidebar .nav-item.active .nav-badge {
+    background: #ffffff25;
+}
+
+
+/* EI2-HYBRID-HOME */
+
+.dash-sidebar .sidebar-nav .nav-item.active {
+    background: linear-gradient(
+        110deg,#7c3aed,#963bf5
+    ) !important;
+    border-color: transparent !important;
+    color: #fff !important;
+}
+
+.dash-sidebar .sidebar-nav .nav-item.active i,
+.dash-sidebar .sidebar-nav .nav-item.active span {
+    color: #fff !important;
+}
+
+.ei2-home-heading {
+    margin-bottom: 22px;
+}
+
+.ei2-home-heading h1 {
+    font-size: clamp(24px,3vw,32px);
+    letter-spacing: -.8px;
+    font-weight: 750;
+    color: var(--ei-text);
+    margin: 0 0 8px;
+}
+
+.ei2-home-heading p {
+    color: var(--ei-muted);
+    font-size: 14px;
+    margin: 0;
+}
+
+.ei2-home-search {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px 8px 16px;
+    border: 1px solid var(--ei-border);
+    background: var(--ei-card);
+    border-radius: 12px;
+    margin-bottom: 24px;
+}
+
+.ei2-home-search > i {
+    font-size: 18px;
+    color: var(--ei-muted);
+}
+
+.ei2-home-search input {
+    flex: 1;
+    min-width: 0;
+    min-height: 36px;
+    border: 0;
+    background: transparent;
+    color: var(--ei-text);
+    font: inherit;
+}
+
+.ei2-home-search input:focus {
+    outline: 2px solid var(--ei-primary);
+    outline-offset: 3px;
+    border-radius: 4px;
+}
+
+.ei2-home-search button {
+    background: #7c3aed;
+    color: white;
+    border: 0;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.ei2-home-shortcuts {
+    display: grid;
+    grid-template-columns: repeat(3,minmax(0,1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+.ei2-home-shortcut {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    min-width: 0;
+    padding: 20px;
+    border: 1px solid var(--ei-border);
+    border-radius: 14px;
+    background: var(--ei-card);
+    text-decoration: none;
+    color: var(--ei-text);
+}
+
+.ei2-home-shortcut > i {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--ei-accent);
+    color: var(--ei-highlight);
+    font-size: 22px;
+    margin-bottom: 4px;
+}
+
+.ei2-home-shortcut strong {
+    font-size: 16px;
+}
+
+.ei2-home-shortcut span {
+    color: var(--ei-muted);
+    font-size: 13px;
+}
+
+a.ei2-home-shortcut:hover {
+    border-color: var(--ei-primary);
+}
+
+.ei2-home-disabled {
+    opacity: .65;
+}
+
+.ei2-performance-title {
+    font-size: 18px;
+    margin: 24px 0 16px;
+    color: var(--ei-text);
+}
+
+@media(max-width: 600px) {
+    .ei2-home-shortcuts {
+        grid-template-columns: minmax(0,1fr);
+        gap: 10px;
+    }
+
+    .ei2-home-shortcut {
+        padding: 16px;
+    }
+
+    .ei2-home-search button {
+        padding: 10px 12px;
+    }
+}
+
+
+/* EI2-HOME-PRIORITIES-STYLE */
+
+.ei2-home-priorities {
+    display: grid;
+    grid-template-columns: minmax(0, 2.4fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 18px;
+    margin-bottom: 28px;
+}
+
+#ei2-home-jobs {
+    min-width: 0;
+}
+
+#ei2-home-jobs .dash-card {
+    margin: 0;
+    width: 100%;
+}
+
+.ei2-home-profile {
+    padding: 24px;
+    background: var(--ei-card);
+    border: 1px solid var(--ei-border);
+    border-radius: 16px;
+    text-align: center;
+}
+
+.ei2-home-profile h3 {
+    font-size: 17px;
+    margin: 0 0 22px;
+    text-align: left;
+}
+
+.ei2-profile-progress {
+    width: 108px;
+    height: 108px;
+    border: 9px solid var(--ei-accent);
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    margin: 0 auto 20px;
+    color: var(--ei-highlight);
+    font-size: 35px;
+}
+
+.ei2-home-profile strong {
+    font-size: 15px;
+}
+
+.ei2-home-profile p {
+    color: var(--ei-muted);
+    font-size: 13px;
+    line-height: 1.6;
+    margin: 10px 0 18px;
+}
+
+.ei2-home-profile a {
+    color: var(--ei-highlight);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.ei2-sidebar-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 8px;
+    margin-bottom: 8px;
+    color: var(--ei-text);
+    text-decoration: none;
+    min-width: 0;
+}
+
+.ei2-sidebar-avatar {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--ei-accent);
+    color: var(--ei-highlight);
+}
+
+.ei2-sidebar-user-info {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.ei2-sidebar-user-info strong {
+    font-size: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ei2-sidebar-user-info span {
+    font-size: 11px;
+    color: var(--ei-muted);
+}
+
+#section-overview .dash-two-col {
+    grid-template-columns: minmax(0,1fr);
+}
+
+@media(max-width:900px) {
+    .ei2-home-priorities {
+        grid-template-columns: minmax(0,1fr);
+    }
+}
+
+
+/* EI2-HEADER-THEME-STYLE */
+
+.ei2-header-theme {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    padding: 0;
+    border: 1px solid var(--ei-border);
+    border-radius: 10px;
+    background: var(--ei-surface);
+    color: var(--ei-highlight);
+    font-size: 18px;
+    cursor: pointer;
+    transition: background .2s, border-color .2s;
+}
+
+.ei2-header-theme:hover {
+    border-color: var(--ei-primary);
+    background: var(--ei-accent);
+}
+
+.ei2-header-theme:focus-visible {
+    outline: 2px solid var(--ei-primary);
+    outline-offset: 3px;
+}
+
+.ei2-header-theme [hidden] {
+    display: none !important;
+}
+
+@media(max-width:600px) {
+    .ei2-header-theme {
+        width: 36px;
+        height: 36px;
+    }
+}
+
+
+/* EI2-HOME-SEARCH-FIX */
+
+.ei2-home-search input {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 8px 0;
+    outline: none;
+}
+
+.ei2-home-search:focus-within {
+    border-color: var(--ei-primary);
+}
+
+.ei2-home-search input::placeholder {
+    color: var(--ei-muted);
+}
+
+.ei2-home-heading {
+    margin-bottom: 16px;
+}
+
+.ei2-home-search {
+    margin-bottom: 18px;
+}
+
+.ei2-home-shortcut strong {
+    color: var(--ei-text);
+}
+
+
+/* EI2-RECOMMENDED-JOBS */
+
+#top-vagas-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+#top-vagas-list .ei2-recommended-job {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px;
+    border: 1px solid var(--ei-border);
+    border-radius: 12px;
+    background: var(--ei-card);
+    min-width: 0;
+}
+
+.ei2-job-company {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+    border-radius: 10px;
+    background: var(--ei-accent);
+    color: var(--ei-highlight);
+    font-weight: 800;
+    font-size: 17px;
+}
+
+.ei2-job-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.ei2-job-info h4 {
+    color: var(--ei-text);
+    font-size: 14px;
+    line-height: 1.4;
+    margin: 0 0 5px;
+}
+
+.ei2-job-info p {
+    color: var(--ei-muted);
+    font-size: 12px;
+    margin: 0;
+}
+
+.ei2-job-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 9px;
+}
+
+.ei2-job-tags span {
+    background: var(--ei-surface);
+    color: var(--ei-text);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 11px;
+}
+
+.ei2-job-match {
+    background: var(--ei-surface);
+    border-radius: 20px;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.ei2-home-empty {
+    color: var(--ei-muted);
+    font-size: 14px;
+}
+
+@media(max-width:600px) {
+    #top-vagas-list .ei2-recommended-job {
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 12px;
+    }
+
+    .ei2-job-info {
+        flex: 1 1 calc(100% - 70px);
+    }
+
+    .ei2-job-match {
+        margin-left: auto;
+    }
+}
+
+
+/* EI2-PROFILE-COMPLETION-STYLE */
+
+.ei2-profile-progress {
+    --profile-progress: 0%;
+    position: relative;
+    isolation: isolate;
+    width: 120px;
+    height: 120px;
+    border: none;
+    border-radius: 50%;
+    background: conic-gradient(
+        #8b36f5 var(--profile-progress),
+        var(--ei-accent) 0
+    );
+    display: grid;
+    place-items: center;
+    font-size: 29px;
+    font-weight: 800;
+    color: var(--ei-text);
+}
+
+.ei2-profile-progress::before {
+    content: "";
+    position: absolute;
+    inset: 10px;
+    border-radius: 50%;
+    background: var(--ei-card);
+    z-index: -1;
+}
+
+#section-overview #dash-widgets-grid {
+    grid-template-columns: minmax(0,1fr) !important;
+}
+
+#section-overview #card-compatibilidade-ia {
+    grid-column: 1 / -1;
+    width: 100%;
+    max-width: none;
+}
+
+
+/* EI2-COMPANY-LOGO-STYLE */
+
+#top-vagas-list .ei2-job-company {
+    position: relative !important;
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
+    max-width: 48px !important;
+    min-height: 48px !important;
+    max-height: 48px !important;
+    flex: 0 0 48px !important;
+    overflow: hidden !important;
+    border-radius: 10px;
+}
+
+#top-vagas-list .ei2-job-company img {
+    position: absolute !important;
+    inset: 0 !important;
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 48px !important;
+    max-height: 48px !important;
+    object-fit: contain !important;
+    border-radius: 10px;
+}
+
+
+/* EI2-HEADER-PROTOTYPE */
+
+body.dash-body[data-panel="candidato"] .dash-header {
+    min-height: 64px;
+    gap: 14px;
+}
+
+body.dash-body[data-panel="candidato"] .dash-greeting {
+    display: none !important;
+}
+
+body.dash-body[data-panel="candidato"] .btn-menu-toggle {
+    width: 38px;
+    min-width: 38px;
+    height: 38px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--ei-surface) !important;
+    border: 1px solid var(--ei-border) !important;
+    border-radius: 10px;
+    color: var(--ei-highlight) !important;
+    box-shadow: none !important;
+}
+
+body.dash-body[data-panel="candidato"]
+.btn-menu-toggle span {
+    display: none;
+}
+
+body.dash-body[data-panel="candidato"]
+.dash-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.ei2-header-icon {
+    width: 38px;
+    height: 38px;
+    display: grid;
+    place-items: center;
+    background: var(--ei-surface);
+    border: 1px solid var(--ei-border);
+    border-radius: 10px;
+    color: var(--ei-highlight);
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.ei2-header-icon:hover {
+    background: var(--ei-accent);
+    border-color: var(--ei-primary);
+}
+
+.ei2-notifications {
+    position: relative;
+}
+
+.ei2-notification-panel {
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 0;
+    width: 290px;
+    padding: 18px;
+    background: var(--ei-card);
+    color: var(--ei-text);
+    border: 1px solid var(--ei-border);
+    border-radius: 14px;
+    box-shadow: 0 12px 36px #00000026;
+    z-index: 100;
+}
+
+.ei2-notification-panel[hidden] {
+    display: none !important;
+}
+
+.ei2-notification-panel h3 {
+    margin: 0 0 18px;
+    font-size: 16px;
+}
+
+.ei2-notification-empty {
+    padding: 24px 8px;
+    text-align: center;
+}
+
+.ei2-notification-empty > i {
+    display: block;
+    font-size: 28px;
+    color: var(--ei-highlight);
+    margin-bottom: 12px;
+}
+
+.ei2-notification-empty strong {
+    font-size: 13px;
+}
+
+.ei2-notification-empty p {
+    color: var(--ei-muted);
+    font-size: 12px;
+    margin-top: 8px;
+}
+
+@media(max-width:600px) {
+
+    body.dash-body[data-panel="candidato"]
+    .dash-header {
+        gap: 8px;
+        padding: 10px;
+    }
+
+    body.dash-body[data-panel="candidato"]
+    .dash-header-actions {
+        gap: 6px;
+    }
+
+    .ei2-notification-panel {
+        position: fixed;
+        top: 68px;
+        right: 12px;
+        width: min(290px, calc(100vw - 24px));
+    }
+}
+
+
+/* EI2-PEOPLE-INTEGRATION */
+
+.ei2-people-heading {
+    margin-bottom: 20px;
+}
+
+.ei2-people-heading h1 {
+    font-size: 28px;
+    font-weight: 750;
+    color: var(--ei-text);
+    margin-bottom: 8px;
+}
+
+.ei2-people-heading p {
+    color: var(--ei-muted);
+    font-size: 14px;
+}
+
+.ei2-people-frame {
+    display: block;
+    width: 100%;
+    height: 1100px;
+    border: none;
+    background: transparent;
+}
+
+@media(max-width:600px) {
+    .ei2-people-heading h1 {
+        font-size: 24px;
+    }
+}
+
+
+/* EI2-PEOPLE-ALIGNMENT */
+
+#section-pessoas {
+    width: 100%;
+    max-width: 1440px;
+    margin-inline: auto;
+    padding: 12px 24px 32px;
+    box-sizing: border-box;
+}
+
+.ei2-people-heading {
+    margin-bottom: 12px;
+}
+
+@media(max-width:600px) {
+    #section-pessoas {
+        padding: 8px 4px 24px;
+    }
+}
