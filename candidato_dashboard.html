@@ -13,7 +13,7 @@
 
   <link rel="stylesheet" href="/static/css/easyintern.css" />
   <link rel="stylesheet" href="/static/css/dashboard.css?v=13" />
-  <link rel="stylesheet" href="/static/css/dashboard-easyintern2.css?v=1" />
+  <link rel="stylesheet" href="/static/css/dashboard-easyintern2.css?v=3" />
 
   <style>
     /* Formulário editável do candidato */
@@ -202,6 +202,32 @@
     <!-- Seção: Visão Geral -->
     <section class="dash-section active" id="section-overview">
 
+      <!-- EI2-HERO-INICIO -->
+      <div class="ei2-welcome">
+        <div class="ei2-welcome-content">
+          <span class="ei2-eyebrow">SEU FUTURO COME&Ccedil;A AQUI</span>
+          <h1>Bem-vindo ao EasyIntern!</h1>
+          <p>Explore oportunidades, desenvolva suas habilidades e construa sua carreira profissional.</p>
+          <div class="ei2-welcome-actions">
+            <a href="#" data-section="recomendadas" class="ei2-action-primary">
+              <i class="bi bi-briefcase"></i> Explorar vagas
+            </a>
+            <a href="#" data-section="perfil" class="ei2-action-secondary">
+              <i class="bi bi-person"></i> Meu perfil
+            </a>
+          </div>
+        </div>
+        <div class="ei2-welcome-art" aria-hidden="true">
+          <i class="bi bi-graph-up-arrow"></i>
+        </div>
+      </div>
+      <div class="ei2-section-heading">
+        <h2>Seu desempenho</h2>
+        <p>Acompanhe sua jornada profissional.</p>
+      </div>
+      <!-- EI2-HERO-FIM -->
+
+
       <!-- Estatísticas -->
       <div class="stats-grid" id="stats-grid">
 
@@ -309,7 +335,7 @@
 
         <div class="glass-card dash-card draggable-card" id="card-top-vagas" draggable="true" data-widget-id="card-top-vagas">
           <div class="card-header">
-            <h3><i class="bi bi-stars"></i> Top Recomendações</h3>
+            <h3><i class="bi bi-stars"></i> Vagas recomendadas</h3>
             <a href="#" class="card-link" data-section="recomendadas">Ver todas</a>
             <span class="drag-handle" title="Clique e arraste para reposicionar">
               <i class="bi bi-grip-vertical"></i>
@@ -774,7 +800,7 @@
                 <label class="edit-dash-toggle-item">
                   <span class="edit-dash-toggle-label">
                     <i class="bi bi-stars" style="color: #20b479;"></i>
-                    Top Recomendações
+                    Vagas recomendadas
                   </span>
                   <span class="edit-dash-switch">
                     <input type="checkbox" id="toggle-card-top-vagas" checked data-target-widget="card-top-vagas">

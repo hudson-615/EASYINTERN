@@ -1,4 +1,4 @@
-﻿/* EasyIntern 2.0 - Dashboard do candidato */
+/* EasyIntern 2.0 - Dashboard do candidato */
 /* Sobrescritas visuais isoladas. Nao alterar regras de negocio. */
 
 body.dash-body[data-panel="candidato"] {
@@ -434,3 +434,492 @@ body.dash-body[data-panel="candidato"][data-theme="dark"] .side-menu .active {
   color: #ffffff;
 }
 
+
+
+/* EI2-OVERVIEW-INICIO */
+
+#section-overview {
+  --overview-surface: #f3effb;
+  --overview-accent: #efe8ff;
+  --overview-card: #ffffff;
+  --overview-border: #e3def1;
+}
+
+body[data-theme="dark"] #section-overview {
+  --overview-surface: #232138;
+  --overview-accent: #362452;
+  --overview-card: #1b1a2b;
+  --overview-border: #35314f;
+}
+
+#section-overview .ei2-welcome {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  padding: clamp(24px, 4vw, 44px);
+  margin-bottom: 30px;
+  background: var(--overview-surface);
+  border: 1px solid var(--overview-border);
+  border-radius: 20px;
+}
+
+#section-overview .ei2-welcome-content {
+  flex: 1;
+  min-width: 0;
+}
+
+#section-overview .ei2-eyebrow {
+  color: var(--ei2-lavender);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.6px;
+}
+
+#section-overview .ei2-welcome h1 {
+  margin: 12px 0;
+  color: var(--ei2-text);
+  font-size: clamp(25px, 3vw, 36px);
+  line-height: 1.2;
+  font-weight: 750;
+  letter-spacing: -1px;
+}
+
+#section-overview .ei2-welcome p {
+  max-width: 520px;
+  color: var(--ei2-muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+#section-overview .ei2-welcome-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+#section-overview .ei2-welcome-actions a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+#section-overview .ei2-action-primary {
+  background: var(--ei2-purple);
+  color: #fff;
+}
+
+#section-overview .ei2-action-secondary {
+  background: var(--overview-accent);
+  color: var(--ei2-lavender);
+  border: 1px solid var(--overview-border);
+}
+
+#section-overview .ei2-welcome-actions a:hover {
+  filter: brightness(1.08);
+}
+
+#section-overview .ei2-welcome-art {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: clamp(100px, 14vw, 170px);
+  aspect-ratio: 1;
+  border-radius: 28px;
+  background: var(--overview-accent);
+  color: var(--ei2-lavender);
+  font-size: clamp(44px, 6vw, 76px);
+}
+
+#section-overview .ei2-section-heading {
+  margin-bottom: 18px;
+}
+
+#section-overview .ei2-section-heading h2 {
+  margin: 0 0 6px;
+  color: var(--ei2-text);
+  font-size: 21px;
+  font-weight: 700;
+}
+
+#section-overview .ei2-section-heading p {
+  color: var(--ei2-muted);
+  font-size: 13px;
+}
+
+#section-overview #stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+#section-overview .stat-card,
+#section-overview .glass-card {
+  background: var(--overview-card);
+  border: 1px solid var(--overview-border);
+  border-radius: 16px;
+  box-shadow: none;
+}
+
+#section-overview .stat-card {
+  min-width: 0;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+#section-overview .stat-card::before {
+  display: none;
+}
+
+#section-overview .stat-icon {
+  background: var(--overview-accent);
+  color: var(--ei2-lavender);
+  border-radius: 12px;
+}
+
+#section-overview .stat-value {
+  color: var(--ei2-text);
+  font-size: 30px;
+  font-weight: 750;
+}
+
+#section-overview .stat-label {
+  color: var(--ei2-muted);
+  font-size: 13px;
+}
+
+#section-overview #dash-widgets-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.7fr);
+  gap: 18px;
+  margin-bottom: 22px;
+}
+
+#section-overview .card-header {
+  padding: 20px;
+  border-bottom: 1px solid var(--overview-border);
+}
+
+#section-overview .card-header h3 {
+  font-size: 16px;
+  color: var(--ei2-text);
+}
+
+#section-overview .card-body {
+  padding: 20px;
+}
+
+@media (max-width: 1100px) {
+  #section-overview #stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  #section-overview #dash-widgets-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  #section-overview .ei2-welcome-art {
+    display: none;
+  }
+}
+
+@media (max-width: 420px) {
+  #section-overview #stats-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  #section-overview .ei2-welcome-actions a {
+    width: 100%;
+  }
+}
+
+/* EI2-OVERVIEW-FIM */
+
+
+/* EI2-REFINAMENTO-OVERVIEW-INICIO */
+
+#section-overview {
+  max-width: 1440px;
+  width: 100%;
+  margin-inline: auto;
+  box-sizing: border-box;
+}
+
+#section-overview .ei2-welcome {
+  padding: 28px 32px;
+  margin-bottom: 24px;
+  gap: 20px;
+}
+
+#section-overview .ei2-welcome h1 {
+  font-size: clamp(24px, 3vw, 32px);
+}
+
+#section-overview .ei2-welcome-art {
+  width: 120px;
+  font-size: 56px;
+  border-radius: 22px;
+}
+
+#section-overview .ei2-welcome-actions {
+  margin-top: 18px;
+}
+
+#section-overview .ei2-section-heading {
+  margin-bottom: 14px;
+}
+
+#section-overview #stats-grid {
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+#section-overview .stat-card {
+  flex-direction: row;
+  align-items: center;
+  min-height: 108px;
+  padding: 18px;
+  gap: 14px;
+}
+
+#section-overview .stat-icon {
+  flex-shrink: 0;
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  font-size: 21px;
+}
+
+#section-overview .stat-value {
+  font-size: 27px;
+}
+
+#section-overview .card-header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 18px 20px;
+}
+
+#section-overview .card-header h3 {
+  margin: 0;
+}
+
+#section-overview .card-link {
+  margin-left: auto;
+  color: var(--ei2-lavender);
+  white-space: nowrap;
+}
+
+#section-overview .donut-bg {
+  stroke: var(--overview-accent);
+}
+
+#section-overview .donut-progress {
+  stroke: var(--ei2-purple);
+}
+
+#section-overview .donut-score {
+  color: var(--ei2-lavender);
+}
+
+#section-overview .badge-ai {
+  background: var(--overview-accent);
+  color: var(--ei2-lavender);
+  border-color: var(--overview-border);
+}
+
+@media (max-width: 600px) {
+  #section-overview .ei2-welcome {
+    padding: 22px;
+  }
+
+  #section-overview .stat-card {
+    padding: 14px;
+    gap: 10px;
+  }
+}
+
+/* EI2-REFINAMENTO-OVERVIEW-FIM */
+
+
+/* EI2-OVERVIEW-CARDS-INICIO */
+
+#section-overview .ei2-welcome {
+  margin-bottom: 20px;
+}
+
+#section-overview .ei2-section-heading {
+  margin-bottom: 12px;
+}
+
+#section-overview #stats-grid {
+  margin-bottom: 20px;
+}
+
+#section-overview #card-top-vagas .card-header {
+  justify-content: flex-start;
+}
+
+#section-overview #card-top-vagas .card-link {
+  margin-left: auto;
+  margin-right: 22px;
+  padding: 8px 12px;
+  background: var(--overview-accent);
+  color: var(--ei2-lavender);
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+#section-overview #top-vagas-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#section-overview #top-vagas-list > div {
+  background: var(--overview-surface);
+  border: 1px solid var(--overview-border) !important;
+  border-radius: 12px;
+  padding: 14px !important;
+  transition: border-color .2s;
+}
+
+#section-overview #top-vagas-list > div:hover {
+  border-color: var(--ei2-purple) !important;
+}
+
+#section-overview #top-vagas-list > div > span {
+  background: var(--overview-card);
+  border: 1px solid var(--overview-border);
+  border-radius: 10px;
+  padding: 12px 8px;
+  flex-shrink: 0;
+  min-width: 64px !important;
+}
+
+#section-overview #top-vagas-list > div > div {
+  overflow-wrap: anywhere;
+  line-height: 1.6;
+}
+
+#section-overview #donut-score,
+#section-overview #donut-score * {
+  color: var(--ei2-lavender) !important;
+}
+
+#section-overview .donut-sub {
+  color: var(--ei2-muted);
+}
+
+#section-overview .card-header::before,
+#section-overview .card-header::after {
+  background: var(--ei2-purple);
+}
+
+#section-overview .timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#section-overview .timeline-item {
+  background: var(--overview-surface);
+  border: 1px solid var(--overview-border);
+  border-radius: 12px;
+  padding: 16px;
+  gap: 14px;
+}
+
+#section-overview .timeline-title {
+  color: var(--ei2-text);
+  font-weight: 600;
+}
+
+#section-overview .timeline-sub {
+  color: var(--ei2-muted);
+  line-height: 1.8;
+}
+
+#section-overview .timeline-item::before,
+#section-overview .timeline::before {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  #section-overview #top-vagas-list > div {
+    padding: 10px !important;
+  }
+}
+
+/* EI2-OVERVIEW-CARDS-FIM */
+
+
+/* EI2-OVERVIEW-FINAL-INICIO */
+
+#section-overview .ei2-welcome {
+  padding: 24px 28px;
+}
+
+#section-overview .ei2-welcome-art {
+  width: 112px;
+}
+
+#section-overview #card-top-vagas .card-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 12px;
+}
+
+#section-overview #card-top-vagas .card-link {
+  margin: 0;
+}
+
+#section-overview #card-top-vagas .drag-handle {
+  position: static;
+}
+
+#section-overview #card-compatibilidade-ia .center-content {
+  justify-content: flex-start;
+  padding-top: 30px;
+}
+
+#section-overview .match-donut-wrap {
+  margin: 12px auto;
+}
+
+#section-overview #donut-score {
+  color: var(--ei2-lavender) !important;
+}
+
+body[data-theme="dark"] #section-overview #top-vagas-list > div > span {
+  filter: brightness(1.35);
+}
+
+#section-overview .ei2-section-heading {
+  margin-bottom: 8px;
+}
+
+@media (max-width: 600px) {
+  #section-overview .ei2-welcome {
+    padding: 20px;
+  }
+}
+
+/* EI2-OVERVIEW-FINAL-FIM */
