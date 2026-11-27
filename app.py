@@ -139,3 +139,10 @@ def pagina_conexoes(request: Request):
         name="conexoes.html"
     )
 
+
+@app.get("/landing", response_class=HTMLResponse)
+def pagina_landing(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="landing.html"
+    )

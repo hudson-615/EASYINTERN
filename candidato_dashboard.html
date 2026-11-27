@@ -13,6 +13,7 @@
 
   <link rel="stylesheet" href="/static/css/easyintern.css" />
   <link rel="stylesheet" href="/static/css/dashboard.css?v=13" />
+  <link rel="stylesheet" href="/static/css/dashboard-easyintern2.css?v=7" />
 
   <style>
     /* Formulário editável do candidato */
@@ -96,6 +97,10 @@
   </style>
 
 <link rel="stylesheet" href="/static/css/chat.css?v=2">
+
+  <link rel="stylesheet" href="/static/css/easyintern2-tokens.css?v=1" />
+  <link rel="stylesheet" href="/static/css/easyintern2-shell.css?v=1" />
+
 </head>
 
 <body class="dash-body" data-panel="candidato">
@@ -108,6 +113,12 @@
     </div>
 
     <nav class="sidebar-nav" aria-label="Menu principal">
+
+      <a href="/conexoes" class="nav-item" id="nav-conexoes">
+        <i class="bi bi-people-fill" aria-hidden="true"></i>
+        <span>Conex&otilde;es</span>
+      </a>
+
       <a href="#" class="nav-item active" data-section="overview" id="nav-overview">
         <i class="bi bi-grid-1x2-fill"></i>
         <span>Visão Geral</span>
@@ -194,6 +205,32 @@
 
     <!-- Seção: Visão Geral -->
     <section class="dash-section active" id="section-overview">
+
+      <!-- EI2-HERO-INICIO -->
+      <div class="ei2-welcome">
+        <div class="ei2-welcome-content">
+          <span class="ei2-eyebrow">SEU FUTURO COME&Ccedil;A AQUI</span>
+          <h1>Bem-vindo ao EasyIntern!</h1>
+          <p>Explore oportunidades, desenvolva suas habilidades e construa sua carreira profissional.</p>
+          <div class="ei2-welcome-actions">
+            <a href="#" data-section="recomendadas" class="ei2-action-primary">
+              <i class="bi bi-briefcase"></i> Explorar vagas
+            </a>
+            <a href="#" data-section="perfil" class="ei2-action-secondary">
+              <i class="bi bi-person"></i> Meu perfil
+            </a>
+          </div>
+        </div>
+        <div class="ei2-welcome-art" aria-hidden="true">
+          <i class="bi bi-graph-up-arrow"></i>
+        </div>
+      </div>
+      <div class="ei2-section-heading">
+        <h2>Seu desempenho</h2>
+        <p>Acompanhe sua jornada profissional.</p>
+      </div>
+      <!-- EI2-HERO-FIM -->
+
 
       <!-- Estatísticas -->
       <div class="stats-grid" id="stats-grid">
@@ -302,7 +339,7 @@
 
         <div class="glass-card dash-card draggable-card" id="card-top-vagas" draggable="true" data-widget-id="card-top-vagas">
           <div class="card-header">
-            <h3><i class="bi bi-stars"></i> Top Recomendações</h3>
+            <h3><i class="bi bi-stars"></i> Vagas recomendadas</h3>
             <a href="#" class="card-link" data-section="recomendadas">Ver todas</a>
             <span class="drag-handle" title="Clique e arraste para reposicionar">
               <i class="bi bi-grip-vertical"></i>
@@ -336,6 +373,30 @@
 
     <!-- Seção: Minhas Candidaturas -->
     <section class="dash-section" id="section-candidaturas">
+
+      <!-- EI2-CANDIDATURAS-HERO -->
+      <div class="ei2-cand-hero">
+        <div>
+          <span class="ei2-cand-eyebrow">
+            SUA JORNADA PROFISSIONAL
+          </span>
+          <h1>Minhas candidaturas</h1>
+          <p>Acompanhe seus processos seletivos e mantenha contato com as empresas.</p>
+          <a href="#" data-section="recomendadas" class="ei2-cand-explore">
+            <i class="bi bi-search"></i>
+            Explorar novas vagas
+          </a>
+        </div>
+        <div class="ei2-cand-art" aria-hidden="true">
+          <i class="bi bi-clipboard-check"></i>
+        </div>
+      </div>
+
+      <div class="ei2-cand-heading">
+        <h2>Processos seletivos</h2>
+        <p>Consulte suas candidaturas por situa&ccedil;&atilde;o.</p>
+      </div>
+
       <div class="section-toolbar">
         <div class="section-filters">
           <button class="filter-btn active" data-filter="todos">Todas</button>
@@ -368,6 +429,24 @@
 
     <!-- Seção: Vagas Recomendadas -->
     <section class="dash-section" id="section-recomendadas">
+
+      <!-- EI2-VAGAS-HERO -->
+      <div class="ei2-jobs-hero">
+        <div>
+          <span class="ei2-jobs-eyebrow">
+            OPORTUNIDADES PROFISSIONAIS
+          </span>
+          <h1>Encontre sua pr&oacute;xima oportunidade</h1>
+          <p>
+            Explore vagas de acordo com suas habilidades,
+            interesses e objetivos profissionais.
+          </p>
+        </div>
+        <div class="ei2-jobs-art" aria-hidden="true">
+          <i class="bi bi-briefcase"></i>
+        </div>
+      </div>
+
       <div class="section-toolbar">
         <div class="section-filters">
           <button class="filter-btn active" data-rec-filter="todos">Todos</button>
@@ -431,9 +510,16 @@
 
     <!-- Seção: Perfil -->
     <section class="dash-section" id="section-perfil">
+<!-- EI2-PROFILE-GRID -->
 
-      <div class="perfil-layout">
+      <div class="perfil-layout ei2-profile-grid">
         <div class="glass-card perfil-card">
+          <!-- EI2-PERFIL-CAPA -->
+          <div class="ei2-profile-cover">
+            <span>EasyIntern</span>
+            <i class="bi bi-mortarboard" aria-hidden="true"></i>
+          </div>
+
           <div class="perfil-avatar-wrap">
             <div class="perfil-avatar-lg" aria-hidden="true">
               <i class="bi bi-person-fill"></i>
@@ -449,9 +535,24 @@
           </div>
 
           <div class="perfil-links" id="perfil-links"></div>
+
+          <div class="ei2-profile-quick-edit">
+            <button type="button"
+                    class="btn btn-primary"
+                    id="ei2-profile-edit-shortcut">
+              <i class="bi bi-pencil-square"></i>
+              Editar perfil
+            </button>
+          </div>
+<div class="ei2-profile-about">
+            <h3>Sobre mim</h3>
+            <p id="ei2-profile-bio">Carregando biografia...</p>
+          </div>
+
         </div>
 
-        <div class="glass-card perfil-area-card">
+        <div class="ei2-profile-side">
+<div class="glass-card perfil-area-card">
           <div class="card-header">
             <h3><i class="bi bi-cpu"></i> Área de Interesse</h3>
           </div>
@@ -463,10 +564,29 @@
             </p>
           </div>
         </div>
+      <div class="glass-card" id="curriculo-card" style="margin-top:24px;padding:24px">
+        <div class="card-header"><h3><i class="bi bi-file-earmark-pdf"></i> Meu Currículo</h3></div>
+        <div class="card-body">
+          <p id="curriculo-situacao" aria-live="polite">Consultando currículo...</p>
+          <form id="curriculo-form" style="display:flex;flex-wrap:wrap;gap:12px;align-items:end">
+            <label for="curriculo-arquivo" style="flex:1 1 230px">Arquivo PDF (máximo 5 MB)
+              <input id="curriculo-arquivo" type="file" accept=".pdf,application/pdf" required style="display:block;width:100%;margin-top:8px">
+            </label>
+            <button id="curriculo-enviar" type="submit" class="btn btn-primary">Enviar PDF</button>
+          </form>
+          <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:14px">
+            <button id="curriculo-visualizar" type="button" class="btn btn-ghost" hidden>Visualizar PDF</button>
+            <button id="curriculo-baixar" type="button" class="btn btn-ghost" hidden>Baixar PDF</button>
+            <button id="curriculo-excluir" type="button" class="btn btn-ghost" hidden>Excluir currículo</button>
+          </div>
+          <p id="curriculo-mensagem" role="status" aria-live="polite" style="margin-top:12px"></p>
+        </div>
       </div>
+</div>
+</div>
 
       <!-- Edição do perfil do candidato -->
-      <div class="glass-card" style="margin-top: 24px; padding: 24px;">
+      <div class="glass-card ei2-profile-edit" style="margin-top: 24px; padding: 24px;">
         <div class="card-header">
           <h3>
             <i class="bi bi-person-gear"></i>
@@ -618,25 +738,7 @@
       </div>
       <!-- EI-M04-M06-FIM -->
       <!-- EASYINTERN-M08-UI -->
-      <div class="glass-card" id="curriculo-card" style="margin-top:24px;padding:24px">
-        <div class="card-header"><h3><i class="bi bi-file-earmark-pdf"></i> Meu Currículo</h3></div>
-        <div class="card-body">
-          <p id="curriculo-situacao" aria-live="polite">Consultando currículo...</p>
-          <form id="curriculo-form" style="display:flex;flex-wrap:wrap;gap:12px;align-items:end">
-            <label for="curriculo-arquivo" style="flex:1 1 230px">Arquivo PDF (máximo 5 MB)
-              <input id="curriculo-arquivo" type="file" accept=".pdf,application/pdf" required style="display:block;width:100%;margin-top:8px">
-            </label>
-            <button id="curriculo-enviar" type="submit" class="btn btn-primary">Enviar PDF</button>
-          </form>
-          <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:14px">
-            <button id="curriculo-visualizar" type="button" class="btn btn-ghost" hidden>Visualizar PDF</button>
-            <button id="curriculo-baixar" type="button" class="btn btn-ghost" hidden>Baixar PDF</button>
-            <button id="curriculo-excluir" type="button" class="btn btn-ghost" hidden>Excluir currículo</button>
-          </div>
-          <p id="curriculo-mensagem" role="status" aria-live="polite" style="margin-top:12px"></p>
-        </div>
-      </div>
-    </section>
+      </section>
 
     <!-- Seção: Configurações -->
     <section class="dash-section" id="section-configuracoes">
@@ -767,7 +869,7 @@
                 <label class="edit-dash-toggle-item">
                   <span class="edit-dash-toggle-label">
                     <i class="bi bi-stars" style="color: #20b479;"></i>
-                    Top Recomendações
+                    Vagas recomendadas
                   </span>
                   <span class="edit-dash-switch">
                     <input type="checkbox" id="toggle-card-top-vagas" checked data-target-widget="card-top-vagas">
@@ -973,9 +1075,38 @@
   <div class="toast-container" id="toast-container" aria-live="polite"></div>
 
   <script type="module" src="https://esm.sh/number-flow"></script>
-  <script src="/static/js/dashboard.js?v=15"></script>
+  <script src="/static/js/dashboard.js?v=16"></script>
   <script src="/static/js/perfil-formacoes-habilidades.js?v=1"></script>
   <script defer src="/static/js/curriculo-perfil.js?v=1"></script>
 <script defer src="/static/js/chat.js?v=4"></script>
+
+
+
+
+
+<script>
+/* EI2-PROFILE-SHORTCUT */
+document.getElementById('ei2-profile-edit-shortcut')
+  ?.addEventListener('click', async () => {
+    const formulario = document.getElementById('form-editar-perfil');
+
+    if (!formulario) return;
+
+    if (formulario.hidden) {
+      await abrirEdicaoPerfil();
+    }
+
+    if (!formulario.hidden) {
+      formulario.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
+      document.getElementById('edit-nome')?.focus({
+        preventScroll: true
+      });
+    }
+  });
+</script>
+
 </body>
 </html>

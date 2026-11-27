@@ -1,0 +1,44 @@
+/* EasyIntern 2.0 - Shared Design Tokens */
+
+:root {
+  --ei-bg: #f7f6fb;
+  --ei-sidebar: #ffffff;
+  --ei-card: #ffffff;
+  --ei-surface: #f3effb;
+  --ei-border: #e3def1;
+  --ei-text: #171426;
+  --ei-muted: #706a85;
+  --ei-primary: #7535e7;
+  --ei-highlight: #8454e9;
+  --ei-accent: #efe8ff;
+
+  --ei-font: Inter, system-ui, sans-serif;
+
+  --ei-radius-sm: 8px;
+  --ei-radius-md: 12px;
+  --ei-radius-lg: 18px;
+  --ei-radius-xl: 24px;
+
+  --ei-space-xs: 4px;
+  --ei-space-sm: 8px;
+  --ei-space-md: 16px;
+  --ei-space-lg: 24px;
+  --ei-space-xl: 32px;
+
+  --ei-shadow: 0 12px 32px #46308517;
+}
+
+:root[data-theme="dark"],
+body[data-theme="dark"] {
+  --ei-bg: #10101d;
+  --ei-sidebar: #141424;
+  --ei-card: #1b1a2b;
+  --ei-surface: #232138;
+  --ei-border: #35314f;
+  --ei-text: #f8f7ff;
+  --ei-muted: #aaa6c4;
+  --ei-primary: #8d43f8;
+  --ei-highlight: #b58cff;
+  --ei-accent: #362452;
+  --ei-shadow: 0 16px 36px #09081744;
+}
