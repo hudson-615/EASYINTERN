@@ -128,7 +128,33 @@
     empresa: document.getElementById('tab-empresa'),
   };
 
-  let activePanel = 'login';
+
+  // EI2-DIRECT-REGISTER
+  const cadastroInicial = new URLSearchParams(
+    window.location.search
+  ).get('cadastro');
+
+  let activePanel = ['candidato', 'empresa'].includes(cadastroInicial)
+    ? cadastroInicial
+    : 'login';
+
+  Object.entries(panels).forEach(([name, panel]) => {
+    if (!panel) return;
+
+    panel.hidden = name !== activePanel;
+    panel.classList.toggle('active', name === activePanel);
+  });
+
+  Object.entries(tabs).forEach(([name, tab]) => {
+    if (!tab) return;
+
+    const ativo = name === activePanel;
+    tab.classList.toggle('active', ativo);
+    tab.setAttribute('aria-selected', String(ativo));
+  });
+
+  document.documentElement.removeAttribute('data-auth-initial');
+
 
   function switchPanel(name) {
     if (!panels[name] || name === activePanel) return;
