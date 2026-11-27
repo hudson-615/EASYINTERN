@@ -1,16 +1,16 @@
 /* EasyIntern 2.0 - Shared Design Tokens */
 
 :root {
-  --ei-bg: #f7f6fb;
-  --ei-sidebar: #ffffff;
-  --ei-card: #ffffff;
-  --ei-surface: #f3effb;
-  --ei-border: #e3def1;
-  --ei-text: #171426;
-  --ei-muted: #706a85;
-  --ei-primary: #7535e7;
-  --ei-highlight: #8454e9;
-  --ei-accent: #efe8ff;
+  --ei-bg: #edeef2;
+  --ei-sidebar: #fafafc;
+  --ei-card: #fafafc;
+  --ei-surface: #e9ebf1;
+  --ei-border: #b9becc;
+  --ei-text: #202332;
+  --ei-muted: #50596b;
+  --ei-primary: #6430bd;
+  --ei-highlight: #6430bd;
+  --ei-accent: #e8dff5;
 
   --ei-font: Inter, system-ui, sans-serif;
 

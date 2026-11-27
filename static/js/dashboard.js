@@ -800,6 +800,7 @@ function navigateTo(secao) {
     vagas: 'Vagas Publicadas',
     candidatos: 'Candidatos — Ranking IA',
     'nova-vaga': 'Publicar Nova Vaga',
+    projetos: 'Projetos',
     configuracoes: 'Configurações'
   };
 
