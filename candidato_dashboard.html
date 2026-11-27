@@ -98,11 +98,14 @@
 
 <link rel="stylesheet" href="/static/css/chat.css?v=2">
 
-  <link rel="stylesheet" href="/static/css/easyintern2-tokens.css?v=1" />
+  <link rel="stylesheet" href="/static/css/easyintern2-tokens.css?v=20261127-20" />
   <link rel="stylesheet" href="/static/css/easyintern2-shell.css?v=1" />
 
 <link rel="stylesheet" href="/static/css/easyintern2-candidate-review.css?v=1">
   <link rel="icon" type="image/svg+xml" href="/static/img/easyintern-logo.svg?v=2">
+<link rel="stylesheet" href="/static/css/easyintern2-portfolio.css?v=2">
+<link rel="stylesheet" href="/static/css/easyintern2-mensagens.css?v=3">
+<link rel="stylesheet" href="/static/css/easyintern2-gabriel-theme.css?v=20261127-20">
 </head>
 
 <body class="dash-body" data-panel="candidato">
@@ -139,11 +142,13 @@
     <span class="nav-badge ai">IA</span>
   </a>
 
-  <button type="button" class="nav-item ei2-nav-pending"
-          disabled title="Funcionalidade em desenvolvimento">
+
+<a href="#" class="nav-item"
+   data-section="projetos" id="nav-projetos">
     <i class="bi bi-code-slash"></i>
     <span>Projetos</span>
-  </button>
+</a>
+
 
   <a href="#" class="nav-item"
      data-section="candidaturas" id="nav-candidaturas">
@@ -377,11 +382,14 @@ document.addEventListener('DOMContentLoaded', () => {
     <span>Descubra pessoas</span>
   </a>
 
-  <div class="ei2-home-shortcut ei2-home-disabled">
+
+<a href="#" class="ei2-home-shortcut"
+   data-section="projetos">
     <i class="bi bi-code-slash"></i>
     <strong>Projetos</strong>
-    <span>Em desenvolvimento</span>
-  </div>
+    <span>Construa seu portfolio</span>
+</a>
+
 
 </div>
 
@@ -612,35 +620,172 @@ document.addEventListener('DOMContentLoaded', () => {
     <p>Encontre estudantes e amplie sua rede profissional.</p>
   </div>
 
-  <iframe
-    id="ei2-people-frame"
-    class="ei2-people-frame"
-    title="Explorar pessoas"
-    data-src="/conexoes?embedded=1">
-  </iframe>
+
+<div id="ei2-social-host"></div>
+
+<template id="ei2-social-template">
+  <link rel="stylesheet" href="/static/css/conexoes.css">
+  <link rel="stylesheet" href="/static/css/easyintern2-conexoes.css?v=11">
+  <link rel="stylesheet" href="/static/css/easyintern2-social-integrado.css?v=20261127-20">
+
+  <div class="ei2-embedded">
+    <div class="main">
+      <button id="themeToggle" type="button" hidden></button>
+<div class="privacy-toolbar">
+      <button id="profileVisibility"
+              class="secondary"
+              type="button">
+        Meu perfil: verificando...
+      </button>
+    </div>
+    <section class="discover" aria-labelledby="peopleTitle">
+        <div class="section-heading"><div><h2 id="peopleTitle">Conheça a comunidade</h2><p>Busque por nome, curso, instituição ou habilidade.</p></div><span class="counter" id="resultCount" aria-live="polite"></span></div>
+        <div class="toolbar"><label class="search-wrap" for="searchPeople"><span aria-hidden="true">⌕</span><input id="searchPeople" type="search" placeholder="Buscar por nome, curso ou habilidade..." autocomplete="off" /></label><label class="select-wrap">&Aacute;rea <select id="areaFilter"><option value="">Todas as áreas</option><option value="desenvolvimento">Desenvolvimento</option><option value="design">Design</option><option value="dados">Dados</option></select></label></div>
+
+<!-- EI2-PEOPLE-FILTERS -->
+<div class="ei2-people-filters">
+
+  <strong>Filtros:</strong>
+
+  <select id="filterCourse" aria-label="Filtrar por curso">
+    <option value="">Curso</option>
+  </select>
+
+  <select id="filterSkill" aria-label="Filtrar por habilidade">
+    <option value="">Habilidades</option>
+  </select>
+
+  <select aria-label="Instituicao" disabled
+          title="Funcionalidade em desenvolvimento">
+    <option>Institui&ccedil;&atilde;o</option>
+  </select>
+
+  <select id="filterLocation" aria-label="Filtrar por local">
+    <option value="">Localiza&ccedil;&atilde;o</option>
+  </select>
+
+  <button type="button" id="clearPeopleFilters">
+    Limpar filtros
+  </button>
+
+</div>
+<div class="tabs" role="tablist" aria-label="Visualização das conexões"><button type="button" class="tab active" role="tab" aria-selected="true" data-tab="discover">Descobrir</button><button type="button" class="tab" role="tab" aria-selected="false" data-tab="saved">Perfis salvos <span id="savedCount">0</span></button></div>
+        <div id="peopleGrid" class="people-grid" aria-live="polite"></div>
+        <div id="emptyState" class="empty" hidden><span aria-hidden="true">⌕</span><h3>Nenhum perfil encontrado</h3><p>Tente remover um filtro ou pesquisar outro termo.</p></div>
+      </section>
+    <dialog id="profileDialog" class="profile-dialog" aria-labelledby="dialogName"><div class="dialog-inner"><button class="close-dialog" id="closeDialog" aria-label="Fechar perfil">✕</button><div id="dialogContent"></div></div></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+
+    </div>
+  </div>
+</template>
+
 
 </section>
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  const secao = document.getElementById('section-pessoas');
-  const frame = document.getElementById('ei2-people-frame');
 
-  function atualizar() {
-    if (secao.classList.contains('active') &&
-        !frame.hasAttribute('src')) {
-      frame.src = frame.dataset.src;
-    }
-  }
 
-  new MutationObserver(atualizar).observe(secao, {
-    attributes: true,
-    attributeFilter: ['class']
-  });
+<!-- EI2-PORTFOLIO -->
+<section class="dash-section" id="section-projetos">
+    <div class="ei2-portfolio">
 
-  atualizar();
-});
-</script>
+        <header class="ep-heading">
+            <div>
+                <span class="ep-eyebrow">SUA IDENTIDADE PROFISSIONAL</span>
+                <h1>Meu portfólio</h1>
+                <p>Transforme seu conhecimento em oportunidades.</p>
+            </div>
+
+            <button class="ep-primary" id="ep-add" type="button">
+                + Novo projeto
+            </button>
+        </header>
+
+        <div class="ep-summary">
+            <div>
+                <span>Projetos cadastrados</span>
+                <strong id="ep-count">0</strong>
+            </div>
+            <div>
+                <span>Tecnologias utilizadas</span>
+                <strong id="ep-tech-count">0</strong>
+            </div>
+            <div>
+                <span>Projetos com link</span>
+                <strong id="ep-link-count">0</strong>
+            </div>
+        </div>
+
+        <div class="ep-list-heading">
+            <h2>Meus projetos</h2>
+            <input id="ep-search" type="search"
+                   placeholder="Buscar projetos..."
+                   aria-label="Buscar projetos">
+        </div>
+
+        <div id="ep-grid" class="ep-grid"></div>
+
+        <div id="ep-empty" class="ep-empty">
+            <span class="ep-empty-icon">
+                <i class="bi bi-code-slash"></i>
+            </span>
+            <h2>Seu primeiro projeto começa aqui</h2>
+            <p>Adicione projetos acadêmicos, pessoais ou profissionais.</p>
+            <button class="ep-primary" id="ep-first" type="button">
+                Adicionar projeto
+            </button>
+        </div>
+
+        <dialog id="ep-dialog" class="ep-dialog">
+            <form id="ep-form">
+
+                <h2 id="ep-dialog-title">Novo projeto</h2>
+
+                <label for="ep-title">Nome do projeto</label>
+                <input id="ep-title" required maxlength="100">
+
+                <label for="ep-category">Categoria</label>
+                <select id="ep-category">
+                    <option>Acadêmico</option>
+                    <option>Pessoal</option>
+                    <option>Profissional</option>
+                    <option>Voluntário</option>
+                </select>
+
+                <label for="ep-description">Descrição</label>
+                <textarea id="ep-description"
+                          required maxlength="600" rows="4"></textarea>
+
+                <label for="ep-technologies">Tecnologias</label>
+                <input id="ep-technologies"
+                       maxlength="200"
+                       placeholder="Python, MySQL, FastAPI">
+
+                <label for="ep-url">Link do projeto</label>
+                <input id="ep-url" type="url"
+                       maxlength="500"
+                       placeholder="https://github.com/...">
+
+                <div class="ep-form-actions">
+                    <button type="button" class="ep-secondary"
+                            id="ep-cancel">Cancelar</button>
+                    <button type="submit" class="ep-primary">
+                        Salvar projeto
+                    </button>
+                </div>
+
+            </form>
+        </dialog>
+
+        <p class="ep-storage-note">
+            Versão local do portfólio. Os projetos ainda não
+            são publicados para outros estudantes.
+        </p>
+
+    </div>
+</section>
+
 <section class="dash-section" id="section-candidaturas">
 
       <!-- EI2-CANDIDATURAS-HERO -->
@@ -1250,7 +1395,95 @@ document.addEventListener('DOMContentLoaded', () => {
     </section>
 
 <section class="dash-section" id="section-chat">
-  <div class="ei-chat-layout">
+
+<!-- EI2-SOCIAL-MESSAGES -->
+
+<div class="em-heading">
+    <h1>Mensagens</h1>
+    <p>Gerencie suas conversas e conex&otilde;es profissionais.</p>
+</div>
+
+<div class="em-tabs" role="group" aria-label="Tipos de conversa">
+
+    <button type="button" id="em-recruiters"
+            class="em-tab active" aria-pressed="true">
+        <i class="bi bi-briefcase"></i>
+        Recrutadores
+    </button>
+
+    <button type="button" id="em-network"
+            class="em-tab" aria-pressed="false">
+        <i class="bi bi-people"></i>
+        Rede profissional
+    </button>
+
+</div>
+
+<div id="em-network-panel" class="em-network-panel" hidden>
+
+    <aside class="em-sidebar">
+
+        <h2>Conversas</h2>
+
+        <input type="search"
+               placeholder="Buscar conversas..."
+               aria-label="Buscar conversas"
+               disabled>
+
+        <div class="em-sidebar-empty">
+            <i class="bi bi-chat-left-text"></i>
+            <p>Mensagens entre estudantes em desenvolvimento.</p>
+        </div>
+
+    </aside>
+
+    <div class="em-conversation">
+
+        <div class="em-empty">
+
+            <div class="em-empty-icon">
+                <i class="bi bi-chat-dots"></i>
+            </div>
+
+            <h2>Sua rede, novas oportunidades</h2>
+
+            <p>
+                Conhe&ccedil;a estudantes da sua &aacute;rea,
+                compartilhe experi&ecirc;ncias e encontre
+                parceiros para seus projetos.
+            </p>
+
+            <a href="#" class="em-primary"
+               data-section="pessoas">
+                Explorar pessoas
+            </a>
+
+            <small>
+                O envio de mensagens sociais ainda
+                n&atilde;o est&aacute; dispon&iacute;vel.
+            </small>
+
+        </div>
+
+        <div class="em-composer">
+
+            <input type="text"
+                   placeholder="Escreva uma mensagem..."
+                   aria-label="Mensagem"
+                   disabled>
+
+            <button type="button" disabled
+                    aria-label="Enviar mensagem">
+                <i class="bi bi-send"></i>
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div class="ei-chat-layout" id="em-recruiter-panel">
     <aside class="ei-chat-sidebar">
       <h2>Conversas</h2>
       <button type="button" id="chat-atualizar">Atualizar conversas</button>
@@ -1344,7 +1577,7 @@ document.addEventListener('DOMContentLoaded', () => {
   <div class="toast-container" id="toast-container" aria-live="polite"></div>
 
   <script type="module" src="https://esm.sh/number-flow"></script>
-  <script src="/static/js/dashboard.js?v=16"></script>
+  <script src="/static/js/dashboard.js?v=17"></script>
   <script src="/static/js/perfil-formacoes-habilidades.js?v=1"></script>
   <script defer src="/static/js/curriculo-perfil.js?v=1"></script>
 <script defer src="/static/js/chat.js?v=4"></script>
@@ -1398,5 +1631,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 </script>
+<script defer src="/static/js/conexoes-integradas.js?v=4"></script>
+<script defer src="/static/js/easyintern2-portfolio.js?v=1"></script>
+<script defer src="/static/js/easyintern2-mensagens.js?v=2"></script>
 </body>
 </html>

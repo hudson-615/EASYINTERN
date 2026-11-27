@@ -1,0 +1,331 @@
+
+.ei2-portfolio {
+    max-width: 1400px;
+    margin: auto;
+    padding: 24px;
+    color: var(--ei-text);
+}
+
+.ei2-portfolio [hidden] {
+    display: none !important;
+}
+
+.ep-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+.ep-eyebrow {
+    font-size: 10px;
+    letter-spacing: 2px;
+    font-weight: 700;
+    color: var(--ei-highlight);
+}
+
+.ep-heading h1 {
+    font-size: 29px;
+    margin: 8px 0;
+}
+
+.ep-heading p {
+    color: var(--ei-muted);
+    font-size: 14px;
+}
+
+.ep-primary, .ep-secondary {
+    padding: 11px 18px;
+    border-radius: 8px;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.ep-primary {
+    background: #6d28d9;
+    color: white;
+    border: 1px solid #6d28d9;
+}
+
+.ep-primary:hover {
+    background: #5b21b6;
+}
+
+.ep-secondary {
+    background: transparent;
+    color: var(--ei-text);
+    border: 1px solid var(--ei-border);
+}
+
+.ep-summary {
+    display: grid;
+    grid-template-columns: repeat(3,minmax(0,1fr));
+    background: var(--ei-card);
+    border: 1px solid var(--ei-border);
+    border-radius: 12px;
+    margin-bottom: 30px;
+}
+
+.ep-summary > div {
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.ep-summary > div + div {
+    border-left: 1px solid var(--ei-border);
+}
+
+.ep-summary span {
+    font-size: 12px;
+    color: var(--ei-muted);
+}
+
+.ep-summary strong {
+    font-size: 28px;
+    color: var(--ei-text);
+}
+
+.ep-list-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.ep-list-heading h2 {
+    font-size: 19px;
+}
+
+.ei2-portfolio input,
+.ei2-portfolio textarea,
+.ei2-portfolio select {
+    background: var(--ei-bg);
+    color: var(--ei-text);
+    border: 1px solid var(--ei-border);
+    border-radius: 8px;
+    padding: 12px;
+    font: inherit;
+    font-size: 13px;
+    min-width: 0;
+}
+
+.ei2-portfolio :focus-visible {
+    outline: 2px solid var(--ei-highlight);
+    outline-offset: 3px;
+}
+
+.ep-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit,minmax(min(100%,300px),1fr));
+    gap: 18px;
+}
+
+.ep-card {
+    overflow: hidden;
+    border: 1px solid var(--ei-border);
+    background: var(--ei-card);
+    border-radius: 12px;
+    min-width: 0;
+}
+
+.ep-cover {
+    height: 118px;
+    background: linear-gradient(125deg,#211635,#483076);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 22px;
+    color: #e9d5ff;
+}
+
+.ep-cover i {
+    font-size: 38px;
+}
+
+.ep-cover span {
+    font-size: 11px;
+    letter-spacing: 1px;
+}
+
+.ep-card-body {
+    padding: 18px;
+}
+
+.ep-card h3 {
+    font-size: 17px;
+    margin-bottom: 12px;
+    overflow-wrap: anywhere;
+}
+
+.ep-card p {
+    color: var(--ei-muted);
+    font-size: 13px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.ep-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 16px 0;
+}
+
+.ep-tags span {
+    background: var(--ei-accent);
+    color: var(--ei-highlight);
+    padding: 5px 9px;
+    border-radius: 6px;
+    font-size: 11px;
+    overflow-wrap: anywhere;
+}
+
+.ep-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--ei-border);
+}
+
+.ep-card-actions a {
+    color: var(--ei-highlight);
+    font-size: 13px;
+    margin-right: auto;
+}
+
+.ep-empty {
+    text-align: center;
+    padding: 55px 20px;
+    border: 1px dashed var(--ei-border);
+    border-radius: 12px;
+}
+
+.ep-empty-icon {
+    display: inline-grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    background: var(--ei-accent);
+    color: var(--ei-highlight);
+    border-radius: 16px;
+    font-size: 26px;
+}
+
+.ep-empty h2 {
+    margin: 20px 0 10px;
+    font-size: 20px;
+}
+
+.ep-empty p {
+    color: var(--ei-muted);
+    margin-bottom: 22px;
+    font-size: 14px;
+}
+
+.ep-dialog {
+    position: fixed;
+    inset: 0;
+    margin: auto;
+    width: min(520px, calc(100% - 28px));
+    max-height: 90dvh;
+    overflow-y: auto;
+    border: 1px solid var(--ei-border);
+    border-radius: 16px;
+    background: var(--ei-card);
+    color: var(--ei-text);
+    padding: 24px;
+}
+
+.ep-dialog::backdrop {
+    background: rgba(0,0,0,.6);
+}
+
+.ep-dialog form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.ep-dialog label {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.ep-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.ep-storage-note {
+    margin-top: 20px;
+    font-size: 12px;
+    color: var(--ei-muted);
+}
+
+@media(max-width:650px) {
+    .ei2-portfolio {
+        padding: 14px;
+    }
+
+    .ep-heading, .ep-list-heading {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .ep-summary > div {
+        padding: 12px;
+    }
+
+    .ep-summary strong {
+        font-size: 23px;
+    }
+
+    .ep-summary span {
+        font-size: 11px;
+    }
+}
+
+
+/* EI2-PORTFOLIO-INPUT-FIX */
+
+.ei2-portfolio .ep-dialog input,
+.ei2-portfolio .ep-dialog textarea,
+.ei2-portfolio .ep-dialog select {
+    width: 100%;
+    background: var(--ei-surface) !important;
+    color: var(--ei-text) !important;
+    caret-color: var(--ei-text);
+    border: 1px solid var(--ei-border);
+}
+
+.ei2-portfolio .ep-dialog input::placeholder,
+.ei2-portfolio .ep-dialog textarea::placeholder {
+    color: var(--ei-muted);
+    opacity: 1;
+}
+
+.ei2-portfolio .ep-dialog input:-webkit-autofill,
+.ei2-portfolio .ep-dialog input:-webkit-autofill:hover,
+.ei2-portfolio .ep-dialog input:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 1000px var(--ei-surface) inset !important;
+    -webkit-text-fill-color: var(--ei-text) !important;
+    caret-color: var(--ei-text);
+}
+
+.ei2-portfolio .ep-dialog input:focus,
+.ei2-portfolio .ep-dialog select:focus,
+.ei2-portfolio .ep-dialog textarea:focus {
+    border-color: var(--ei-primary);
+}

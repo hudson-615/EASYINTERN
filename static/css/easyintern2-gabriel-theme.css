@@ -1,0 +1,194 @@
+
+/* EI2-GABRIEL-NEUTRAL-PALETTE */
+
+body:not([data-theme="dark"]) #section-pessoas,
+body:not([data-theme="dark"]) #section-projetos,
+body:not([data-theme="dark"]) #section-chat {
+    --ei-bg: #f4f5f7;
+    --ei-card: #ffffff;
+    --ei-surface: #f0f2f5;
+    --ei-border: #dde0e6;
+    --ei-text: #171923;
+    --ei-muted: #555d6e;
+    --ei-primary: #6d28d9;
+    --ei-highlight: #6327c9;
+    --ei-accent: #eee8fa;
+
+    background: var(--ei-bg);
+    color: var(--ei-text);
+}
+
+body[data-theme="dark"] #section-pessoas,
+body[data-theme="dark"] #section-projetos,
+body[data-theme="dark"] #section-chat {
+    --ei-bg: #10101c;
+    --ei-card: #191925;
+    --ei-surface: #222231;
+    --ei-border: #303042;
+    --ei-text: #f5f5fa;
+    --ei-muted: #b2b2c5;
+    --ei-primary: #7c3aed;
+    --ei-highlight: #b69af7;
+    --ei-accent: #302442;
+}
+
+
+/* EI2-LIGHT-SOFT-CONTRAST */
+
+body:not([data-theme="dark"]) #section-pessoas,
+body:not([data-theme="dark"]) #section-projetos,
+body:not([data-theme="dark"]) #section-chat {
+    --ei-bg: #ebedf1;
+    --ei-card: #f8f9fb;
+    --ei-surface: #f0f1f4;
+    --ei-border: #d8dce4;
+    --ei-text: #202332;
+    --ei-muted: #555e70;
+    --ei-primary: #6430bd;
+    --ei-highlight: #6430bd;
+    --ei-accent: #eae4f5;
+}
+
+body:not([data-theme="dark"])
+#section-chat .ei-chat-sidebar {
+    background: var(--ei-card);
+}
+
+body:not([data-theme="dark"])
+#section-chat #chat-mensagens {
+    background: #eef0f3;
+}
+
+body:not([data-theme="dark"])
+#section-chat .em-conversation {
+    background: var(--ei-card);
+}
+
+#section-chat a.em-primary,
+#section-chat a.em-primary:visited,
+#section-chat a.em-primary:hover {
+    color: #ffffff !important;
+}
+
+#section-chat button.em-tab.active {
+    background: #6430bd;
+    border-color: #6430bd;
+    color: #ffffff;
+}
+
+
+/* EI2-LIGHT-GLOBAL-CONTRAST */
+
+body:not([data-theme="dark"]) #section-pessoas,
+body:not([data-theme="dark"]) #section-projetos,
+body:not([data-theme="dark"]) #section-chat {
+    --ei-bg: #edeef2;
+    --ei-card: #fafafc;
+    --ei-surface: #e9ebf1;
+    --ei-border: #b9becc;
+    --ei-text: #202332;
+    --ei-muted: #50596b;
+    --ei-primary: #6430bd;
+    --ei-highlight: #6430bd;
+    --ei-accent: #e8dff5;
+}
+
+body:not([data-theme="dark"]) .ep-card,
+body:not([data-theme="dark"]) .ep-summary,
+body:not([data-theme="dark"]) .ep-dialog,
+body:not([data-theme="dark"]) .ep-empty,
+body:not([data-theme="dark"]) .ei-chat-layout,
+body:not([data-theme="dark"]) .em-network-panel {
+    border: 1px solid #b9becc !important;
+    background-color: #fafafc;
+}
+
+body:not([data-theme="dark"]) .ep-summary > div + div {
+    border-left: 1px solid #b9becc !important;
+}
+
+body:not([data-theme="dark"]) .ep-empty {
+    border: 1px dashed #969eb1 !important;
+}
+
+body:not([data-theme="dark"]) .ep-card-actions,
+body:not([data-theme="dark"]) .em-tabs,
+body:not([data-theme="dark"]) .em-composer,
+body:not([data-theme="dark"]) .ei-chat-header,
+body:not([data-theme="dark"]) .ei-chat-form {
+    border-color: #b9becc !important;
+}
+
+body:not([data-theme="dark"])
+#section-chat .ei-chat-sidebar,
+body:not([data-theme="dark"])
+#section-chat .em-sidebar {
+    background: #fafafc;
+    border-color: #b9becc;
+}
+
+body:not([data-theme="dark"])
+#section-chat #chat-mensagens {
+    background: #f0ebf8 !important;
+}
+
+body:not([data-theme="dark"])
+#section-chat .em-empty {
+    background: #f0ebf8;
+}
+
+body:not([data-theme="dark"])
+#section-chat .ei-chat-mensagem {
+    background: #fafafc;
+    color: #202332;
+    border: 1px solid #c0b7d0;
+}
+
+body:not([data-theme="dark"])
+#section-chat .ei-chat-mensagem.minha {
+    background: #e0d4f5;
+    color: #342252;
+    border: 1px solid #b4a0d6;
+}
+
+body:not([data-theme="dark"])
+#section-chat .ei-chat-mensagem.minha time {
+    color: #59466e;
+}
+
+body:not([data-theme="dark"])
+#section-chat button.ei-chat-conversa[aria-pressed="true"] {
+    background: #e8dff5;
+    border: 1px solid #c6b4e2;
+    border-left: 3px solid #6430bd;
+}
+
+body:not([data-theme="dark"])
+#section-chat #chat-conteudo,
+body:not([data-theme="dark"])
+#section-chat .em-network-panel input,
+body:not([data-theme="dark"])
+.ei2-portfolio input,
+body:not([data-theme="dark"])
+.ei2-portfolio textarea,
+body:not([data-theme="dark"])
+.ei2-portfolio select {
+    background: #f0f1f5 !important;
+    border: 1px solid #aeb5c5 !important;
+    color: #202332 !important;
+}
+
+body:not([data-theme="dark"])
+.ei2-portfolio .ep-secondary {
+    border-color: #aeb5c5;
+    color: #343b4c;
+}
+
+body:not([data-theme="dark"])
+#section-chat #chat-atualizar {
+    border-color: #aeb5c5;
+}
+
+body:not([data-theme="dark"]) .ep-summary strong {
+    color: #302044;
+}
