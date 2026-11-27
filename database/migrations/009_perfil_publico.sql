@@ -1,0 +1,1 @@
+ALTER TABLE candidatos ADD COLUMN perfil_publico TINYINT(1) NOT NULL DEFAULT 0;

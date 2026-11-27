@@ -1,3 +1,4 @@
+from social.routes import router as social_router
 from pathlib import Path
 
 from fastapi import FastAPI, Request
@@ -89,6 +90,8 @@ app.include_router(feedback_router)
 app.include_router(chat_router)
 app.include_router(chat_ws_router)
 
+app.include_router(social_router)
+
 @app.get("/")
 def inicio():
     return {
@@ -135,3 +138,4 @@ def pagina_conexoes(request: Request):
         request=request,
         name="conexoes.html"
     )
+
