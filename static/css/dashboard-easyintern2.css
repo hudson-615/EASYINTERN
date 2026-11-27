@@ -2,13 +2,13 @@
 /* Sobrescritas visuais isoladas. Nao alterar regras de negocio. */
 
 body.dash-body[data-panel="candidato"] {
-  --ei2-purple: #7c3aed;
-  --ei2-lavender: #a78bfa;
-  --ei2-border: #e7ddf5;
-  --ei2-surface: #ffffff;
-  --ei2-background: #f7f5fc;
-  --ei2-text: #241c38;
-  --ei2-muted: #675c7a;
+  --ei2-purple: var(--ei-primary);
+  --ei2-lavender: var(--ei-highlight);
+  --ei2-border: var(--ei-border);
+  --ei2-surface: var(--ei-card);
+  --ei2-background: var(--ei-bg);
+  --ei2-text: var(--ei-text);
+  --ei2-muted: var(--ei-muted);
   --bg-base: var(--ei2-background);
   --bg-card: var(--ei2-surface);
   --card-bg: var(--ei2-surface);
@@ -99,12 +99,12 @@ body.dash-body[data-panel="candidato"] .btn-menu-toggle:hover {
 
 /* Tema escuro */
 body.dash-body[data-panel="candidato"][data-theme="dark"] {
-  --ei2-purple: #a78bfa;
-  --ei2-border: #342a4a;
-  --ei2-surface: #1b172b;
-  --ei2-background: #100f1e;
-  --ei2-text: #f5f2ff;
-  --ei2-muted: #c4b9d8;
+  --ei2-purple: var(--ei-primary);
+  --ei2-border: var(--ei-border);
+  --ei2-surface: var(--ei-card);
+  --ei2-background: var(--ei-bg);
+  --ei2-text: var(--ei-text);
+  --ei2-muted: var(--ei-muted);
 }
 
 body.dash-body[data-panel="candidato"][data-theme="dark"] .btn-primary,
@@ -161,23 +161,23 @@ body.dash-body[data-panel="candidato"][data-theme="dark"] .dash-page-title {
 /* Importa somente as variaveis oficiais, sem importar
    os estilos globais da pagina Conexoes. */
 body.dash-body[data-panel="candidato"] {
-  --ei2-background: #f7f6fb;
-  --ei2-surface: #ffffff;
-  --ei2-border: #e3def1;
-  --ei2-text: #171426;
-  --ei2-muted: #706a85;
-  --ei2-purple: #7535e7;
-  --ei2-lavender: #8454e9;
+  --ei2-background: var(--ei-bg);
+  --ei2-surface: var(--ei-card);
+  --ei2-border: var(--ei-border);
+  --ei2-text: var(--ei-text);
+  --ei2-muted: var(--ei-muted);
+  --ei2-purple: var(--ei-primary);
+  --ei2-lavender: var(--ei-highlight);
 }
 
 body.dash-body[data-panel="candidato"][data-theme="dark"] {
-  --ei2-background: #10101d;
-  --ei2-surface: #1b1a2b;
-  --ei2-border: #35314f;
-  --ei2-text: #f8f7ff;
-  --ei2-muted: #aaa6c4;
-  --ei2-purple: #8d43f8;
-  --ei2-lavender: #b58cff;
+  --ei2-background: var(--ei-bg);
+  --ei2-surface: var(--ei-card);
+  --ei2-border: var(--ei-border);
+  --ei2-text: var(--ei-text);
+  --ei2-muted: var(--ei-muted);
+  --ei2-purple: var(--ei-primary);
+  --ei2-lavender: var(--ei-highlight);
 }
 
 /* A sidebar tem uma cor propria no tema escuro */
@@ -275,7 +275,7 @@ body.dash-body[data-panel="candidato"] .filter-btn:focus-visible {
   --ei2-surface-dark: #17162b;
   --ei2-surface-dark-2: #1d1b35;
   --ei2-border-dark: #4b2c82;
-  --ei2-purple: #8d43f8;
+  --ei2-purple: var(--ei-primary);
   --ei2-purple-2: #a56bff;
   --ei2-text-dark: #f8f7ff;
   --ei2-muted-dark: #beb7e6;
@@ -439,17 +439,17 @@ body.dash-body[data-panel="candidato"][data-theme="dark"] .side-menu .active {
 /* EI2-OVERVIEW-INICIO */
 
 #section-overview {
-  --overview-surface: #f3effb;
-  --overview-accent: #efe8ff;
-  --overview-card: #ffffff;
-  --overview-border: #e3def1;
+  --overview-surface: var(--ei-surface);
+  --overview-accent: var(--ei-accent);
+  --overview-card: var(--ei-card);
+  --overview-border: var(--ei-border);
 }
 
 body[data-theme="dark"] #section-overview {
-  --overview-surface: #232138;
-  --overview-accent: #362452;
-  --overview-card: #1b1a2b;
-  --overview-border: #35314f;
+  --overview-surface: var(--ei-surface);
+  --overview-accent: var(--ei-accent);
+  --overview-card: var(--ei-card);
+  --overview-border: var(--ei-border);
 }
 
 #section-overview .ei2-welcome {
@@ -928,10 +928,10 @@ body[data-theme="dark"] #section-overview #top-vagas-list > div > span {
 /* EI2-JOBS-INICIO */
 
 #section-recomendadas {
-  --jobs-card: #ffffff;
-  --jobs-surface: #f3effb;
-  --jobs-accent: #efe8ff;
-  --jobs-border: #e3def1;
+  --jobs-card: var(--ei-card);
+  --jobs-surface: var(--ei-surface);
+  --jobs-accent: var(--ei-accent);
+  --jobs-border: var(--ei-border);
   max-width: 1440px;
   width: 100%;
   margin-inline: auto;
@@ -939,10 +939,10 @@ body[data-theme="dark"] #section-overview #top-vagas-list > div > span {
 }
 
 body[data-theme="dark"] #section-recomendadas {
-  --jobs-card: #1b1a2b;
-  --jobs-surface: #232138;
-  --jobs-accent: #362452;
-  --jobs-border: #35314f;
+  --jobs-card: var(--ei-card);
+  --jobs-surface: var(--ei-surface);
+  --jobs-accent: var(--ei-accent);
+  --jobs-border: var(--ei-border);
 }
 
 /* Cabecalho */
@@ -1339,8 +1339,8 @@ body[data-theme="dark"] #section-recomendadas .match-score-big {
 }
 
 .ei2-job-dialog {
-  --detail-surface: #f3effb;
-  --detail-accent: #efe8ff;
+  --detail-surface: var(--ei-surface);
+  --detail-accent: var(--ei-accent);
   position: fixed;
   inset: 0;
   margin: auto;
@@ -1356,8 +1356,8 @@ body[data-theme="dark"] #section-recomendadas .match-score-big {
 }
 
 body[data-theme="dark"] .ei2-job-dialog {
-  --detail-surface: #232138;
-  --detail-accent: #362452;
+  --detail-surface: var(--ei-surface);
+  --detail-accent: var(--ei-accent);
 }
 
 .ei2-job-dialog::backdrop {
@@ -1526,10 +1526,10 @@ body[data-theme="dark"] .ei2-job-dialog {
 /* EI2-CANDIDATURAS-V2-INICIO */
 
 #section-candidaturas {
-  --cand-card: #ffffff;
-  --cand-surface: #f3effb;
-  --cand-accent: #efe8ff;
-  --cand-border: #e3def1;
+  --cand-card: var(--ei-card);
+  --cand-surface: var(--ei-surface);
+  --cand-accent: var(--ei-accent);
+  --cand-border: var(--ei-border);
   max-width: 1440px;
   width: 100%;
   margin-inline: auto;
@@ -1537,10 +1537,10 @@ body[data-theme="dark"] .ei2-job-dialog {
 }
 
 body[data-theme="dark"] #section-candidaturas {
-  --cand-card: #1b1a2b;
-  --cand-surface: #232138;
-  --cand-accent: #362452;
-  --cand-border: #35314f;
+  --cand-card: var(--ei-card);
+  --cand-surface: var(--ei-surface);
+  --cand-accent: var(--ei-accent);
+  --cand-border: var(--ei-border);
 }
 
 /* Painel principal */
@@ -1834,10 +1834,10 @@ body[data-theme="dark"] #section-candidaturas .match-score-big {
 /* EI2-PERFIL-V2-INICIO */
 
 #section-perfil {
-  --profile-card: #ffffff;
-  --profile-surface: #f3effb;
-  --profile-accent: #efe8ff;
-  --profile-border: #e3def1;
+  --profile-card: var(--ei-card);
+  --profile-surface: var(--ei-surface);
+  --profile-accent: var(--ei-accent);
+  --profile-border: var(--ei-border);
   max-width: 1440px;
   width: 100%;
   margin-inline: auto;
@@ -1845,10 +1845,10 @@ body[data-theme="dark"] #section-candidaturas .match-score-big {
 }
 
 body[data-theme="dark"] #section-perfil {
-  --profile-card: #1b1a2b;
-  --profile-surface: #232138;
-  --profile-accent: #362452;
-  --profile-border: #35314f;
+  --profile-card: var(--ei-card);
+  --profile-surface: var(--ei-surface);
+  --profile-accent: var(--ei-accent);
+  --profile-border: var(--ei-border);
 }
 
 #section-perfil .perfil-layout {
