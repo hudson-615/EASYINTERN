@@ -4,6 +4,25 @@
 
 
 {% block extra_head %}
+<!-- EI2-PREVENT-AUTH-FLASH -->
+<script>
+(() => {
+  const cadastro = new URLSearchParams(
+    window.location.search
+  ).get('cadastro');
+
+  if (['candidato', 'empresa'].includes(cadastro)) {
+    document.documentElement.dataset.authInitial = cadastro;
+  }
+})();
+</script>
+
+<style>
+html[data-auth-initial] #auth-section {
+  visibility: hidden;
+}
+</style>
+
 <link rel="stylesheet" href="/static/css/easyintern2-tokens.css?v=1">
 <link rel="stylesheet" href="/static/css/easyintern2-components.css?v=1">
 <link rel="stylesheet" href="/static/css/easyintern2-auth.css?v=4">
@@ -982,6 +1001,8 @@
 {% endblock %}
 
 {% block extra_scripts %}
+
+
 <!-- EI2-PASSWORD-CONFIRM -->
 <script>
 (() => {
