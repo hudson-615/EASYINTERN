@@ -13,6 +13,7 @@
 
   <link rel="stylesheet" href="/static/css/easyintern.css" />
   <link rel="stylesheet" href="/static/css/dashboard.css?v=13" />
+  <link rel="stylesheet" href="/static/css/dashboard-easyintern2.css?v=7" />
 
   <style>
     /* Formulário editável do candidato */
@@ -96,54 +97,126 @@
   </style>
 
 <link rel="stylesheet" href="/static/css/chat.css?v=2">
+
+  <link rel="stylesheet" href="/static/css/easyintern2-tokens.css?v=1" />
+  <link rel="stylesheet" href="/static/css/easyintern2-shell.css?v=1" />
+
+<link rel="stylesheet" href="/static/css/easyintern2-candidate-review.css?v=1">
+  <link rel="icon" type="image/svg+xml" href="/static/img/easyintern-logo.svg?v=2">
 </head>
 
 <body class="dash-body" data-panel="candidato">
 
   <!-- Sidebar Zero-G -->
   <aside class="dash-sidebar" id="dash-sidebar">
-    <div class="sidebar-brand">
-      <i class="bi bi-rocket-takeoff-fill brand-icon-sm"></i>
-      <span class="brand-name">EasyIntern</span>
-    </div>
 
-    <nav class="sidebar-nav" aria-label="Menu principal">
-      <a href="#" class="nav-item active" data-section="overview" id="nav-overview">
-        <i class="bi bi-grid-1x2-fill"></i>
-        <span>Visão Geral</span>
-      </a>
-
-      <a href="#" class="nav-item" data-section="candidaturas" id="nav-candidaturas">
-        <i class="bi bi-send-fill"></i>
-        <span>Minhas Candidaturas</span>
-        <span class="nav-badge" id="badge-candidaturas">0</span>
-      </a>
-
-      <a href="#" class="nav-item" data-section="recomendadas" id="nav-recomendadas">
-        <i class="bi bi-stars"></i>
-        <span>Vagas Recomendadas</span>
-        <span class="nav-badge ai">IA</span>
-      </a>
+<div class="sidebar-brand">
+  <img class="ei2-sidebar-logo"
+       src="/static/img/easyintern-logo.svg"
+       alt="">
+  <span class="brand-name">EasyIntern <small>2.0</small></span>
+</div>
 
 
-      <a href="#" class="nav-item" data-section="chat" id="nav-chat">
-        <i class="bi bi-chat-dots-fill" aria-hidden="true"></i>
-        <span>Mensagens</span>
-        <span class="nav-badge" id="badge-chat" hidden>0</span>
-      </a>
 
-    <a href="#" class="nav-item" data-section="perfil" id="nav-perfil">
-        <i class="bi bi-person-circle"></i>
-        <span>Meu Perfil</span>
-      </a>
+<nav class="sidebar-nav" aria-label="Menu principal">
 
-      <a href="#" class="nav-item" data-section="configuracoes" id="nav-configuracoes">
-        <i class="bi bi-sliders"></i>
-        <span>Configurações</span>
-      </a>
-    </nav>
+  <a href="#" class="nav-item active"
+     data-section="overview" id="nav-overview">
+    <i class="bi bi-house-door"></i>
+    <span>In&iacute;cio</span>
+  </a>
+
+  <a href="#" class="nav-item" data-section="pessoas" id="nav-pessoas">
+    <i class="bi bi-people"></i>
+    <span>Pessoas</span>
+  </a>
+
+  <a href="#" class="nav-item"
+     data-section="recomendadas" id="nav-recomendadas">
+    <i class="bi bi-briefcase"></i>
+    <span>Vagas</span>
+    <span class="nav-badge ai">IA</span>
+  </a>
+
+  <button type="button" class="nav-item ei2-nav-pending"
+          disabled title="Funcionalidade em desenvolvimento">
+    <i class="bi bi-code-slash"></i>
+    <span>Projetos</span>
+  </button>
+
+  <a href="#" class="nav-item"
+     data-section="candidaturas" id="nav-candidaturas">
+    <i class="bi bi-clipboard-check"></i>
+    <span>Candidaturas</span>
+    <span class="nav-badge" id="badge-candidaturas">0</span>
+  </a>
+
+  <a href="#" class="nav-item"
+     data-section="chat" id="nav-chat">
+    <i class="bi bi-chat-dots"></i>
+    <span>Mensagens</span>
+    <span class="nav-badge" id="badge-chat" hidden>0</span>
+  </a>
+
+  <a href="#" class="nav-item"
+     data-section="perfil" id="nav-perfil">
+    <i class="bi bi-person"></i>
+    <span>Perfil</span>
+  </a>
+
+  <a href="#" class="nav-item"
+     data-section="configuracoes" id="nav-configuracoes">
+    <i class="bi bi-gear"></i>
+    <span>Configura&ccedil;&otilde;es</span>
+  </a>
+
+</nav>
+
 
     <div class="sidebar-footer">
+<!-- EI2-SIDEBAR-USER -->
+<a href="#" data-section="perfil" class="ei2-sidebar-user">
+
+  <div class="ei2-sidebar-avatar">
+    <i class="bi bi-person-fill"></i>
+  </div>
+
+  <div class="ei2-sidebar-user-info">
+    <strong id="ei2-sidebar-name">Estudante</strong>
+    <span>Minha conta</span>
+  </div>
+
+</a>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const origem = document.getElementById('dash-greeting');
+  const destino = document.getElementById('ei2-sidebar-name');
+
+  if (!origem || !destino) return;
+
+  function atualizar() {
+    const texto = origem.textContent.trim();
+
+    if (texto.startsWith('Carregando')) return;
+
+    destino.textContent = texto
+      .replace(/^Ol.{1,2},\s*/, '')
+      .replace(/\s*\u{1F44B}.*$/u, '')
+      .trim();
+  }
+
+  new MutationObserver(atualizar).observe(origem, {
+    childList: true,
+    characterData: true,
+    subtree: true
+  });
+
+  atualizar();
+});
+</script>
+
       <button class="btn-logout" id="btn-logout" title="Sair da conta">
         <i class="bi bi-box-arrow-left"></i>
         <span>Sair</span>
@@ -172,11 +245,88 @@
       </button>
 
       <div class="dash-header-info">
-        <h2 class="dash-page-title" id="page-title">Visão Geral</h2>
+        <h2 class="dash-page-title" id="page-title">In&iacute;cio</h2>
         <span class="dash-greeting" id="dash-greeting">Carregando...</span>
       </div>
 
       <div class="dash-header-actions">
+<!-- EI2-HEADER-NOTIFICATIONS -->
+<div class="ei2-notifications">
+
+  <button type="button"
+          id="ei2-notification-toggle"
+          class="ei2-header-icon"
+          aria-label="Notifica&ccedil;&otilde;es"
+          aria-expanded="false"
+          aria-controls="ei2-notification-panel">
+    <i class="bi bi-bell"></i>
+  </button>
+
+  <div class="ei2-notification-panel"
+       id="ei2-notification-panel" hidden>
+
+    <h3>Notifica&ccedil;&otilde;es</h3>
+
+    <div class="ei2-notification-empty">
+      <i class="bi bi-bell"></i>
+      <strong>Central de notifica&ccedil;&otilde;es</strong>
+      <p>Funcionalidade em desenvolvimento.</p>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const botao = document.getElementById(
+    'ei2-notification-toggle'
+  );
+
+  const painel = document.getElementById(
+    'ei2-notification-panel'
+  );
+
+  function fechar() {
+    painel.hidden = true;
+    botao.setAttribute('aria-expanded', 'false');
+  }
+
+  botao.addEventListener('click', () => {
+    painel.hidden = !painel.hidden;
+    botao.setAttribute(
+      'aria-expanded', String(!painel.hidden)
+    );
+  });
+
+  document.addEventListener('click', evento => {
+    if (!evento.target.closest('.ei2-notifications')) {
+      fechar();
+    }
+  });
+
+  document.addEventListener('keydown', evento => {
+    if (evento.key === 'Escape') fechar();
+  });
+})();
+</script>
+
+<!-- EI2-HEADER-THEME -->
+<button type="button"
+        id="header-theme-toggle"
+        class="ei2-header-theme"
+        aria-label="Alternar tema"
+        aria-pressed="false"
+        title="Alternar tema claro e escuro">
+
+  <i class="bi bi-sun theme-icon--sun"
+     aria-hidden="true" hidden></i>
+
+  <i class="bi bi-moon-stars theme-icon--moon"
+     aria-hidden="true"></i>
+
+</button>
+
         <span class="header-badge-nivel" id="header-nivel">Estagiário</span>
 
         <button
@@ -194,6 +344,124 @@
 
     <!-- Seção: Visão Geral -->
     <section class="dash-section active" id="section-overview">
+
+
+<!-- EI2-HYBRID-OVERVIEW -->
+
+<div class="ei2-home-heading">
+  <h1 id="ei2-home-greeting">Ol&aacute;, estudante!</h1>
+  <p>Descubra pessoas, projetos e oportunidades.</p>
+</div>
+
+<form id="ei2-home-search" class="ei2-home-search">
+  <i class="bi bi-search" aria-hidden="true"></i>
+  <input type="search" id="ei2-home-query"
+         maxlength="120"
+         placeholder="Buscar vagas..."
+         aria-label="Buscar vagas ou habilidades">
+  <button type="submit">Buscar</button>
+</form>
+
+<div class="ei2-home-shortcuts">
+
+  <a href="#" data-section="recomendadas"
+     class="ei2-home-shortcut">
+    <i class="bi bi-briefcase"></i>
+    <strong>Vagas para voc&ecirc;</strong>
+    <span>Explore oportunidades</span>
+  </a>
+
+  <a href="#" data-section="pessoas" class="ei2-home-shortcut">
+    <i class="bi bi-people"></i>
+    <strong>Conex&otilde;es</strong>
+    <span>Descubra pessoas</span>
+  </a>
+
+  <div class="ei2-home-shortcut ei2-home-disabled">
+    <i class="bi bi-code-slash"></i>
+    <strong>Projetos</strong>
+    <span>Em desenvolvimento</span>
+  </div>
+
+</div>
+
+<script>
+(() => {
+  const origem = document.getElementById('dash-greeting');
+  const destino = document.getElementById('ei2-home-greeting');
+
+  function atualizarSaudacao() {
+    const texto = origem.textContent.trim();
+    if (texto && !texto.startsWith('Carregando')) {
+      destino.textContent = texto;
+    }
+  }
+
+  new MutationObserver(atualizarSaudacao).observe(origem, {
+    childList: true,
+    characterData: true,
+    subtree: true
+  });
+
+  atualizarSaudacao();
+
+  document.getElementById('ei2-home-search')
+    .addEventListener('submit', event => {
+      event.preventDefault();
+
+      const busca = document.getElementById('rec-busca');
+      busca.value = document.getElementById('ei2-home-query').value;
+      document.getElementById('nav-recomendadas').click();
+      document.getElementById('rec-busca-form').requestSubmit();
+    });
+})();
+</script>
+
+
+<!-- EI2-HOME-PRIORITIES -->
+
+<div class="ei2-home-priorities" id="ei2-home-priorities">
+
+  <div id="ei2-home-jobs"></div>
+
+  <article class="ei2-home-profile">
+
+    <h3>Seu perfil</h3>
+
+    <div class="ei2-profile-progress"
+         id="ei2-home-profile-progress">
+      <i class="bi bi-person"></i>
+    </div>
+
+    <strong id="ei2-home-profile-status">Complete seu perfil</strong>
+
+    <p>Mantenha seus dados profissionais atualizados.</p>
+
+    <a href="#" data-section="perfil">
+      Meu perfil
+      <i class="bi bi-arrow-right"></i>
+    </a>
+
+  </article>
+
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const vagas = document.getElementById('card-top-vagas');
+  const destino = document.getElementById('ei2-home-jobs');
+
+  if (vagas && destino) {
+    destino.appendChild(vagas);
+    vagas.removeAttribute('draggable');
+    vagas.classList.remove('draggable-card');
+    vagas.querySelector('.drag-handle')?.remove();
+  }
+});
+</script>
+<h2 class="ei2-performance-title">Seu desempenho</h2>
+
+
 
       <!-- Estatísticas -->
       <div class="stats-grid" id="stats-grid">
@@ -302,7 +570,7 @@
 
         <div class="glass-card dash-card draggable-card" id="card-top-vagas" draggable="true" data-widget-id="card-top-vagas">
           <div class="card-header">
-            <h3><i class="bi bi-stars"></i> Top Recomendações</h3>
+            <h3><i class="bi bi-stars"></i> Vagas recomendadas</h3>
             <a href="#" class="card-link" data-section="recomendadas">Ver todas</a>
             <span class="drag-handle" title="Clique e arraste para reposicionar">
               <i class="bi bi-grip-vertical"></i>
@@ -335,7 +603,69 @@
     </section>
 
     <!-- Seção: Minhas Candidaturas -->
-    <section class="dash-section" id="section-candidaturas">
+
+<!-- EI2-PEOPLE-SECTION -->
+<section class="dash-section" id="section-pessoas">
+
+  <div class="ei2-people-heading">
+    <h1>Explorar pessoas</h1>
+    <p>Encontre estudantes e amplie sua rede profissional.</p>
+  </div>
+
+  <iframe
+    id="ei2-people-frame"
+    class="ei2-people-frame"
+    title="Explorar pessoas"
+    data-src="/conexoes?embedded=1">
+  </iframe>
+
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const secao = document.getElementById('section-pessoas');
+  const frame = document.getElementById('ei2-people-frame');
+
+  function atualizar() {
+    if (secao.classList.contains('active') &&
+        !frame.hasAttribute('src')) {
+      frame.src = frame.dataset.src;
+    }
+  }
+
+  new MutationObserver(atualizar).observe(secao, {
+    attributes: true,
+    attributeFilter: ['class']
+  });
+
+  atualizar();
+});
+</script>
+<section class="dash-section" id="section-candidaturas">
+
+      <!-- EI2-CANDIDATURAS-HERO -->
+      <div class="ei2-cand-hero">
+        <div>
+          <span class="ei2-cand-eyebrow">
+            SUA JORNADA PROFISSIONAL
+          </span>
+          <h1>Minhas candidaturas</h1>
+          <p>Acompanhe seus processos seletivos e mantenha contato com as empresas.</p>
+          <a href="#" data-section="recomendadas" class="ei2-cand-explore">
+            <i class="bi bi-search"></i>
+            Explorar novas vagas
+          </a>
+        </div>
+        <div class="ei2-cand-art" aria-hidden="true">
+          <i class="bi bi-clipboard-check"></i>
+        </div>
+      </div>
+
+      <div class="ei2-cand-heading">
+        <h2>Processos seletivos</h2>
+        <p>Consulte suas candidaturas por situa&ccedil;&atilde;o.</p>
+      </div>
+
       <div class="section-toolbar">
         <div class="section-filters">
           <button class="filter-btn active" data-filter="todos">Todas</button>
@@ -368,6 +698,24 @@
 
     <!-- Seção: Vagas Recomendadas -->
     <section class="dash-section" id="section-recomendadas">
+
+      <!-- EI2-VAGAS-HERO -->
+      <div class="ei2-jobs-hero">
+        <div>
+          <span class="ei2-jobs-eyebrow">
+            OPORTUNIDADES PROFISSIONAIS
+          </span>
+          <h1>Encontre sua pr&oacute;xima oportunidade</h1>
+          <p>
+            Explore vagas de acordo com suas habilidades,
+            interesses e objetivos profissionais.
+          </p>
+        </div>
+        <div class="ei2-jobs-art" aria-hidden="true">
+          <i class="bi bi-briefcase"></i>
+        </div>
+      </div>
+
       <div class="section-toolbar">
         <div class="section-filters">
           <button class="filter-btn active" data-rec-filter="todos">Todos</button>
@@ -431,9 +779,16 @@
 
     <!-- Seção: Perfil -->
     <section class="dash-section" id="section-perfil">
+<!-- EI2-PROFILE-GRID -->
 
-      <div class="perfil-layout">
+      <div class="perfil-layout ei2-profile-grid">
         <div class="glass-card perfil-card">
+          <!-- EI2-PERFIL-CAPA -->
+          <div class="ei2-profile-cover">
+            <span>EasyIntern</span>
+            <i class="bi bi-mortarboard" aria-hidden="true"></i>
+          </div>
+
           <div class="perfil-avatar-wrap">
             <div class="perfil-avatar-lg" aria-hidden="true">
               <i class="bi bi-person-fill"></i>
@@ -449,9 +804,24 @@
           </div>
 
           <div class="perfil-links" id="perfil-links"></div>
+
+          <div class="ei2-profile-quick-edit">
+            <button type="button"
+                    class="btn btn-primary"
+                    id="ei2-profile-edit-shortcut">
+              <i class="bi bi-pencil-square"></i>
+              Editar perfil
+            </button>
+          </div>
+<div class="ei2-profile-about">
+            <h3>Sobre mim</h3>
+            <p id="ei2-profile-bio">Carregando biografia...</p>
+          </div>
+
         </div>
 
-        <div class="glass-card perfil-area-card">
+        <div class="ei2-profile-side">
+<div class="glass-card perfil-area-card">
           <div class="card-header">
             <h3><i class="bi bi-cpu"></i> Área de Interesse</h3>
           </div>
@@ -463,10 +833,29 @@
             </p>
           </div>
         </div>
+      <div class="glass-card" id="curriculo-card" style="margin-top:24px;padding:24px">
+        <div class="card-header"><h3><i class="bi bi-file-earmark-pdf"></i> Meu Currículo</h3></div>
+        <div class="card-body">
+          <p id="curriculo-situacao" aria-live="polite">Consultando currículo...</p>
+          <form id="curriculo-form" style="display:flex;flex-wrap:wrap;gap:12px;align-items:end">
+            <label for="curriculo-arquivo" style="flex:1 1 230px">Arquivo PDF (máximo 5 MB)
+              <input id="curriculo-arquivo" type="file" accept=".pdf,application/pdf" required style="display:block;width:100%;margin-top:8px">
+            </label>
+            <button id="curriculo-enviar" type="submit" class="btn btn-primary">Enviar PDF</button>
+          </form>
+          <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:14px">
+            <button id="curriculo-visualizar" type="button" class="btn btn-ghost" hidden>Visualizar PDF</button>
+            <button id="curriculo-baixar" type="button" class="btn btn-ghost" hidden>Baixar PDF</button>
+            <button id="curriculo-excluir" type="button" class="btn btn-ghost" hidden>Excluir currículo</button>
+          </div>
+          <p id="curriculo-mensagem" role="status" aria-live="polite" style="margin-top:12px"></p>
+        </div>
       </div>
+</div>
+</div>
 
       <!-- Edição do perfil do candidato -->
-      <div class="glass-card" style="margin-top: 24px; padding: 24px;">
+      <div class="glass-card ei2-profile-edit" style="margin-top: 24px; padding: 24px;">
         <div class="card-header">
           <h3>
             <i class="bi bi-person-gear"></i>
@@ -618,25 +1007,7 @@
       </div>
       <!-- EI-M04-M06-FIM -->
       <!-- EASYINTERN-M08-UI -->
-      <div class="glass-card" id="curriculo-card" style="margin-top:24px;padding:24px">
-        <div class="card-header"><h3><i class="bi bi-file-earmark-pdf"></i> Meu Currículo</h3></div>
-        <div class="card-body">
-          <p id="curriculo-situacao" aria-live="polite">Consultando currículo...</p>
-          <form id="curriculo-form" style="display:flex;flex-wrap:wrap;gap:12px;align-items:end">
-            <label for="curriculo-arquivo" style="flex:1 1 230px">Arquivo PDF (máximo 5 MB)
-              <input id="curriculo-arquivo" type="file" accept=".pdf,application/pdf" required style="display:block;width:100%;margin-top:8px">
-            </label>
-            <button id="curriculo-enviar" type="submit" class="btn btn-primary">Enviar PDF</button>
-          </form>
-          <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:14px">
-            <button id="curriculo-visualizar" type="button" class="btn btn-ghost" hidden>Visualizar PDF</button>
-            <button id="curriculo-baixar" type="button" class="btn btn-ghost" hidden>Baixar PDF</button>
-            <button id="curriculo-excluir" type="button" class="btn btn-ghost" hidden>Excluir currículo</button>
-          </div>
-          <p id="curriculo-mensagem" role="status" aria-live="polite" style="margin-top:12px"></p>
-        </div>
-      </div>
-    </section>
+      </section>
 
     <!-- Seção: Configurações -->
     <section class="dash-section" id="section-configuracoes">
@@ -767,7 +1138,7 @@
                 <label class="edit-dash-toggle-item">
                   <span class="edit-dash-toggle-label">
                     <i class="bi bi-stars" style="color: #20b479;"></i>
-                    Top Recomendações
+                    Vagas recomendadas
                   </span>
                   <span class="edit-dash-switch">
                     <input type="checkbox" id="toggle-card-top-vagas" checked data-target-widget="card-top-vagas">
@@ -973,9 +1344,59 @@
   <div class="toast-container" id="toast-container" aria-live="polite"></div>
 
   <script type="module" src="https://esm.sh/number-flow"></script>
-  <script src="/static/js/dashboard.js?v=15"></script>
+  <script src="/static/js/dashboard.js?v=16"></script>
   <script src="/static/js/perfil-formacoes-habilidades.js?v=1"></script>
   <script defer src="/static/js/curriculo-perfil.js?v=1"></script>
 <script defer src="/static/js/chat.js?v=4"></script>
+
+
+
+
+
+<script>
+/* EI2-PROFILE-SHORTCUT */
+document.getElementById('ei2-profile-edit-shortcut')
+  ?.addEventListener('click', async () => {
+    const formulario = document.getElementById('form-editar-perfil');
+
+    if (!formulario) return;
+
+    if (formulario.hidden) {
+      await abrirEdicaoPerfil();
+    }
+
+    if (!formulario.hidden) {
+      formulario.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
+      document.getElementById('edit-nome')?.focus({
+        preventScroll: true
+      });
+    }
+  });
+</script>
+
+
+<!-- EI2-PEOPLE-TITLE -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const secao = document.getElementById('section-pessoas');
+    const titulo = document.querySelector('.dash-page-title');
+
+    if (!secao || !titulo) return;
+
+    function atualizar() {
+        if (secao.classList.contains('active')) {
+            titulo.textContent = 'Pessoas';
+        }
+    }
+
+    new MutationObserver(atualizar).observe(secao, {
+        attributes: true,
+        attributeFilter: ['class']
+    });
+});
+</script>
 </body>
 </html>

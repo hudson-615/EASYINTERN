@@ -972,6 +972,10 @@ function animateDonut(score) {
 // ============================================================
 
 async function loadCandidatoDashboard() {
+  carregarPerfilCandidato().catch(erro => {
+    console.warn('Falha ao consultar progresso do perfil:', erro);
+  });
+
   await loadCandidatoStats();
   await carregarPerfilCandidato();
   await loadCandidaturas();
@@ -1868,12 +1872,27 @@ function renderVagasRec(filtro = 'todos') {
         ${veredicto}
 
         <div class="vaga-card-footer">
+          <button type="button"
+                  class="ei2-job-details-btn"
+                  data-vaga-detalhes="${Number(vaga.id)}">
+            <i class="bi bi-eye"></i>
+            Ver detalhes
+          </button>
           ${acao}
         </div>
 
       </div>
     `;
   }).join('');
+
+
+  grid.querySelectorAll('[data-vaga-detalhes]').forEach(botao => {
+    botao.addEventListener('click', () => {
+      const id = Number(botao.dataset.vagaDetalhes);
+      const vaga = allVagasRec.find(item => Number(item.id) === id);
+      if (vaga) ei2AbrirDetalhesVaga(vaga, botao);
+    });
+  });
 
   if (CANDIDATURAS_HABILITADAS) {
     grid
@@ -1928,74 +1947,112 @@ async function loadTopVagas() {
   }
 }
 
-function renderTopVagas(resultados) {
-  const elemento = document.getElementById(
-    'top-vagas-list'
-  );
 
+
+// EI2-COMPANY-LOGO
+function ei2LogoEmpresa(vaga, iniciais) {
+  const nome = String(vaga.empresa || '').trim();
+
+  const logosDemo = {
+    'murilotech': '/static/img/empresas/murilotech.svg',
+    'inovadata': '/static/img/empresas/inovadata.svg',
+    'techsolutions': '/static/img/empresas/techsolutions.svg'
+  };
+
+  const url = vaga.url_logo ||
+    vaga.logo_empresa ||
+    logosDemo[nome.toLowerCase()] || '';
+
+  let logo = '';
+
+  if (url) {
+    try {
+      const destino = new URL(url, window.location.origin);
+
+      if (['http:', 'https:'].includes(destino.protocol)) {
+        logo = destino.href;
+      }
+    } catch {}
+  }
+
+  return `
+    <div class="ei2-job-company">
+      <span>${escHtml(iniciais)}</span>
+      ${logo ? `
+        <img src="${escHtml(logo)}"
+             alt=""
+             loading="lazy"
+             onerror="this.remove()">
+      ` : ''}
+    </div>
+  `;
+}
+
+function renderTopVagas(resultados) {
+  const elemento = document.getElementById('top-vagas-list');
   if (!elemento) return;
 
   const vagas = resultados.slice(0, 4);
 
   if (!vagas.length) {
     elemento.innerHTML = `
-      <p style="
-        color:var(--text-muted);
-        font-size:.875rem;
-      ">
-        Nenhuma vaga disponível no momento.
+      <p class="ei2-home-empty">
+        Nenhuma vaga dispon&iacute;vel no momento.
       </p>
     `;
     return;
   }
 
-  elemento.innerHTML = vagas.map((vaga, indice) => {
+  elemento.innerHTML = vagas.map(vaga => {
     const avaliado = scoreValido(vaga.match);
 
+    const iniciais = String(vaga.empresa || 'Empresa')
+      .trim()
+      .split(/\s+/)
+      .map(p => p.charAt(0))
+      .join('')
+      .slice(0, 2)
+      .toUpperCase();
+
+    const tags = String(vaga.tags || '')
+      .split(',')
+      .map(tag => tag.trim())
+      .filter(Boolean)
+      .slice(0, 4);
+
     return `
-      <div style="
-        display:flex;
-        align-items:center;
-        gap:12px;
-        padding:10px 0;
-        ${indice < vagas.length - 1
-          ? 'border-bottom:1px solid rgba(128,128,128,.15);'
-          : ''}
-      ">
+      <article class="ei2-recommended-job">
 
-        <span style="
-          font-weight:800;
-          color:${obterCorScore(vaga.match)};
-          font-size:${avaliado ? '1.1rem' : '.8rem'};
-          min-width:60px;
-          text-align:center;
-        ">
-          ${avaliado
-            ? scoreTexto(vaga.match)
-            : 'Não avaliado'}
-        </span>
+        ${ei2LogoEmpresa(vaga, iniciais)}
 
-        <div style="flex:1;min-width:0;">
+        <div class="ei2-job-info">
 
-          <div style="
-            font-size:.875rem;
-            font-weight:600;
-          ">
-            ${escHtml(vaga.titulo)}
-          </div>
+          <h4>${escHtml(vaga.titulo)}</h4>
 
-          <div style="
-            font-size:.75rem;
-            color:var(--text-muted);
-          ">
+          <p>
             ${escHtml(vaga.empresa)}
-            ·
+            &middot;
             ${escHtml(vaga.modalidade)}
-          </div>
+          </p>
+
+          ${tags.length ? `
+            <div class="ei2-job-tags">
+              ${tags.map(tag => `
+                <span>${escHtml(tag)}</span>
+              `).join('')}
+            </div>
+          ` : ''}
 
         </div>
 
-      </div>
+        <div class="ei2-job-match"
+             style="color:${obterCorScore(vaga.match)}">
+          ${avaliado
+            ? escHtml(scoreTexto(vaga.match)) + ' match'
+            : 'N&atilde;o avaliado'}
+        </div>
+
+      </article>
     `;
   }).join('');
 }
@@ -4537,6 +4594,7 @@ async function init() {
 
   initSidebar();
   initNavigation();
+
   initThemeControl();
   initLogout();
   initFilters();
@@ -4545,6 +4603,24 @@ async function init() {
   if (dashPanel === 'candidato') {
     initCandidaturaModal();
     await loadCandidatoDashboard();
+
+  // EasyIntern 2.0: abrir diretamente a secao solicitada
+  if (dashPanel === 'candidato') {
+    const parametros = new URLSearchParams(window.location.search);
+    const secaoInicial = parametros.get('secao');
+
+    const secoesPermitidas = [
+      'overview',
+      'recomendadas',
+      'candidaturas',
+      'perfil',
+      'chat'
+    ];
+
+    if (secoesPermitidas.includes(secaoInicial)) {
+      navigateTo(secaoInicial);
+    }
+  }
   } else if (dashPanel === 'empresa') {
     initFormNovaVaga();
     initCandidatoModal();
@@ -4608,7 +4684,68 @@ function preencherFormularioPerfil(perfil) {
 }
 
 // Atualiza a visualização do perfil.
+
+// EI2-PROFILE-COMPLETION
+function ei2AtualizarProgressoPerfil(perfil) {
+  const circulo = document.getElementById(
+    'ei2-home-profile-progress'
+  );
+
+  if (!circulo || !perfil) return;
+
+  const campos = [
+    'nome_completo',
+    'telefone',
+    'cidade',
+    'uf',
+    'nivel_carreira',
+    'linkedin_url',
+    'github_url',
+    'biografia'
+  ];
+
+  const preenchidos = campos.filter(campo =>
+    String(perfil[campo] ?? '').trim().length > 0
+  ).length;
+
+  const progresso = Math.round(
+    preenchidos / campos.length * 100
+  );
+
+  circulo.style.setProperty(
+    '--profile-progress', progresso + '%'
+  );
+
+  circulo.textContent = progresso + '%';
+
+  circulo.setAttribute('role', 'progressbar');
+  circulo.setAttribute('aria-label', 'Preenchimento do perfil');
+  circulo.setAttribute('aria-valuemin', '0');
+  circulo.setAttribute('aria-valuemax', '100');
+  circulo.setAttribute('aria-valuenow', String(progresso));
+
+  const titulo = document.getElementById(
+    'ei2-home-profile-status'
+  );
+
+  if (titulo) {
+    titulo.textContent = progresso === 100
+      ? 'Perfil completo'
+      : 'Perfil preenchido';
+  }
+}
+
 function exibirDadosPerfil(perfil) {
+  ei2AtualizarProgressoPerfil(perfil);
+
+  // EI2 - Biografia real do candidato
+  const bio = document.getElementById('ei2-profile-bio');
+
+  if (bio) {
+    bio.textContent = String(perfil.biografia || '').trim()
+      || 'Adicione uma biografia ao seu perfil profissional.';
+  }
+
   setText(
     'perfil-nome',
     perfil.nome_completo || 'Nome não informado'
@@ -4881,4 +5018,127 @@ if (document.readyState === 'loading') {
   );
 } else {
   iniciarEdicaoPerfilCandidato();
+}
+
+// EI2 - DETALHES DA VAGA
+function ei2AbrirDetalhesVaga(vaga, origem) {
+  if (document.getElementById('ei2-job-dialog')) return;
+
+  const dialog = document.createElement('dialog');
+  dialog.id = 'ei2-job-dialog';
+  dialog.className = 'ei2-job-dialog';
+  dialog.setAttribute('aria-labelledby', 'ei2-job-title');
+
+  const habilidades = (vaga.tags || '')
+    .split(',')
+    .map(tag => tag.trim())
+    .filter(Boolean);
+
+  const score = obterScore(vaga.match);
+
+  const nivel = ({
+    estagiario: 'Estagiário',
+    estagio: 'Estágio',
+    junior: 'Júnior',
+    pleno: 'Pleno'
+  })[vaga.nivel] || vaga.nivel || 'Não informado';
+
+  const local = [vaga.cidade, vaga.estado]
+    .filter(Boolean).join(', ') || 'Não informado';
+
+  dialog.innerHTML = `
+    <div class="ei2-detail-header">
+      <strong>DETALHES DA VAGA</strong>
+      <button type="button" data-fechar aria-label="Fechar">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <div class="ei2-detail-body">
+      <div class="ei2-detail-company">
+        <div class="ei2-detail-icon">
+          <i class="bi bi-building"></i>
+        </div>
+        <div>
+          <h2 id="ei2-job-title">${escHtml(vaga.titulo)}</h2>
+          <p>${escHtml(vaga.empresa)}</p>
+        </div>
+      </div>
+
+      <div class="ei2-detail-meta">
+        ${modalidadePill(vaga.modalidade)}
+        <span>${escHtml(nivel)}</span>
+        <span>${escHtml(local)}</span>
+        <span>${escHtml(formatarMoeda(vaga.salario_min))}</span>
+      </div>
+
+      <div class="ei2-detail-match">
+        <div class="ei2-detail-match-title">
+          <strong>${vaga.match?.estimado
+            ? 'Compatibilidade estimada'
+            : 'Compatibilidade IA'}</strong>
+          <strong>${scoreTexto(vaga.match)}</strong>
+        </div>
+
+        ${score !== null ? `
+          <div class="ei2-detail-track">
+            <div style="width:${Math.max(0, Math.min(100, score))}%"></div>
+          </div>
+        ` : ''}
+      </div>
+
+      <h3>Sobre a oportunidade</h3>
+      <p class="ei2-detail-description">
+        ${escHtml(vaga.descricao || 'Descrição não informada.')}
+      </p>
+
+      ${habilidades.length ? `
+        <h3>Habilidades</h3>
+        <div class="ei2-detail-tags">
+          ${habilidades.map(tag => `
+            <span>${escHtml(tag)}</span>
+          `).join('')}
+        </div>
+      ` : ''}
+
+      ${vaga.match?.veredicto ? `
+        <h3>Análise de compatibilidade</h3>
+        <p>${escHtml(vaga.match.veredicto)}</p>
+      ` : ''}
+    </div>
+
+    <div class="ei2-detail-footer">
+      <button type="button" data-fechar
+              class="ei2-job-details-btn">
+        Fechar
+      </button>
+
+      ${vaga.ja_candidatou
+        ? '<span class="ei2-detail-status">Já se candidatou</span>'
+        : CANDIDATURAS_HABILITADAS
+          ? '<button type="button" class="btn btn-primary" data-aplicar>Candidatar-se</button>'
+          : ''}
+    </div>
+  `;
+
+  document.body.appendChild(dialog);
+
+  dialog.querySelectorAll('[data-fechar]').forEach(btn => {
+    btn.addEventListener('click', () => dialog.close());
+  });
+
+  dialog.querySelector('[data-aplicar]')?.addEventListener('click', () => {
+    dialog.close();
+    abrirModalCandidatura(vaga.id, vaga.titulo, vaga.empresa);
+  });
+
+  dialog.addEventListener('close', () => {
+    dialog.remove();
+    if (!document.getElementById('modal-candidatura') ||
+        document.getElementById('modal-candidatura').hidden) {
+      origem?.focus();
+    }
+  });
+
+  dialog.showModal();
 }

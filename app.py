@@ -1,3 +1,4 @@
+from social.routes import router as social_router
 from pathlib import Path
 
 from fastapi import FastAPI, Request
@@ -89,6 +90,8 @@ app.include_router(feedback_router)
 app.include_router(chat_router)
 app.include_router(chat_ws_router)
 
+app.include_router(social_router)
+
 @app.get("/")
 def inicio():
     return {
@@ -128,3 +131,18 @@ def teste_banco():
     return {
         "mensagem": "Conexão com o banco realizada com sucesso!"
     }
+
+@app.get("/conexoes", response_class=HTMLResponse)
+def pagina_conexoes(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="conexoes.html"
+    )
+
+
+@app.get("/landing", response_class=HTMLResponse)
+def pagina_landing(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="landing.html"
+    )

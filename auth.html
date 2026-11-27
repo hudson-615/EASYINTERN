@@ -2,26 +2,240 @@
 
 {% block title %}Acesse sua conta — EasyIntern{% endblock %}
 
+
+{% block extra_head %}
+<!-- EI2-PREVENT-AUTH-FLASH -->
+<script>
+(() => {
+  const cadastro = new URLSearchParams(
+    window.location.search
+  ).get('cadastro');
+
+  if (['candidato', 'empresa'].includes(cadastro)) {
+    document.documentElement.dataset.authInitial = cadastro;
+  }
+})();
+</script>
+
+<style>
+html[data-auth-initial] #auth-section {
+  visibility: hidden;
+}
+</style>
+
+<link rel="stylesheet" href="/static/css/easyintern2-tokens.css?v=1">
+<link rel="stylesheet" href="/static/css/easyintern2-components.css?v=1">
+<link rel="stylesheet" href="/static/css/easyintern2-auth.css?v=4">
+{% endblock %}
+
 {% block content %}
 <!-- ═══════════════════════════════════════════════════════════════════════
      SPA DE AUTENTICAÇÃO — 3 painéis: Login | Candidato | Empresa
      Transições via JS (opacity + transform), sem page reload.
 ════════════════════════════════════════════════════════════════════════ -->
 
-<section class="auth-section" id="auth-section">
+
+<!-- EI2-AUTH-LAYOUT -->
+<!-- EI2-LOGIN-REFINADO -->
+
+    <div class="ei2-theme-switch" role="group"
+         aria-label="Tema de aparencia">
+
+      <button type="button" data-auth-theme="light"
+              aria-label="Tema claro" aria-pressed="false">
+        <i class="bi bi-sun" aria-hidden="true"></i>
+      </button>
+
+      <button type="button" data-auth-theme="dark"
+              aria-label="Tema escuro" aria-pressed="true">
+        <i class="bi bi-moon-stars" aria-hidden="true"></i>
+      </button>
+
+    </div>
+<section class="auth-section ei2-auth" id="auth-section">
+
+  <aside class="ei2-auth-visual">
+
+    <div class="ei2-auth-logo">
+      <img class="ei2-brand-mark" src="/static/img/easyintern-logo.svg" alt="">
+      <strong>EasyIntern</strong>
+      <span class="ei2-logo-version">2.0</span>
+    </div>
+
+    <div class="ei2-auth-intro">
+      <h1>Acesse sua conta</h1>
+      <p>Continue sua jornada profissional no EasyIntern.</p>
+    </div>
+
+
+    <!-- EI2-REGISTER-LAYOUT -->
+    <div class="ei2-register-promo">
+
+      <span class="ei2-register-eyebrow">
+        CARREIRAS &bull; EST&Aacute;GIOS &bull; OPORTUNIDADES
+      </span>
+
+      <h2>Impulsione sua carreira com
+        <span>est&aacute;gios reais</span>
+      </h2>
+
+      <p class="ei2-register-description">
+        A rede profissional para estudantes que conecta
+        talentos a oportunidades de est&aacute;gio e desenvolvimento.
+      </p>
+
+      <div class="ei2-register-benefits">
+
+        <div class="ei2-benefit">
+          <i class="bi bi-mortarboard"></i>
+          <div>
+            <strong>Oportunidades reais</strong>
+            <p>Encontre vagas de est&aacute;gio na sua &aacute;rea.</p>
+          </div>
+        </div>
+
+        <div class="ei2-benefit">
+          <i class="bi bi-graph-up-arrow"></i>
+          <div>
+            <strong>Evolu&ccedil;&atilde;o na carreira</strong>
+            <p>Construa seu perfil e destaque suas habilidades no mercado.</p>
+          </div>
+        </div>
+
+        <div class="ei2-benefit">
+          <i class="bi bi-people"></i>
+          <div>
+            <strong>Conex&otilde;es que geram resultados</strong>
+            <p>Conecte-se com empresas e profissionais.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="ei2-register-art" aria-hidden="true">
+
+    <img class="ei2-register-art-dark"
+         src="/static/img/cadastro-dark.png" alt="">
+
+    <img class="ei2-register-art-light"
+         src="/static/img/cadastro-light.png" alt="">
+
+    </div>
+<div class="ei2-auth-art" aria-hidden="true">
+    <img class="ei2-art-dark"
+         src="/static/img/login-dark.png" alt="">
+    <img class="ei2-art-light"
+         src="/static/img/login-light.png" alt="">
+
+    </div>
+
+    <span class="ei2-auth-caption">
+      CARREIRAS &bull; EST&Aacute;GIOS &bull; CONEX&Otilde;ES
+    </span>
+  </aside>
+
+  <div class="ei2-auth-content">
+    <aside class="ei2-register-preview ei2-company-preview">
+      <span class="ei2-preview-label">Pr&eacute;via</span>
+
+      <h2><i class="bi bi-building"></i> Cadastro de Empresa</h2>
+
+      <p>Cadastre sua empresa e encontre talentos para seu time.</p>
+
+      <div class="ei2-preview-field">
+        <strong>Nome da empresa</strong>
+        <span>Ex.: TechSolutions</span>
+      </div>
+
+      <div class="ei2-preview-field">
+        <strong>CNPJ</strong>
+        <span>00.000.000/0001-00</span>
+      </div>
+
+      <div class="ei2-preview-field">
+        <strong>E-mail corporativo</strong>
+        <span>rh@techsolutions.com.br</span>
+      </div>
+
+      <div class="ei2-preview-field">
+        <strong>Senha</strong>
+        <span>Crie uma senha segura</span>
+      </div>
+
+      <div class="ei2-preview-field">
+        <strong>&Aacute;rea de atua&ccedil;&atilde;o</strong>
+        <span>Selecione uma &aacute;rea</span>
+      </div>
+
+      <div class="ei2-preview-benefits">
+        <p><i class="bi bi-check-lg"></i> Divulgue vagas de est&aacute;gio</p>
+        <p><i class="bi bi-check-lg"></i> Encontre estudantes qualificados</p>
+        <p><i class="bi bi-check-lg"></i> Gerencie processos seletivos</p>
+        <p><i class="bi bi-check-lg"></i> Fortale&ccedil;a sua marca</p>
+      </div>
+
+      <button type="button" class="ei-button ei-button-secondary"
+              data-ei2-register="empresa">
+        Cadastrar empresa
+      </button>
+    </aside>
+
+    <aside class="ei2-register-preview ei2-candidate-preview">
+      <span class="ei2-preview-label">Pr&eacute;via</span>
+
+      <h2><i class="bi bi-mortarboard"></i> Cadastro de Candidato</h2>
+
+      <p>Crie seu perfil profissional e encontre oportunidades.</p>
+
+      <div class="ei2-preview-field">
+        <strong>Nome completo</strong>
+        <span>Ex.: Ana Souza Oliveira</span>
+      </div>
+
+      <div class="ei2-preview-field">
+        <strong>E-mail</strong>
+        <span>seuemail@exemplo.com</span>
+      </div>
+
+      <div class="ei2-preview-field">
+        <strong>N&iacute;vel de carreira</strong>
+        <span>Estagi&aacute;rio</span>
+      </div>
+
+      <div class="ei2-preview-field">
+        <strong>Forma&ccedil;&atilde;o</strong>
+        <span>Selecione seu curso</span>
+      </div>
+
+      <div class="ei2-preview-field">
+        <strong>Senha</strong>
+        <span>Crie uma senha segura</span>
+      </div>
+
+      <div class="ei2-preview-benefits">
+        <p><i class="bi bi-check-lg"></i> Explore oportunidades</p>
+        <p><i class="bi bi-check-lg"></i> Desenvolva seu perfil</p>
+        <p><i class="bi bi-check-lg"></i> Amplie suas conex&otilde;es</p>
+      </div>
+
+      <button type="button" class="ei-button ei-button-secondary"
+              data-ei2-register="candidato">
+        Cadastrar candidato
+      </button>
+    </aside>
+
+    <header class="ei2-register-heading">
+      <h1>
+        <i class="bi bi-person-plus"></i>
+        Criar sua conta
+      </h1>
+      <p>Comece sua jornada no EasyIntern.</p>
+    </header>
+
+
 
   <!-- ── Logo / Marca ────────────────────────────────────────────────────── -->
-  <div class="auth-brand" aria-label="EasyIntern — Plataforma Inteligente de Recrutamento">
-    <div class="brand-icon" aria-hidden="true">
-      <i class="bi bi-rocket-takeoff-fill"></i>
-    </div>
-    <div class="brand-text">
-      <h1 class="brand-title">EasyIntern</h1>
-      <p class="brand-subtitle">Plataforma EasyIntern de Recrutamento</p>
-    </div>
-  </div>
-
-  <!-- ── Seletor de painel ───────────────────────────────────────────────── -->
   <div class="auth-tabs" role="tablist" aria-label="Tipo de acesso">
     <button
       class="auth-tab active"
@@ -65,12 +279,25 @@
     role="tabpanel"
     aria-labelledby="tab-login"
   >
-    <div class="panel-header">
-      <h2 class="panel-title">Bem-vindo de volta</h2>
-      <p class="panel-desc">Entre na sua conta para continuar</p>
-    </div>
 
-    <form class="auth-form" id="form-login" novalidate>
+
+
+    <!-- EI2-LOGIN-ROLES -->
+    <div class="ei2-login-roles" role="group"
+         aria-label="Tipo de conta">
+      <button type="button" class="active"
+              data-login-role="candidato"
+              aria-pressed="true">
+        Candidato
+      </button>
+
+      <button type="button"
+              data-login-role="empresa"
+              aria-pressed="false">
+        Empresa
+      </button>
+    </div>
+<form class="auth-form" id="form-login" novalidate>
       <!-- E-mail -->
       <div class="field-group" id="fg-login-email">
         <label class="field-label" for="login-email">
@@ -84,7 +311,7 @@
             type="email"
             name="email"
             autocomplete="email"
-            placeholder="seu@email.com"
+            placeholder="seuemail@exemplo.com"
             required
             aria-required="true"
             aria-describedby="login-email-err"
@@ -107,7 +334,7 @@
             type="password"
             name="password"
             autocomplete="current-password"
-            placeholder="Mínimo 8 caracteres"
+            placeholder="Sua senha"
             required
             aria-required="true"
             aria-describedby="login-password-err"
@@ -125,7 +352,13 @@
       </div>
 
       <!-- Submit -->
-      <button type="submit" class="btn-ag btn-primary" id="btn-login">
+      <div style="text-align:center;margin-top:4px;">
+        <button type="button" class="forgot-pwd-link" id="btn-forgot-pwd">
+          <i class="bi bi-question-circle" aria-hidden="true"></i>
+          Esqueci minha senha
+        </button>
+      </div>
+<button type="submit" class="btn-ag btn-primary" id="btn-login">
         <span class="btn-text">
           <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i>
           Entrar
@@ -137,20 +370,28 @@
       </button>
 
       <!-- Separador -->
-      <div class="auth-divider"><span>ou crie sua conta</span></div>
 
-      <div class="auth-links">
-        <button type="button" class="auth-link-btn" data-goto="candidato">
-          <i class="bi bi-person-plus" aria-hidden="true"></i>
-          Sou Candidato
-        </button>
-        <button type="button" class="auth-link-btn" data-goto="empresa">
-          <i class="bi bi-building-add" aria-hidden="true"></i>
-          Sou Empresa
+      <div class="auth-divider"><span>ou</span></div>
+
+      <button type="button"
+              class="ei2-google-button"
+              disabled
+              title="Integracao com Google pendente">
+        <span class="ei2-google-icon">G</span>
+        Entrar com Google
+      </button>
+
+      <div class="ei2-register-link">
+        N&atilde;o tem uma conta?
+        <button type="button"
+                id="ei2-register-shortcut"
+                data-goto="candidato">
+          Cadastre-se
         </button>
       </div>
 
-      <div class="demo-access" aria-labelledby="demo-access-title">
+
+      <details class="ei2-demo-details"><summary>Acesso de demonstra&ccedil;&atilde;o</summary><div class="demo-access" aria-labelledby="demo-access-title">
         <div class="demo-access-heading">
           <span class="demo-access-icon" aria-hidden="true"><i class="bi bi-lightning-charge-fill"></i></span>
           <div>
@@ -172,20 +413,16 @@
         </div>
       </div>
 
-      <div style="text-align:center;margin-top:4px;">
-        <button type="button" class="forgot-pwd-link" id="btn-forgot-pwd">
-          <i class="bi bi-question-circle" aria-hidden="true"></i>
-          Esqueci minha senha
-        </button>
-      </div>
-    </form>
+
+    </details>
+</form>
   </div>
 
   <!-- ── MODAL: RECUPERAÇÃO DE SENHA ──────────────────────────────────────── -->
   <div class="modal-overlay-auth" id="modal-recovery" hidden aria-modal="true" role="dialog" aria-labelledby="modal-rec-title">
     <div class="modal-box-auth glass-card">
       <div class="modal-auth-header">
-        <h3 id="modal-rec-title"><i class="bi bi-envelope-open-heart"></i> Recuperar Senha</h3>
+        <h3 id="modal-rec-title"><i class="bi bi-envelope-open-heart"></i> Esqueceu sua senha?</h3>
         <button class="modal-close-auth" id="modal-rec-close" aria-label="Fechar"><i class="bi bi-x-lg"></i></button>
       </div>
       <div class="modal-auth-body">
@@ -203,9 +440,9 @@
         <div class="form-feedback-modal" id="rec-feedback" hidden></div>
       </div>
       <div class="modal-auth-footer">
-        <button class="btn-ag btn-ghost-sm" id="btn-rec-cancel">Cancelar</button>
+        <button class="btn-ag btn-ghost-sm" id="btn-rec-cancel">Voltar ao login</button>
         <button class="btn-ag btn-violet-sm" id="btn-rec-send">
-          <span class="btn-text"><i class="bi bi-send-fill"></i> Enviar Link</span>
+          <span class="btn-text"><i class="bi bi-send-fill"></i> Enviar link de recupera&ccedil;&atilde;o</span>
           <span class="btn-spinner" aria-hidden="true"><i class="bi bi-arrow-repeat spin"></i> Enviando...</span>
         </button>
       </div>
@@ -216,7 +453,7 @@
   <div class="modal-overlay-auth" id="modal-reset" hidden aria-modal="true" role="dialog" aria-labelledby="modal-rst-title">
     <div class="modal-box-auth glass-card">
       <div class="modal-auth-header">
-        <h3 id="modal-rst-title"><i class="bi bi-shield-lock-fill"></i> Nova Senha</h3>
+        <h3 id="modal-rst-title"><i class="bi bi-shield-lock-fill"></i> Crie uma nova senha</h3>
         <button class="modal-close-auth" id="modal-rst-close" aria-label="Fechar"><i class="bi bi-x-lg"></i></button>
       </div>
       <div class="modal-auth-body">
@@ -227,7 +464,7 @@
         <div class="field-group">
           <label class="field-label" for="rst-pwd"><i class="bi bi-lock"></i> Nova Senha</label>
           <div class="field-input-wrap">
-            <input class="field-input" id="rst-pwd" type="password" placeholder="Mín. 8 chars, 1 maiúscula, 1 número" />
+            <input class="field-input" id="rst-pwd" type="password" placeholder="Digite sua nova senha" />
             <button type="button" class="field-eye" data-target="rst-pwd" aria-label="Mostrar/ocultar">
               <i class="bi bi-eye"></i>
             </button>
@@ -238,13 +475,18 @@
           <label class="field-label" for="rst-pwd-confirm"><i class="bi bi-lock-fill"></i> Confirmar Senha</label>
           <div class="field-input-wrap">
             <input class="field-input" id="rst-pwd-confirm" type="password" placeholder="Repita a nova senha" />
+            <button type="button" class="field-eye"
+                    data-target="rst-pwd-confirm"
+                    aria-label="Mostrar ou ocultar senha">
+              <i class="bi bi-eye"></i>
+            </button>
           </div>
           <span class="field-error" id="rst-pwd-confirm-err" role="alert"></span>
         </div>
         <div class="form-feedback-modal" id="rst-feedback" hidden></div>
       </div>
       <div class="modal-auth-footer">
-        <button class="btn-ag btn-ghost-sm" id="btn-rst-cancel">Cancelar</button>
+        <button class="btn-ag btn-ghost-sm" id="btn-rst-cancel">Voltar ao login</button>
         <button class="btn-ag btn-violet-sm" id="btn-rst-save">
           <span class="btn-text"><i class="bi bi-shield-check"></i> Redefinir Senha</span>
           <span class="btn-spinner" aria-hidden="true"><i class="bi bi-arrow-repeat spin"></i> Salvando...</span>
@@ -335,7 +577,7 @@
         <div class="field-label-row">
           <label class="field-label" for="c-area">
             <i class="bi bi-mortarboard-fill" aria-hidden="true"></i>
-            Formação Técnica / Bacharelado
+            Forma&ccedil;&atilde;o acad&ecirc;mica
             <span class="field-optional">(opcional)</span>
           </label>
           <span class="field-badge-api" title="Integrado com Catálogo Nacional de Cursos Técnicos (CNCT/SETEC/MEC) e Censo da Educação Superior (INEP)">
@@ -348,7 +590,7 @@
             id="c-area"
             type="text"
             name="area_interesse"
-            placeholder="Ex: Técnico em Dev de Sistemas, Bacharelado em Ciência da Computação..."
+            placeholder="Pesquise seu curso"
             autocomplete="off"
             aria-autocomplete="list"
             aria-controls="area-suggestions"
@@ -447,7 +689,36 @@
         <span class="field-error" id="c-password-err" role="alert"></span>
       </div>
 
-      <button type="submit" class="btn-ag btn-success" id="btn-candidato">
+
+    <div class="field-group ei2-confirm-group"
+         id="fg-c-confirm">
+      <label class="field-label" for="c-confirm-password">
+        <i class="bi bi-lock"></i>
+        Confirmar senha
+      </label>
+
+      <div class="ei2-confirm-wrap">
+        <input class="field-input"
+               id="c-confirm-password"
+               type="password"
+               autocomplete="new-password"
+               placeholder="Confirme sua senha"
+               aria-describedby="c-confirm-error"
+               required>
+
+        <button type="button"
+                class="ei2-confirm-eye"
+                data-ei2-password="c-confirm-password"
+                aria-label="Mostrar senha">
+          <i class="bi bi-eye"></i>
+        </button>
+      </div>
+
+      <p class="ei2-confirm-error"
+         id="c-confirm-error"
+         aria-live="polite"></p>
+    </div>
+<button type="submit" class="btn-ag btn-success" id="btn-candidato">
         <span class="btn-text">
           <i class="bi bi-person-check" aria-hidden="true"></i>
           Criar Conta de Candidato
@@ -631,7 +902,36 @@
         <span class="field-error" id="e-password-err" role="alert"></span>
       </div>
 
-      <button type="submit" class="btn-ag btn-violet" id="btn-empresa">
+
+    <div class="field-group ei2-confirm-group"
+         id="fg-e-confirm">
+      <label class="field-label" for="e-confirm-password">
+        <i class="bi bi-lock"></i>
+        Confirmar senha
+      </label>
+
+      <div class="ei2-confirm-wrap">
+        <input class="field-input"
+               id="e-confirm-password"
+               type="password"
+               autocomplete="new-password"
+               placeholder="Confirme sua senha"
+               aria-describedby="e-confirm-error"
+               required>
+
+        <button type="button"
+                class="ei2-confirm-eye"
+                data-ei2-password="e-confirm-password"
+                aria-label="Mostrar senha">
+          <i class="bi bi-eye"></i>
+        </button>
+      </div>
+
+      <p class="ei2-confirm-error"
+         id="e-confirm-error"
+         aria-live="polite"></p>
+    </div>
+<button type="submit" class="btn-ag btn-violet" id="btn-empresa">
         <span class="btn-text">
           <i class="bi bi-building-check" aria-hidden="true"></i>
           Criar Conta de Empresa
@@ -696,5 +996,137 @@
     </div>
   </div>
 
+</div>
 </section>
+{% endblock %}
+
+{% block extra_scripts %}
+
+
+<!-- EI2-PASSWORD-CONFIRM -->
+<script>
+(() => {
+  for (const [prefix, tipo] of [
+    ['c', 'candidato'],
+    ['e', 'empresa']
+  ]) {
+    const form = document.getElementById('form-' + tipo);
+    const password = document.getElementById(prefix + '-password');
+    const confirm = document.getElementById(prefix + '-confirm-password');
+    const error = document.getElementById(prefix + '-confirm-error');
+
+    if (!form || !password || !confirm || !error) continue;
+
+    function validar() {
+      let mensagem = '';
+
+      if (!confirm.value) {
+        mensagem = 'Confirme sua senha.';
+      } else if (password.value !== confirm.value) {
+        mensagem = 'As senhas precisam ser iguais.';
+      }
+
+      error.textContent = mensagem;
+      confirm.setCustomValidity(mensagem);
+      confirm.setAttribute('aria-invalid', String(Boolean(mensagem)));
+
+      return !mensagem;
+    }
+
+    confirm.addEventListener('input', validar);
+
+    password.addEventListener('input', () => {
+      if (confirm.value) validar();
+    });
+
+    form.addEventListener('submit', event => {
+      if (!validar()) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        confirm.focus();
+      }
+    }, true);
+  }
+
+  document.querySelectorAll('[data-ei2-password]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const input = document.getElementById(btn.dataset.ei2Password);
+      const oculto = input.type === 'password';
+
+      input.type = oculto ? 'text' : 'password';
+
+      btn.setAttribute(
+        'aria-label',
+        oculto ? 'Ocultar senha' : 'Mostrar senha'
+      );
+
+      btn.querySelector('i').className =
+        oculto ? 'bi bi-eye-slash' : 'bi bi-eye';
+    });
+  });
+})();
+</script>
+
+<script>
+document.querySelectorAll('[data-ei2-register]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.getElementById(
+      'tab-' + btn.dataset.ei2Register
+    )?.click();
+  });
+});
+</script>
+
+<script>
+(() => {
+  const root = document.documentElement;
+  const key = 'easyintern_auth_theme';
+
+  function aplicarTema(tema) {
+    root.dataset.theme = tema;
+
+    document.querySelectorAll('[data-auth-theme]').forEach(btn => {
+      const ativo = btn.dataset.authTheme === tema;
+      btn.classList.toggle('active', ativo);
+      btn.setAttribute('aria-pressed', String(ativo));
+    });
+  }
+
+  let tema = 'dark';
+
+  try {
+    const salvo = localStorage.getItem(key);
+    if (salvo === 'light' || salvo === 'dark') tema = salvo;
+  } catch {}
+
+  aplicarTema(tema);
+
+  document.querySelectorAll('[data-auth-theme]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      aplicarTema(btn.dataset.authTheme);
+
+      try {
+        localStorage.setItem(key, btn.dataset.authTheme);
+      } catch {}
+    });
+  });
+})();
+</script>
+
+
+<script>
+document.querySelectorAll('[data-login-role]').forEach(btn => {
+  btn.addEventListener('click', () => {
+
+    document.querySelectorAll('[data-login-role]').forEach(item => {
+      item.classList.toggle('active', item === btn);
+      item.setAttribute('aria-pressed', String(item === btn));
+    });
+
+    document.getElementById('ei2-register-shortcut')
+      .dataset.goto = btn.dataset.loginRole;
+  });
+});
+</script>
+
 {% endblock %}

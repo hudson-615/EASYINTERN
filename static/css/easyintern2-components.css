@@ -1,0 +1,129 @@
+/* EasyIntern 2.0 - Shared Components */
+
+.ei-card {
+  min-width: 0;
+  padding: var(--ei-space-lg);
+  border: 1px solid var(--ei-border);
+  border-radius: var(--ei-radius-lg);
+  background: var(--ei-card);
+  color: var(--ei-text);
+}
+
+.ei-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 18px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background .2s, border-color .2s;
+}
+
+.ei-button-primary {
+  background: var(--ei-primary);
+  color: #fff;
+  border-color: var(--ei-primary);
+}
+
+.ei-button-secondary {
+  background: var(--ei-accent);
+  color: var(--ei-highlight);
+  border-color: var(--ei-border);
+}
+
+.ei-button-outline {
+  background: transparent;
+  color: var(--ei-text);
+  border-color: var(--ei-border);
+}
+
+.ei-button:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+.ei-button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.ei-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.ei-field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ei-text);
+}
+
+.ei-input {
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  padding: 12px 14px;
+  border: 1px solid var(--ei-border);
+  border-radius: 10px;
+  background: var(--ei-surface);
+  color: var(--ei-text);
+  font: inherit;
+  box-sizing: border-box;
+}
+
+.ei-input::placeholder {
+  color: var(--ei-muted);
+}
+
+.ei-input:focus-visible,
+.ei-button:focus-visible {
+  outline: 2px solid var(--ei-primary);
+  outline-offset: 2px;
+}
+
+.ei-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--ei-accent);
+  color: var(--ei-highlight);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.ei-muted {
+  color: var(--ei-muted);
+}
+
+.ei-container {
+  width: 100%;
+  max-width: 1440px;
+  margin-inline: auto;
+  box-sizing: border-box;
+}
+
+@media (max-width: 600px) {
+  .ei-card {
+    padding: 18px;
+  }
+
+  .ei-input {
+    font-size: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ei-button {
+    transition: none;
+  }
+}

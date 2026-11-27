@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Conexões | EasyIntern 2.0</title>
+  <link rel="stylesheet" href="/static/css/conexoes.css" />
+  <script defer src="/static/js/conexoes.js?v=10"></script>
+  <link rel="stylesheet" href="/static/css/easyintern2-tokens.css" />
+  <link rel="stylesheet" href="/static/css/easyintern2-conexoes.css?v=10" />
+
+<!-- EI2-PEOPLE-EMBEDDED -->
+<script>
+if (new URLSearchParams(location.search).get('embedded') === '1') {
+    document.documentElement.classList.add('ei2-embedded');
+}
+</script>
+
+<style>
+.ei2-embedded .sidebar,
+.ei2-embedded .topbar,
+.ei2-embedded .hero {
+    display: none !important;
+}
+
+.ei2-embedded .shell {
+    display: block !important;
+}
+
+.ei2-embedded .main {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.ei2-embedded .discover {
+    margin: 0 !important;
+}
+
+.ei2-embedded .privacy-toolbar {
+    margin-top: 0;
+}
+
+.ei2-embedded body {
+    margin: 0;
+    background: var(--ei-bg);
+}
+</style>
+  <link rel="icon" type="image/svg+xml" href="/static/img/easyintern-logo.svg?v=2">
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar" aria-label="Navegação principal">
+      <a class="brand" href="/dashboard/candidato"><img class="brand-logo" src="/static/img/easyintern-logo.svg" alt="" /><span>EasyIntern <small>2.0</small></span></a>
+      <nav class="nav">
+        <a href="/dashboard/candidato"><span>⌂</span> Início</a>
+        <a class="active" href="/conexoes" aria-current="page"><span>♧</span> Conexões</a>
+        <a href="/dashboard/candidato?secao=recomendadas"><span>▣</span> Vagas</a>
+        <a href="/dashboard/candidato?secao=candidaturas"><span>▤</span> Candidaturas</a>
+        <a href="/dashboard/candidato?secao=perfil"><span>◫</span> Meu perfil</a>
+        <a href="/dashboard/candidato?secao=chat"><span>✉</span> Mensagens</a>
+      </nav>
+      <div class="sidebar-bottom"><span class="eyebrow">REDE PROFISSIONAL</span><p>Encontre estudantes e amplie sua rede profissional.</p></div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div><p class="eyebrow">REDE PROFISSIONAL</p><h1>Conexões <span class="sparkle">✦</span></h1><p class="subtitle">Encontre estudantes com interesses e habilidades próximos dos seus.</p></div>
+        <button id="themeToggle" type="button" class="secondary theme-toggle" aria-label="Alternar tema">&#9728; <span>Modo claro</span></button>
+      </header>
+
+      <section class="hero" aria-label="Apresentação">
+        <div><p class="eyebrow">AMPLIE SEU NETWORKING</p><h2>Seu próximo projeto pode começar com uma conexão.</h2><p>Explore perfis, descubra talentos e construa sua trajetória profissional.</p></div>
+        <div class="hero-illustration" aria-hidden="true"><div class="bubble one">JS</div><div class="bubble two">UX</div><div class="bubble three">PY</div><span class="hero-link">↗</span></div>
+      </section>
+
+
+    <div class="privacy-toolbar">
+      <button id="profileVisibility"
+              class="secondary"
+              type="button">
+        Meu perfil: verificando...
+      </button>
+    </div>
+    <section class="discover" aria-labelledby="peopleTitle">
+        <div class="section-heading"><div><h2 id="peopleTitle">Conheça a comunidade</h2><p>Busque por nome, curso, instituição ou habilidade.</p></div><span class="counter" id="resultCount" aria-live="polite"></span></div>
+        <div class="toolbar"><label class="search-wrap" for="searchPeople"><span aria-hidden="true">⌕</span><input id="searchPeople" type="search" placeholder="Buscar por nome, curso ou habilidade..." autocomplete="off" /></label><label class="select-wrap">&Aacute;rea <select id="areaFilter"><option value="">Todas as áreas</option><option value="desenvolvimento">Desenvolvimento</option><option value="design">Design</option><option value="dados">Dados</option></select></label></div>
+
+<!-- EI2-PEOPLE-FILTERS -->
+<div class="ei2-people-filters">
+
+  <strong>Filtros:</strong>
+
+  <select id="filterCourse" aria-label="Filtrar por curso">
+    <option value="">Curso</option>
+  </select>
+
+  <select id="filterSkill" aria-label="Filtrar por habilidade">
+    <option value="">Habilidades</option>
+  </select>
+
+  <select aria-label="Instituicao" disabled
+          title="Funcionalidade em desenvolvimento">
+    <option>Institui&ccedil;&atilde;o</option>
+  </select>
+
+  <select id="filterLocation" aria-label="Filtrar por local">
+    <option value="">Localiza&ccedil;&atilde;o</option>
+  </select>
+
+  <button type="button" id="clearPeopleFilters">
+    Limpar filtros
+  </button>
+
+</div>
+<div class="tabs" role="tablist" aria-label="Visualização das conexões"><button type="button" class="tab active" role="tab" aria-selected="true" data-tab="discover">Descobrir</button><button type="button" class="tab" role="tab" aria-selected="false" data-tab="saved">Perfis salvos <span id="savedCount">0</span></button></div>
+        <div id="peopleGrid" class="people-grid" aria-live="polite"></div>
+        <div id="emptyState" class="empty" hidden><span aria-hidden="true">⌕</span><h3>Nenhum perfil encontrado</h3><p>Tente remover um filtro ou pesquisar outro termo.</p></div>
+      </section>
+    </main>
+  </div>
+  <dialog id="profileDialog" class="profile-dialog" aria-labelledby="dialogName"><div class="dialog-inner"><button class="close-dialog" id="closeDialog" aria-label="Fechar perfil">✕</button><div id="dialogContent"></div></div></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<!-- EI2-PEOPLE-AUTOHEIGHT -->
+<script>
+if (
+    document.documentElement.classList.contains('ei2-embedded')
+    && window.parent !== window
+) {
+    window.addEventListener('DOMContentLoaded', () => {
+        const shell = document.querySelector('.shell');
+
+        if (!shell) return;
+
+        shell.style.minHeight = '0';
+        document.body.style.minHeight = '0';
+
+        function ajustarAltura() {
+            const frame = window.frameElement;
+
+            if (frame) {
+                frame.style.height =
+                    Math.ceil(shell.getBoundingClientRect().height + 8)
+                    + 'px';
+            }
+        }
+
+        new ResizeObserver(ajustarAltura).observe(shell);
+        ajustarAltura();
+    });
+}
+</script>
+</body>
+</html>

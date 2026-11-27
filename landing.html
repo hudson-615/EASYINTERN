@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>EasyIntern 2.0 | Seu futuro começa aqui</title>
+
+
+
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <link rel="stylesheet"
+        href="/static/css/easyintern2-tokens.css">
+
+  <link rel="stylesheet"
+        href="/static/css/easyintern2-components.css">
+
+  <link rel="stylesheet"
+        href="/static/css/easyintern2-landing.css">
+
+  <script src="/static/js/easyintern2-landing.js" defer></script>
+  <link rel="icon" type="image/svg+xml" href="/static/img/easyintern-logo.svg?v=2">
+</head>
+
+<body>
+
+  <header class="landing-header">
+
+    <div class="landing-container landing-nav">
+
+      <a href="/landing" class="landing-brand">
+        <img src="/static/img/easyintern-logo.svg" alt="">
+        <strong>EasyIntern <span>2.0</span></strong>
+      </a>
+
+      <nav class="landing-links" aria-label="Menu principal">
+        <a href="#inicio">Início</a>
+        <a href="#recursos">Recursos</a>
+        <a href="#estudantes">Estudantes</a>
+        <a href="#empresas">Empresas</a>
+      </nav>
+
+      <div class="landing-actions">
+
+        <button type="button" id="landing-theme"
+                aria-label="Alternar tema">
+          <i class="bi bi-sun"></i>
+        </button>
+
+        <a href="/auth" class="landing-login">Entrar</a>
+
+        <a href="/auth?cadastro=candidato" class="ei-button ei-button-primary">
+          Criar conta
+        </a>
+
+      </div>
+
+    </div>
+
+  </header>
+
+  <main>
+
+    <section class="landing-hero" id="inicio">
+
+      <div class="landing-container hero-grid">
+
+        <div class="hero-content">
+
+          <span class="hero-eyebrow">
+            <i class="bi bi-stars"></i>
+            SUA CARREIRA COMEÇA AQUI
+          </span>
+
+          <h1>
+            Conecte talentos.
+            <br>
+            Construa seu
+            <span>futuro profissional.</span>
+          </h1>
+
+          <p>
+            Encontre oportunidades de estágio, desenvolva
+            seu perfil profissional e conecte-se com estudantes
+            e empresas em um único lugar.
+          </p>
+
+          <div class="hero-actions">
+
+            <a href="/auth?cadastro=candidato" class="ei-button ei-button-primary">
+              Comece agora
+              <i class="bi bi-arrow-right"></i>
+            </a>
+
+            <a href="#recursos" class="ei-button ei-button-outline">
+              Conheça a plataforma
+            </a>
+
+          </div>
+
+        </div>
+
+        <div class="hero-art">
+
+          <img class="landing-art-dark"
+               src="/static/img/cadastro-dark.png"
+               alt="Estudante utilizando um notebook">
+
+          <img class="landing-art-light"
+               src="/static/img/cadastro-light.png"
+               alt="Estudante utilizando um notebook">
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <section class="landing-resources" id="recursos">
+
+      <div class="landing-container">
+
+        <div class="section-heading">
+          <span>DESENVOLVA SEU POTENCIAL</span>
+          <h2>Tudo que você precisa para evoluir</h2>
+          <p>Uma plataforma que conecta oportunidades e desenvolvimento profissional.</p>
+        </div>
+
+        <div class="resource-grid">
+
+          <article class="ei-card resource-card">
+            <i class="bi bi-briefcase"></i>
+            <h3>Oportunidades reais</h3>
+            <p>Explore vagas de estágio e oportunidades para iniciar sua carreira.</p>
+          </article>
+
+          <article class="ei-card resource-card">
+            <i class="bi bi-people"></i>
+            <h3>Conexões profissionais</h3>
+            <p>Encontre estudantes e amplie sua rede de contatos profissionais.</p>
+          </article>
+
+          <article class="ei-card resource-card">
+            <i class="bi bi-person-vcard"></i>
+            <h3>Perfil profissional</h3>
+            <p>Apresente suas habilidades, formações e experiências.</p>
+          </article>
+
+          <article class="ei-card resource-card">
+            <i class="bi bi-stars"></i>
+            <h3>Match inteligente</h3>
+            <p>Descubra oportunidades alinhadas ao seu perfil profissional.</p>
+          </article>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <section class="landing-audiences">
+
+      <div class="landing-container audience-grid">
+
+        <article class="ei-card audience-card" id="estudantes">
+          <i class="bi bi-mortarboard"></i>
+          <h2>Para estudantes</h2>
+          <p>Construa seu perfil, encontre oportunidades e acompanhe suas candidaturas.</p>
+          <a href="/auth?cadastro=candidato" class="ei-button ei-button-primary">
+            Começar minha carreira
+          </a>
+        </article>
+
+        <article class="ei-card audience-card" id="empresas">
+          <i class="bi bi-buildings"></i>
+          <h2>Para empresas</h2>
+          <p>Encontre novos talentos e gerencie seus processos seletivos.</p>
+          <a href="/auth?cadastro=empresa" class="ei-button ei-button-secondary">
+            Encontrar talentos
+          </a>
+        </article>
+
+      </div>
+
+    </section>
+
+    <section class="landing-cta">
+
+      <div class="landing-container">
+
+        <h2>Seu futuro profissional começa agora.</h2>
+
+        <p>Dê o primeiro passo com o EasyIntern.</p>
+
+        <a href="/auth?cadastro=candidato" class="ei-button ei-button-primary">
+          Criar minha conta
+          <i class="bi bi-arrow-right"></i>
+        </a>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <footer class="landing-footer">
+
+    <div class="landing-container footer-grid">
+
+      <a href="/landing" class="landing-brand">
+        <img src="/static/img/easyintern-logo.svg" alt="">
+        <strong>EasyIntern <span>2.0</span></strong>
+      </a>
+
+      <p>EasyIntern 2026 - Projeto de Desenvolvimento de Sistemas.</p>
+
+    </div>
+
+  </footer>
+
+</body>
+</html>
