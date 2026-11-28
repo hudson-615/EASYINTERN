@@ -1,0 +1,187 @@
+
+/* EI2-CANDIDATURA-MODAL */
+
+#modal-candidatura {
+    --mc-card: #1b192c;
+    --mc-soft: #30244a;
+    --mc-border: #39364a;
+    --mc-text: #f5f5fa;
+    --mc-muted: #b2afc5;
+    --mc-accent: #a78bfa;
+}
+
+body:not([data-theme="dark"]) #modal-candidatura {
+    --mc-card: #f7f7fb;
+    --mc-soft: #eae3f5;
+    --mc-border: #bfc5d5;
+    --mc-text: #192033;
+    --mc-muted: #526075;
+    --mc-accent: #6430bd;
+}
+
+#modal-candidatura .modal-box {
+    width: min(480px, calc(100% - 32px));
+    max-width: 480px;
+    max-height: 90dvh;
+    overflow-y: auto;
+    box-sizing: border-box;
+    background: var(--mc-card);
+    color: var(--mc-text);
+    border: 1px solid var(--mc-border);
+    border-radius: 18px;
+    padding: 26px;
+}
+
+#modal-candidatura .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0;
+    margin: 0 0 18px;
+    border: 0;
+}
+
+#modal-candidatura .mc-icon,
+#modal-candidatura .mc-vaga-icon {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 46px;
+    height: 46px;
+    background: var(--mc-soft);
+    color: var(--mc-accent);
+    border-radius: 12px;
+    font-size: 21px;
+}
+
+#modal-candidatura .modal-body {
+    padding: 0;
+    margin: 0;
+    overflow: visible;
+}
+
+#modal-candidatura #modal-cand-title {
+    color: var(--mc-text);
+    font-size: 21px;
+    font-weight: 700;
+    margin: 0 0 8px;
+}
+
+#modal-candidatura .mc-description {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--mc-muted);
+    margin: 0 0 22px;
+}
+
+#modal-candidatura .mc-vaga {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px;
+    background: var(--mc-soft);
+    border: 1px solid var(--mc-border);
+    border-radius: 12px;
+}
+
+#modal-candidatura .modal-vaga-info {
+    flex: 1;
+    min-width: 0;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    overflow-wrap: anywhere;
+}
+
+#modal-candidatura .mc-aviso {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 22px 0;
+}
+
+#modal-candidatura .mc-aviso i {
+    color: var(--mc-accent);
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+#modal-candidatura #aviso-compartilhamento-curriculo {
+    flex: 1;
+    color: var(--mc-muted);
+    font-size: 12px;
+    line-height: 1.7;
+    margin: 0;
+}
+
+#modal-candidatura .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    border-top: 1px solid var(--mc-border);
+    padding: 20px 0 0;
+    margin: 0;
+}
+
+#modal-candidatura .modal-footer .btn {
+    min-height: 40px;
+    padding: 10px 16px;
+    border-radius: 9px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+#modal-candidatura #btn-cand-cancel {
+    color: var(--mc-text);
+    border: 1px solid var(--mc-border);
+    background: transparent;
+}
+
+#modal-candidatura #btn-cand-confirm {
+    background: #7c3aed;
+    color: white;
+    border: 1px solid #7c3aed;
+    box-shadow: none;
+}
+
+@media (max-width: 480px) {
+    #modal-candidatura .modal-box {
+        padding: 20px;
+    }
+
+    #modal-candidatura .modal-footer {
+        display: flex;
+        flex-direction: column-reverse;
+    }
+
+    #modal-candidatura .modal-footer .btn {
+        width: 100%;
+    }
+}
+
+/* EI2-MODAL-THEME-FIX */
+
+#modal-candidatura .modal-vaga-info {
+    color: var(--mc-text);
+}
+
+#modal-candidatura .modal-vaga-info strong {
+    color: var(--mc-text) !important;
+}
+
+#modal-candidatura .modal-vaga-info p,
+#modal-candidatura .modal-vaga-info small,
+#modal-candidatura .modal-vaga-info span {
+    color: var(--mc-muted) !important;
+}
+
+#modal-candidatura .modal-close {
+    color: var(--mc-muted) !important;
+}
+
+#modal-candidatura .modal-close:hover {
+    color: var(--mc-accent) !important;
+}

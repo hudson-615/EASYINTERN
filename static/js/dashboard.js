@@ -798,6 +798,7 @@ function navigateTo(secao) {
         ? 'Perfil da Empresa'
         : 'Meu Perfil',
     vagas: 'Vagas Publicadas',
+    processos: 'Processos seletivos',
     candidatos: 'Candidatos — Ranking IA',
     'nova-vaga': 'Publicar Nova Vaga',
     projetos: 'Projetos',
@@ -3228,9 +3229,52 @@ function abrirDetalhesCandidato(
 
   if (!modal || !corpo) return;
 
+
+  // EI2-STATUS-OPCOES-PERMITIDAS
   if (seletor) {
-    seletor.value = candidato.status || 'pendente';
+    const atual = candidato.status || 'pendente';
+
+    const transicoes = {
+      pendente: ['em_analise','reprovado'],
+      em_analise: ['entrevista','reprovado'],
+      entrevista: ['aprovado','reprovado'],
+      aprovado: [],
+      reprovado: []
+    };
+
+    const destinos = transicoes[atual] || [];
+
+    Array.from(seletor.options).forEach(opcao => {
+      const permitido =
+        opcao.value === atual ||
+        destinos.includes(opcao.value);
+
+      opcao.disabled = !permitido;
+      opcao.hidden = !permitido;
+    });
+
+    seletor.value = atual;
+    seletor.disabled = destinos.length === 0;
+
+    const salvar = document.getElementById(
+      'btn-salvar-status'
+    );
+
+    const atualizarBotao = () => {
+      if (salvar) {
+        salvar.disabled =
+          !destinos.includes(seletor.value);
+
+        salvar.title = destinos.length === 0
+          ? 'Candidatura finalizada'
+          : 'Salvar altera\u00e7\u00e3o de status';
+      }
+    };
+
+    seletor.onchange = atualizarBotao;
+    atualizarBotao();
   }
+
 
   const match = candidato.match || {};
 
@@ -3421,7 +3465,11 @@ function initCandidatoModal() {
 
       if (modal) modal.hidden = true;
 
-      if (currentVagaIdCandidatos) {
+      // EI2-PROCESSOS-PRESERVAR-NAVEGACAO
+      if (document.getElementById('section-processos')
+          ?.classList.contains('active')) {
+        // A tela de processos atualiza os dados ao fechar o modal.
+      } else if (currentVagaIdCandidatos) {
         await loadCandidatosVaga(
           currentVagaIdCandidatos
         );
