@@ -104,11 +104,12 @@
 <link rel="stylesheet" href="/static/css/easyintern2-candidate-review.css?v=1">
   <link rel="icon" type="image/svg+xml" href="/static/img/easyintern-logo.svg?v=2">
 <link rel="stylesheet" href="/static/css/easyintern2-portfolio.css?v=2">
-<link rel="stylesheet" href="/static/css/easyintern2-mensagens.css?v=3">
+<link rel="stylesheet" href="/static/css/easyintern2-mensagens.css?v=20261127-52">
 <link rel="stylesheet" href="/static/css/easyintern2-gabriel-theme.css?v=20261127-20">
 <link rel="stylesheet" href="/static/css/easyintern2-dashboard-final.css?v=3">
 
 <link rel="stylesheet" href="/static/css/easyintern2-configuracoes.css?v=2">
+<link rel="stylesheet" href="/static/css/easyintern2-alertas.css?v=1">
 </head>
 
 <body class="dash-body" data-panel="candidato">
@@ -1608,6 +1609,30 @@ document.addEventListener('DOMContentLoaded', () => {
     <p>Gerencie suas conversas e conex&otilde;es profissionais.</p>
 </div>
 
+
+<!-- EI2-CHAT-OFFICIAL -->
+<div class="ec-main-tabs">
+    <button type="button" class="active"
+            id="ec-tab-chat" aria-pressed="true">
+        <i class="bi bi-chat-dots"></i>
+        Chat
+    </button>
+
+    <button type="button"
+            id="ec-tab-notifications" aria-pressed="false">
+        <i class="bi bi-bell"></i>
+        Notifica&ccedil;&otilde;es
+    </button>
+</div>
+
+<div id="ec-notifications" hidden>
+    <div class="ec-empty">
+        <i class="bi bi-bell"></i>
+        <strong>Notifica&ccedil;&otilde;es</strong>
+        <p>Recurso em desenvolvimento.</p>
+    </div>
+</div>
+
 <div class="em-tabs" role="group" aria-label="Tipos de conversa">
 
     <button type="button" id="em-recruiters"
@@ -1692,7 +1717,16 @@ document.addEventListener('DOMContentLoaded', () => {
     <aside class="ei-chat-sidebar">
       <h2>Conversas</h2>
       <button type="button" id="chat-atualizar">Atualizar conversas</button>
-      <div id="chat-conversas" aria-label="Conversas dispon?veis">
+
+<div class="ec-search">
+    <i class="bi bi-search"></i>
+    <input type="search"
+           id="ec-search-conversations"
+           placeholder="Buscar conversas..."
+           aria-label="Buscar conversas">
+</div>
+
+<div id="chat-conversas" aria-label="Conversas dispon?veis">
         Carregando conversas...
       </div>
       <button type="button" id="chat-mais-conversas" hidden>
@@ -1838,7 +1872,7 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 <script defer src="/static/js/conexoes-integradas.js?v=4"></script>
 <script defer src="/static/js/easyintern2-portfolio.js?v=1"></script>
-<script defer src="/static/js/easyintern2-mensagens.js?v=2"></script>
+<script defer src="/static/js/easyintern2-mensagens.js?v=20261127-51"></script>
 
 <!-- EI2-FINAL-METRICS-SYNC -->
 <script>
@@ -1898,5 +1932,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 <script defer src="/static/js/easyintern2-configuracoes.js?v=2"></script>
+<script src="/static/js/easyintern2-alertas.js?v=1"></script>
 </body>
 </html>
