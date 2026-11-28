@@ -13,6 +13,9 @@
 <link rel="stylesheet" href="/static/css/chat.css?v=2">
   <link rel="icon" type="image/svg+xml" href="/static/img/easyintern-logo.svg?v=2">
 <link rel="stylesheet" href="/static/css/easyintern2-empresa.css?v=9">
+<link rel="stylesheet" href="/static/css/easyintern2-ranking.css?v=2">
+<link rel="stylesheet" href="/static/css/easyintern2-processos.css?v=5">
+<link rel="stylesheet" href="/static/css/easyintern2-perfil-recrutador.css?v=1">
 </head>
 <body class="dash-body" data-panel="empresa">
 
@@ -38,6 +41,12 @@
       <span>Candidatos</span>
       <span class="nav-badge ai">IA</span>
     </a>
+
+    <a href="#" class="nav-item" id="nav-processos">
+      <i class="bi bi-diagram-3"></i>
+      <span>Processos seletivos</span>
+    </a>
+
     <a href="#" class="nav-item" data-section="nova-vaga" id="nav-nova-vaga">
       <i class="bi bi-plus-circle-fill"></i>
       <span>Nova Vaga</span>
@@ -687,6 +696,93 @@
   </div>
 </section>
 
+
+<section class="dash-section" id="section-processos">
+
+    <div class="er-hero">
+        <div>
+            <span class="er-eyebrow">GEST&Atilde;O DE RECRUTAMENTO</span>
+            <h2>Processos seletivos</h2>
+            <p>Acompanhe a evolu&ccedil;&atilde;o das candidaturas.</p>
+        </div>
+        <div class="er-hero-icon">
+            <i class="bi bi-diagram-3"></i>
+        </div>
+    </div>
+
+    <div class="ps-selector">
+        <label for="ps-vaga">Selecione uma vaga</label>
+        <div class="ps-selector-row">
+            <select id="ps-vaga" class="field-input field-select">
+                <option value="">Selecione uma vaga</option>
+            </select>
+
+            <button type="button" id="ps-atualizar">
+                <i class="bi bi-arrow-clockwise"></i> Atualizar
+            </button>
+        </div>
+    </div>
+
+    <div class="ps-stats">
+        <div class="ps-stat">
+            <i class="bi bi-clock"></i>
+            <div><strong id="ps-pendentes">&mdash;</strong><span>Pendentes</span></div>
+        </div>
+        <div class="ps-stat">
+            <i class="bi bi-search"></i>
+            <div><strong id="ps-analise">&mdash;</strong><span>Em an&aacute;lise</span></div>
+        </div>
+        <div class="ps-stat">
+            <i class="bi bi-calendar-event"></i>
+            <div><strong id="ps-entrevistas">&mdash;</strong><span>Entrevistas</span></div>
+        </div>
+        <div class="ps-stat">
+            <i class="bi bi-check-circle"></i>
+            <div><strong id="ps-finalizados">&mdash;</strong><span>Finalizados</span></div>
+        </div>
+    </div>
+
+    <div class="ps-results">
+        <div class="ps-results-header">
+            <h3>Candidaturas</h3>
+
+<p class="ps-drag-hint">
+    <i class="bi bi-arrows-move"></i>
+    Arraste os candidatos entre as colunas ou utilize o bot&atilde;o Gerenciar.
+</p>
+
+
+<p class="ps-drag-hint-mobile">
+    <i class="bi bi-info-circle"></i>
+    Utilize o bot&atilde;o Gerenciar para atualizar
+    a etapa de cada candidatura.
+</p>
+
+<div class="ps-filtros" id="ps-filtros">
+                <button type="button" class="active" data-ps-filter="todos">Todas</button>
+                <button type="button" data-ps-filter="pendente">Pendentes</button>
+                <button type="button" data-ps-filter="em_analise">Em an&aacute;lise</button>
+                <button type="button" data-ps-filter="entrevista">Entrevistas</button>
+                <button type="button" data-ps-filter="aprovado">Aprovadas</button>
+                <button type="button" data-ps-filter="reprovado">Reprovadas</button>
+            </div>
+        </div>
+
+        <div id="ps-lista" aria-live="polite">
+            <div class="ps-empty">
+                <i class="bi bi-diagram-3"></i>
+                <p>Selecione uma vaga para acompanhar suas candidaturas.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="er-disclaimer">
+        <i class="bi bi-info-circle"></i>
+        <span>As etapas representam a situa&ccedil;&atilde;o atual da candidatura, e n&atilde;o um hist&oacute;rico de eventos. Combine os detalhes de entrevistas pelo chat.</span>
+    </div>
+
+</section>
+
 </main>
 
 <!-- ── Modal: Candidato Detalhe ───────────────────────────────────────────── -->
@@ -726,9 +822,12 @@
 
 <!-- Maxwell Barvian's NumberFlow custom element -->
 <script type="module" src="https://esm.sh/number-flow"></script>
-<script src="/static/js/dashboard.js?v=15"></script>
+<script src="/static/js/dashboard.js?v=20261128-17"></script>
 <script defer src="/static/js/chat.js?v=4"></script>
 <script src="/static/js/easyintern2-empresa.js?v=9"></script>
 <script src="/static/js/easyintern2-vaga-wizard.js?v=2"></script>
+<script src="/static/js/easyintern2-ranking.js?v=2"></script>
+<script src="/static/js/easyintern2-processos.js?v=4"></script>
+<script src="/static/js/easyintern2-perfil-recrutador.js?v=1"></script>
 </body>
 </html>

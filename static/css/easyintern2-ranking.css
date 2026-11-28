@@ -1,0 +1,604 @@
+
+/* EASYINTERN 2.0 - RANKING EMPRESARIAL */
+
+#section-candidatos .er-hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 28px;
+    background: var(--ep-hero);
+    border: 1px solid var(--ep-border);
+    border-radius: 16px;
+}
+
+.er-hero h2 {
+    color: var(--ep-text);
+    font-size: 26px;
+    margin: 10px 0;
+    overflow-wrap: anywhere;
+}
+
+.er-hero p {
+    color: var(--ep-muted);
+    font-size: 13px;
+}
+
+.er-eyebrow {
+    color: var(--ep-accent);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1.4px;
+}
+
+.er-hero-icon {
+    background: var(--ep-soft);
+    color: var(--ep-accent);
+    width: 76px;
+    height: 76px;
+    border-radius: 16px;
+    display: grid;
+    place-items: center;
+    font-size: 32px;
+    flex-shrink: 0;
+}
+
+#section-candidatos .section-toolbar {
+    background: var(--ep-card);
+    border: 1px solid var(--ep-border);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+#section-candidatos .vaga-selector-wrap {
+    width: 100%;
+    max-width: 100%;
+}
+
+#section-candidatos .field-label {
+    color: var(--ep-text) !important;
+    margin-bottom: 10px;
+}
+
+#section-candidatos .field-label i {
+    color: var(--ep-accent) !important;
+}
+
+#section-candidatos select,
+#section-candidatos input {
+    background: var(--ep-bg) !important;
+    color: var(--ep-text) !important;
+    border: 1px solid var(--ep-border) !important;
+    border-radius: 9px !important;
+    padding: 12px 14px;
+    box-shadow: none !important;
+}
+
+#section-candidatos select:focus,
+#section-candidatos input:focus {
+    outline: 2px solid var(--ep-accent);
+    outline-offset: 1px;
+}
+
+#select-vaga-cands {
+    width: 100%;
+}
+
+.er-stats {
+    display: grid;
+    grid-template-columns: repeat(3,minmax(0,1fr));
+    gap: 16px;
+}
+
+.er-stat {
+    background: var(--ep-card);
+    border: 1px solid var(--ep-border);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 22px;
+}
+
+.er-stat i {
+    background: var(--ep-soft);
+    color: var(--ep-accent);
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.er-stat strong {
+    display: block;
+    font-size: 28px;
+    color: var(--ep-text);
+}
+
+.er-stat span {
+    color: var(--ep-muted);
+    font-size: 12px;
+}
+
+.er-results {
+    background: var(--ep-card);
+    border: 1px solid var(--ep-border);
+    border-radius: 14px;
+    overflow: hidden;
+}
+
+.er-controls {
+    padding: 20px;
+    border-bottom: 1px solid var(--ep-border);
+}
+
+.er-controls h3 {
+    color: var(--ep-text);
+    font-size: 17px;
+    margin-bottom: 16px;
+}
+
+.er-filter-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.er-search {
+    position: relative;
+    flex: 1 1 240px;
+}
+
+.er-search i {
+    position: absolute;
+    top: 50%;
+    left: 14px;
+    transform: translateY(-50%);
+    color: var(--ep-accent);
+}
+
+#section-candidatos .er-search input {
+    padding-left: 40px;
+    width: 100%;
+}
+
+#er-status-filter {
+    flex: 0 1 200px;
+}
+
+.er-columns,
+#candidatos-ranking .ranking-card {
+    display: grid !important;
+    grid-template-columns: 40px 44px minmax(0,1fr) 150px 125px 100px;
+    align-items: center;
+    gap: 14px;
+}
+
+.er-columns {
+    padding: 14px 20px;
+    background: var(--ep-soft);
+    color: var(--ep-muted);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.er-columns span:nth-child(2) {
+    grid-column: span 2;
+}
+
+#candidatos-ranking {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+#candidatos-ranking .ranking-card {
+    background: var(--ep-card) !important;
+    border: 0 !important;
+    border-bottom: 1px solid var(--ep-border) !important;
+    border-radius: 0 !important;
+    padding: 20px;
+    margin: 0;
+    cursor: pointer;
+    min-width: 0;
+}
+
+#candidatos-ranking .ranking-card:hover {
+    background: var(--ep-soft) !important;
+}
+
+#candidatos-ranking .ranking-card:last-child {
+    border-bottom: 0 !important;
+}
+
+#candidatos-ranking .ranking-avatar {
+    background: var(--ep-soft) !important;
+    color: var(--ep-accent) !important;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    font-size: 13px;
+}
+
+#candidatos-ranking .ranking-pos {
+    color: var(--ep-muted) !important;
+}
+
+#candidatos-ranking .ranking-nome {
+    color: var(--ep-text) !important;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+#candidatos-ranking .ranking-sub {
+    color: var(--ep-muted) !important;
+    font-size: 12px;
+    overflow-wrap: anywhere;
+}
+
+#candidatos-ranking .ranking-score-wrap {
+    color: var(--ep-muted) !important;
+    min-width: 0;
+    width: auto;
+    font-size: 12px;
+}
+
+.er-status {
+    min-width: 0;
+}
+
+.er-view {
+    background: var(--ep-soft);
+    color: var(--ep-accent);
+    border: 1px solid var(--ep-border);
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.er-view:hover {
+    background: #7c3aed;
+    color: white;
+}
+
+.er-disclaimer {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    background: var(--ep-card);
+    border: 1px solid var(--ep-border);
+    border-radius: 10px;
+    color: var(--ep-muted);
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.er-disclaimer i {
+    color: var(--ep-accent);
+    font-size: 17px;
+}
+
+#candidatos-ranking .empty-state {
+    padding: 48px 20px;
+    color: var(--ep-muted);
+}
+
+.er-no-results {
+    padding: 30px;
+    text-align: center;
+    color: var(--ep-muted);
+    font-size: 13px;
+}
+
+#section-candidatos [hidden] {
+    display: none !important;
+}
+
+@media(max-width:1000px) {
+    .er-columns {
+        display: none !important;
+    }
+
+    #candidatos-ranking .ranking-card {
+        grid-template-columns: 30px 44px minmax(0,1fr);
+    }
+
+    #candidatos-ranking .ranking-score-wrap,
+    #candidatos-ranking .er-status,
+    #candidatos-ranking .er-view {
+        grid-column: 3;
+        justify-self: start;
+    }
+}
+
+@media(max-width:600px) {
+    .er-hero-icon {
+        display: none;
+    }
+
+    #section-candidatos .er-hero {
+        padding: 20px;
+    }
+
+    .er-hero h2 {
+        font-size: 21px;
+    }
+
+    .er-stats {
+        gap: 8px;
+    }
+
+    .er-stat {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 12px;
+        gap: 8px;
+    }
+
+    .er-stat strong {
+        font-size: 24px;
+    }
+
+    .er-stat span {
+        font-size: 10px;
+    }
+}
+
+
+/* EI2-RANKING-REFINAMENTOS */
+
+.er-columns span:nth-child(n+3) {
+    text-align: center;
+}
+
+#candidatos-ranking .ranking-score-wrap,
+#candidatos-ranking .er-status {
+    justify-self: stretch;
+    text-align: center;
+}
+
+#modal-candidato .modal-box {
+    width: min(880px, calc(100vw - 32px));
+    max-width: 880px !important;
+    max-height: 90vh !important;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden !important;
+    background: var(--ep-card) !important;
+    border: 1px solid var(--ep-border) !important;
+    border-radius: 16px !important;
+    color: var(--ep-text) !important;
+}
+
+#modal-candidato .modal-header {
+    flex-shrink: 0;
+    padding: 22px 26px;
+    border-bottom: 1px solid var(--ep-border);
+    background: var(--ep-card);
+}
+
+#modal-candidato .modal-header h3 {
+    font-size: 18px;
+    color: var(--ep-text);
+}
+
+#modal-candidato .modal-header i {
+    color: var(--ep-accent);
+}
+
+#modal-candidato .modal-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto !important;
+    padding: 24px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--ep-accent) transparent;
+}
+
+#modal-candidato .ranking-card {
+    background: var(--ep-soft) !important;
+    border: 1px solid var(--ep-border) !important;
+    padding: 22px;
+    border-radius: 12px;
+    flex-wrap: wrap;
+    gap: 16px;
+    cursor: default;
+}
+
+#modal-candidato .ranking-avatar {
+    width: 56px;
+    height: 56px;
+    background: #7c3aed !important;
+    color: white !important;
+    display: grid;
+    place-items: center;
+    font-size: 18px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+#modal-candidato .ranking-nome {
+    font-size: 18px;
+    color: var(--ep-text);
+}
+
+#modal-candidato .ranking-sub {
+    color: var(--ep-muted);
+    font-size: 12px;
+    margin: 5px 0 8px;
+}
+
+#modal-candidato .er-profile-details,
+#modal-candidato .er-profile-match,
+#modal-candidato .er-profile-feedback {
+    background: var(--ep-bg);
+    border: 1px solid var(--ep-border) !important;
+    border-radius: 12px;
+    padding: 20px !important;
+    margin-top: 18px !important;
+    gap: 16px !important;
+}
+
+#modal-candidato .er-profile-details {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+}
+
+.er-profile-details > div:nth-child(2),
+.er-profile-details > div:nth-child(3) {
+    grid-column: 1 / -1;
+}
+
+#modal-candidato .er-profile-details strong,
+#modal-candidato .er-profile-match strong,
+#modal-candidato .er-profile-feedback strong {
+    display: block;
+    font-size: 13px;
+    color: var(--ep-text);
+    margin-bottom: 7px;
+}
+
+#modal-candidato .er-profile-details p,
+#modal-candidato .er-profile-match p {
+    font-size: 13px;
+    color: var(--ep-muted);
+    line-height: 1.65;
+    overflow-wrap: anywhere;
+}
+
+.er-profile-skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.er-profile-skills span {
+    background: var(--ep-soft);
+    color: var(--ep-accent);
+    border: 1px solid var(--ep-border);
+    border-radius: 7px;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+#modal-candidato .filter-btn {
+    background: var(--ep-soft) !important;
+    color: var(--ep-accent) !important;
+    border: 1px solid var(--ep-border) !important;
+    border-radius: 8px !important;
+    padding: 10px 14px;
+}
+
+#modal-candidato .filter-btn:hover {
+    border-color: var(--ep-accent) !important;
+}
+
+#modal-candidato textarea,
+#modal-candidato select {
+    background: var(--ep-bg) !important;
+    color: var(--ep-text) !important;
+    border: 1px solid var(--ep-border) !important;
+    border-radius: 9px !important;
+    font-family: inherit !important;
+    font-size: 13px;
+    padding: 12px;
+    box-shadow: none !important;
+}
+
+#modal-candidato textarea::placeholder {
+    color: var(--ep-muted);
+}
+
+#modal-candidato textarea:focus,
+#modal-candidato select:focus {
+    outline: 2px solid var(--ep-accent);
+    outline-offset: 1px;
+}
+
+#modal-candidato .btn {
+    border-radius: 8px !important;
+    padding: 10px 16px;
+}
+
+#ei-feedback-aviso {
+    color: var(--ep-muted);
+    font-size: 12px;
+}
+
+#modal-candidato .ei-iniciar-chat {
+    display: block;
+    width: 100%;
+    margin-top: 16px;
+    padding: 12px;
+}
+
+#modal-candidato .modal-footer {
+    flex-shrink: 0;
+    border-top: 1px solid var(--ep-border);
+    padding: 18px 24px;
+    background: var(--ep-card);
+}
+
+#status-change-group {
+    display: flex !important;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+}
+
+#status-change-group label {
+    color: var(--ep-muted) !important;
+    margin: 0;
+}
+
+#select-status-cand {
+    flex: 1;
+    width: auto !important;
+    min-width: 130px;
+}
+
+#modal-candidato-body a {
+    color: var(--ep-accent);
+}
+
+@media(max-width:600px) {
+    #modal-candidato .modal-box {
+        width: calc(100vw - 20px);
+        max-height: 92dvh !important;
+    }
+
+    #modal-candidato .modal-body {
+        padding: 14px;
+    }
+
+    #modal-candidato .modal-header,
+    #modal-candidato .modal-footer {
+        padding: 14px;
+    }
+
+    #modal-candidato .er-profile-details {
+        grid-template-columns: 1fr;
+    }
+
+    #modal-candidato .er-profile-details,
+    #modal-candidato .er-profile-match,
+    #modal-candidato .er-profile-feedback {
+        padding: 14px !important;
+    }
+
+    #status-change-group label {
+        width: 100%;
+    }
+}
