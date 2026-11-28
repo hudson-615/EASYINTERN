@@ -12,14 +12,15 @@
   <link rel="stylesheet" href="/static/css/dashboard.css?v=13" />
 <link rel="stylesheet" href="/static/css/chat.css?v=2">
   <link rel="icon" type="image/svg+xml" href="/static/img/easyintern-logo.svg?v=2">
+<link rel="stylesheet" href="/static/css/easyintern2-empresa.css?v=9">
 </head>
 <body class="dash-body" data-panel="empresa">
 
 <!-- ── Sidebar Zero-G ─────────────────────────────────────────────────────── -->
 <aside class="dash-sidebar" id="dash-sidebar">
   <div class="sidebar-brand">
-    <i class="bi bi-rocket-takeoff-fill brand-icon-sm"></i>
-    <span class="brand-name">EasyIntern</span>
+    <img class="ei2-empresa-logo" src="/static/img/easyintern-logo.svg" alt="">
+    <span class="brand-name">EasyIntern <b class="ep-brand-version">2.0</b></span>
   </div>
 
   <nav class="sidebar-nav" aria-label="Menu principal">
@@ -29,7 +30,7 @@
     </a>
     <a href="#" class="nav-item" data-section="vagas" id="nav-vagas">
       <i class="bi bi-briefcase-fill"></i>
-      <span>Vagas Publicadas</span>
+      <span>Vagas</span>
       <span class="nav-badge" id="badge-vagas">0</span>
     </a>
     <a href="#" class="nav-item" data-section="candidatos" id="nav-candidatos">
@@ -50,7 +51,7 @@
 
     <a href="#" class="nav-item" data-section="perfil" id="nav-perfil">
       <i class="bi bi-building"></i>
-      <span>Perfil da Empresa</span>
+      <span>Empresa</span>
     </a>
     <a href="#" class="nav-item" data-section="configuracoes" id="nav-configuracoes">
       <i class="bi bi-sliders"></i>
@@ -82,6 +83,14 @@
       <span class="dash-greeting" id="dash-greeting">Painel do Recrutador</span>
     </div>
     <div class="dash-header-actions">
+      <button type="button" id="header-theme-toggle"
+              class="theme-toggle"
+              aria-label="Alternar tema"
+              aria-pressed="false"
+              title="Alternar tema">
+          <i class="bi bi-moon-stars ei2-moon"></i>
+          <i class="bi bi-sun ei2-sun"></i>
+      </button>
       <button class="btn btn-primary btn-sm" id="btn-nova-vaga-header">
         <i class="bi bi-plus-lg"></i> Nova Vaga
       </button>
@@ -93,12 +102,22 @@
 
   <!-- ── Seção: Overview ──────────────────────────────────────────────────── -->
   <section class="dash-section active" id="section-overview">
+    <div class="ei2-empresa-hero" id="ei2-empresa-hero">
+        <div>
+            <span class="ei2-empresa-eyebrow">PAINEL DE RECRUTAMENTO</span>
+            <h1 id="ei2-empresa-saudacao">Bem-vindo!</h1>
+            <p>Gerencie suas vagas e acompanhe seus processos seletivos.</p>
+        </div>
+        <div class="ei2-empresa-hero-icon">
+            <i class="bi bi-building-check"></i>
+        </div>
+    </div>
     <div class="stats-grid" id="stats-grid">
       <div class="stat-card draggable-card" draggable="true" data-widget-id="stat-total-vagas-card">
         <div class="drag-handle" title="Arrastar e reordenar"><i class="bi bi-grip-vertical"></i></div>
         <div class="stat-icon"><i class="bi bi-briefcase-fill"></i></div>
         <div class="stat-body nf nf-stat" data-number-flow-stat>
-          <number-flow class="nf-number stat-value" id="stat-total-vagas" data-stat-number>—</number-flow>
+          <span class="nf-number stat-value" id="stat-total-vagas" data-stat-number>—</span>
           <span class="stat-label">Total de Vagas</span>
         </div>
       </div>
@@ -106,7 +125,7 @@
         <div class="drag-handle" title="Arrastar e reordenar"><i class="bi bi-grip-vertical"></i></div>
         <div class="stat-icon"><i class="bi bi-door-open-fill"></i></div>
         <div class="stat-body nf nf-stat" data-number-flow-stat>
-          <number-flow class="nf-number stat-value" id="stat-vagas-abertas" data-stat-number>—</number-flow>
+          <span class="nf-number stat-value" id="stat-vagas-abertas" data-stat-number>—</span>
           <span class="stat-label">Vagas Abertas</span>
         </div>
       </div>
@@ -114,7 +133,7 @@
         <div class="drag-handle" title="Arrastar e reordenar"><i class="bi bi-people-fill"></i></div>
         <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
         <div class="stat-body nf nf-stat" data-number-flow-stat>
-          <number-flow class="nf-number stat-value" id="stat-total-candidatos" data-stat-number>—</number-flow>
+          <span class="nf-number stat-value" id="stat-total-candidatos" data-stat-number>—</span>
           <span class="stat-label">Candidatos Recebidos</span>
         </div>
       </div>
@@ -122,10 +141,80 @@
         <div class="drag-handle" title="Arrastar e reordenar"><i class="bi bi-trophy-fill"></i></div>
         <div class="stat-icon"><i class="bi bi-trophy-fill"></i></div>
         <div class="stat-body nf nf-stat" data-number-flow-stat>
-          <number-flow class="nf-number stat-value" id="stat-aprovados" data-stat-number>—</number-flow>
+          <span class="nf-number stat-value" id="stat-aprovados" data-stat-number>—</span>
           <span class="stat-label">Aprovados</span>
         </div>
       </div>
+    </div>
+
+
+    <!-- EI2-EMPRESA-DASHBOARD-HIBRIDO -->
+    <div class="ep-insights-grid">
+
+        <article class="ep-insight-card">
+            <div class="ep-insight-header">
+                <div>
+                    <h3>Candidaturas por vaga</h3>
+                    <p>Acompanhe o interesse nas vagas publicadas.</p>
+                </div>
+                <i class="bi bi-bar-chart-line"></i>
+            </div>
+
+            <div id="ep-chart-vagas" aria-live="polite">
+                Carregando dados...
+            </div>
+        </article>
+
+        <article class="ep-insight-card">
+            <div class="ep-insight-header">
+                <div>
+                    <h3>A&ccedil;&otilde;es r&aacute;pidas</h3>
+                    <p>Gerencie seu recrutamento.</p>
+                </div>
+                <i class="bi bi-lightning-charge"></i>
+            </div>
+
+            <div class="ep-quick-actions">
+
+                <button type="button" id="ep-quick-publish">
+                    <i class="bi bi-plus-circle"></i>
+                    <div>
+                        <strong>Publicar nova vaga</strong>
+                        <small>Crie uma oportunidade</small>
+                    </div>
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+
+                <button type="button" id="ep-quick-candidates">
+                    <i class="bi bi-people"></i>
+                    <div>
+                        <strong>Ver candidatos</strong>
+                        <small>Consulte o ranking de IA</small>
+                    </div>
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+
+                <button type="button" id="ep-quick-jobs">
+                    <i class="bi bi-briefcase"></i>
+                    <div>
+                        <strong>Gerenciar vagas</strong>
+                        <small>Acompanhe suas publica&ccedil;&otilde;es</small>
+                    </div>
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+
+                <button type="button" id="ep-quick-chat">
+                    <i class="bi bi-chat-dots"></i>
+                    <div>
+                        <strong>Mensagens</strong>
+                        <small>Converse com candidatos</small>
+                    </div>
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+
+            </div>
+        </article>
+
     </div>
 
     <!-- Tabela de Vagas Abertas -->
@@ -639,5 +728,7 @@
 <script type="module" src="https://esm.sh/number-flow"></script>
 <script src="/static/js/dashboard.js?v=15"></script>
 <script defer src="/static/js/chat.js?v=4"></script>
+<script src="/static/js/easyintern2-empresa.js?v=9"></script>
+<script src="/static/js/easyintern2-vaga-wizard.js?v=2"></script>
 </body>
 </html>
