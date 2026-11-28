@@ -19,7 +19,7 @@
     );
   }
 
-  let tema = 'dark';
+  let tema = 'light';
 
   try {
     const salvo = localStorage.getItem(key);

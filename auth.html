@@ -42,12 +42,12 @@ html[data-auth-initial] #auth-section {
          aria-label="Tema de aparencia">
 
       <button type="button" data-auth-theme="light"
-              aria-label="Tema claro" aria-pressed="false">
+              aria-label="Tema claro" aria-pressed="true">
         <i class="bi bi-sun" aria-hidden="true"></i>
       </button>
 
       <button type="button" data-auth-theme="dark"
-              aria-label="Tema escuro" aria-pressed="true">
+              aria-label="Tema escuro" aria-pressed="false">
         <i class="bi bi-moon-stars" aria-hidden="true"></i>
       </button>
 
@@ -1092,7 +1092,7 @@ document.querySelectorAll('[data-ei2-register]').forEach(btn => {
     });
   }
 
-  let tema = 'dark';
+  let tema = 'light';
 
   try {
     const salvo = localStorage.getItem(key);
