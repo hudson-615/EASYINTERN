@@ -1,0 +1,523 @@
+
+/* EASYINTERN 2.0 - CONFIGURACOES */
+
+#section-configuracoes {
+    --es-card: #f7f7fb;
+    --es-surface: #eceef3;
+    --es-border: #b5bdce;
+    --es-text: #192033;
+    --es-muted: #526075;
+    --es-accent: #6430bd;
+    --es-selected: #e9defb;
+
+    max-width: 1200px;
+    width: 100%;
+    margin-inline: auto;
+    padding: 20px 24px 32px;
+}
+
+body[data-theme="dark"] #section-configuracoes {
+    --es-card: #191925;
+    --es-surface: #222231;
+    --es-border: #36394b;
+    --es-text: #f5f5fa;
+    --es-muted: #b2b2c5;
+    --es-accent: #b69af7;
+    --es-selected: #35254f;
+}
+
+#section-configuracoes [hidden] {
+    display: none !important;
+}
+
+.es-heading {
+    margin-bottom: 24px;
+}
+
+.es-heading h1 {
+    color: var(--es-text);
+    font-size: 28px;
+    font-weight: 750;
+    margin: 0 0 6px;
+    letter-spacing: -.5px;
+}
+
+.es-heading p,
+.es-panel p {
+    color: var(--es-muted);
+    font-size: 14px;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.es-layout {
+    display: grid;
+    grid-template-columns: 240px minmax(0,1fr);
+    align-items: start;
+    gap: 20px;
+}
+
+.es-menu {
+    background: var(--es-card);
+    border: 1px solid var(--es-border);
+    border-radius: 10px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.es-menu button {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 13px 12px;
+    background: transparent;
+    color: var(--es-muted);
+    border: 0;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+}
+
+.es-menu button i {
+    font-size: 17px;
+}
+
+.es-menu button:hover {
+    background: var(--es-surface);
+}
+
+.es-menu button.active {
+    background: var(--es-selected);
+    color: var(--es-accent);
+}
+
+.es-content {
+    min-width: 0;
+}
+
+.es-panel {
+    background: var(--es-card);
+    border: 1px solid var(--es-border);
+    border-radius: 10px;
+    padding: 24px;
+    color: var(--es-text);
+    min-height: 280px;
+}
+
+.es-panel h2 {
+    font-size: 21px;
+    font-weight: 750;
+    margin: 0 0 6px;
+    color: var(--es-text);
+}
+
+.es-panel h3 {
+    font-size: 15px;
+    font-weight: 650;
+    margin: 0 0 6px;
+    color: var(--es-text);
+}
+
+.es-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 22px 0;
+    border-top: 1px solid var(--es-border);
+    margin-top: 18px;
+}
+
+.es-row + .es-row {
+    margin-top: 0;
+}
+
+.es-row strong {
+    display: block;
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+.es-row p {
+    font-size: 13px;
+}
+
+.es-row > i {
+    color: var(--es-accent);
+    font-size: 20px;
+}
+
+.es-button {
+    border: 1px solid #6430bd;
+    border-radius: 7px;
+    padding: 10px 15px;
+    background: #6430bd;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.es-button:hover {
+    background: #5525a4;
+}
+
+.es-divider {
+    border-top: 1px solid var(--es-border);
+    margin: 20px 0;
+}
+
+.es-theme-grid {
+    display: grid;
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.es-theme {
+    display: block;
+    text-align: left;
+    background: var(--es-card);
+    border: 2px solid var(--es-border);
+    border-radius: 10px;
+    padding: 10px;
+    color: var(--es-text);
+    cursor: pointer;
+    min-width: 0;
+}
+
+.es-theme.active {
+    border-color: #7c3aed;
+    background: var(--es-selected);
+}
+
+.es-preview {
+    height: 120px;
+    padding: 14px;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    border: 1px solid #aeb5c8;
+}
+
+.es-preview-light {
+    background: #e9ebf0;
+}
+
+.es-preview-dark {
+    background: #10101c;
+    border-color: #363d50;
+}
+
+.es-preview span {
+    display: block;
+    height: 20px;
+    border-radius: 4px;
+}
+
+.es-preview-light span {
+    background: #fafafd;
+    border: 1px solid #b5bdce;
+}
+
+.es-preview-dark span {
+    background: #222231;
+    border: 1px solid #363d50;
+}
+
+.es-preview span:first-child {
+    width: 60%;
+    height: 10px;
+    border: 0;
+    background: #7c3aed;
+}
+
+.es-theme-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 13px 3px 3px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.es-selected {
+    display: none;
+    margin-left: auto;
+    color: var(--es-accent);
+}
+
+.es-theme.active .es-selected {
+    display: inline-block;
+}
+
+.es-empty {
+    text-align: center;
+    padding: 36px 16px;
+    margin-top: 20px;
+    border: 1px dashed var(--es-border);
+    border-radius: 9px;
+}
+
+.es-empty > i {
+    display: block;
+    font-size: 30px;
+    color: var(--es-accent);
+    margin-bottom: 15px;
+}
+
+.es-notice {
+    background: var(--es-surface);
+    border: 1px solid var(--es-border);
+    border-radius: 7px;
+    padding: 12px;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--es-muted);
+    margin: 16px 0;
+}
+
+/* Preservar e padronizar controles anteriores */
+
+#section-configuracoes #card-editar-dashboards {
+    border: 0 !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    background: transparent !important;
+}
+
+#section-configuracoes #card-editar-dashboards > .card-header {
+    display: none;
+}
+
+#section-configuracoes #card-editar-dashboards > .card-body {
+    padding: 0 !important;
+}
+
+#section-configuracoes .edit-dash-grid {
+    grid-template-columns: minmax(0,1fr) !important;
+    gap: 14px;
+}
+
+#section-configuracoes .edit-dash-block,
+#section-configuracoes .edit-dash-toggle-item,
+#section-configuracoes .edit-dash-mode-card,
+#section-configuracoes .badge-auto-stats {
+    background: var(--es-surface) !important;
+    border: 1px solid var(--es-border) !important;
+    color: var(--es-text) !important;
+    box-shadow: none !important;
+    border-radius: 8px;
+}
+
+#section-configuracoes .edit-dash-block-title,
+#section-configuracoes .edit-dash-toggle-label i,
+#section-configuracoes .edit-dash-mode-header i,
+#section-configuracoes .badge-auto-stats i {
+    color: var(--es-accent) !important;
+}
+
+#section-configuracoes .edit-dash-mode-desc {
+    color: var(--es-muted) !important;
+}
+
+#section-configuracoes .edit-dash-mode-card.active {
+    border-color: #7c3aed !important;
+    background: var(--es-selected) !important;
+}
+
+#section-configuracoes .edit-dash-slider {
+    background: #9298aa !important;
+}
+
+#section-configuracoes input:checked + .edit-dash-slider {
+    background: #7c3aed !important;
+}
+
+#section-configuracoes #btn-reset-dash-order {
+    background: var(--es-selected) !important;
+    color: var(--es-accent) !important;
+    border: 1px solid var(--es-border) !important;
+    border-radius: 7px;
+    padding: 10px 14px;
+}
+
+#section-configuracoes button:focus-visible {
+    outline: 2px solid #7c3aed;
+    outline-offset: 3px;
+}
+
+@media(max-width:800px) {
+    #section-configuracoes {
+        padding: 16px;
+    }
+
+    .es-layout {
+        grid-template-columns: minmax(0,1fr);
+    }
+
+    .es-menu {
+        display: grid;
+        grid-template-columns: repeat(2,minmax(0,1fr));
+        gap: 5px;
+    }
+
+    .es-panel {
+        padding: 18px;
+    }
+}
+
+@media(max-width:480px) {
+    .es-menu button {
+        font-size: 12px;
+        padding: 10px 8px;
+    }
+
+    .es-row {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .es-theme-grid {
+        grid-template-columns: minmax(0,1fr);
+    }
+
+    .es-heading h1 {
+        font-size: 24px;
+    }
+
+    #section-configuracoes .edit-dash-mode-selector {
+        display: flex;
+        flex-direction: column;
+    }
+}
+
+
+/* EI2-SETTINGS-OFFICIAL-PROTOTYPE */
+
+#section-configuracoes {
+    max-width: 1050px;
+    margin-inline: auto;
+}
+
+#section-configuracoes .es-heading {
+    margin-bottom: 22px;
+}
+
+#section-configuracoes .es-layout {
+    display: block;
+}
+
+#section-configuracoes .es-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 0;
+    background: transparent;
+    border: 0;
+}
+
+#section-configuracoes .es-menu button {
+    display: grid;
+    grid-template-columns: 42px minmax(0,1fr) 20px;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 20px;
+    min-height: 80px;
+    border: 1px solid var(--es-border);
+    border-radius: 9px;
+    background: var(--es-card);
+    color: var(--es-text);
+    transition: border-color .15s, background .15s;
+}
+
+#section-configuracoes .es-menu button:hover {
+    background: var(--es-surface);
+    border-color: #7c3aed;
+}
+
+#section-configuracoes .es-menu button > i:first-child {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 9px;
+    background: var(--es-selected);
+    color: var(--es-accent);
+    font-size: 20px;
+}
+
+#section-configuracoes .es-option-text {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+#section-configuracoes .es-option-text strong {
+    font-size: 15px;
+    font-weight: 650;
+}
+
+#section-configuracoes .es-option-text small {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--es-muted);
+}
+
+#section-configuracoes .es-option-arrow {
+    font-size: 14px;
+    color: var(--es-accent);
+}
+
+#section-configuracoes .es-menu [aria-disabled="true"] {
+    cursor: default;
+    opacity: .75;
+}
+
+#section-configuracoes .es-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    color: var(--es-accent);
+    background: transparent;
+    border: 0;
+    padding: 10px 0;
+    margin-bottom: 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+#section-configuracoes .es-panel {
+    min-height: 0;
+    border-radius: 9px;
+}
+
+body[data-theme="dark"] #section-configuracoes {
+    --es-card: #1b192c;
+    --es-surface: #2a2740;
+    --es-border: #39364a;
+    --es-selected: #302442;
+    --es-accent: #a78bfa;
+}
+
+@media(max-width:600px) {
+    #section-configuracoes .es-menu button {
+        grid-template-columns: 36px minmax(0,1fr) 16px;
+        padding: 13px;
+        gap: 10px;
+    }
+
+    #section-configuracoes .es-menu button > i:first-child {
+        width: 36px;
+        height: 36px;
+        font-size: 17px;
+    }
+}

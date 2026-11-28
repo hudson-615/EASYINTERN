@@ -978,6 +978,7 @@ async function loadCandidatoDashboard() {
   });
 
   await loadCandidatoStats();
+  ei2AtualizarEntrevistas();
   await carregarPerfilCandidato();
   await loadCandidaturas();
   await Promise.all([
@@ -2047,7 +2048,12 @@ function renderTopVagas(resultados) {
         </div>
 
         <div class="ei2-job-match"
-             style="color:${obterCorScore(vaga.match)}">
+             data-score-level="${
+               !avaliado ? 'neutral' :
+               obterScore(vaga.match) >= 80 ? 'high' :
+               obterScore(vaga.match) >= 60 ? 'medium' :
+               obterScore(vaga.match) >= 40 ? 'partial' : 'neutral'
+             }">
           ${avaliado
             ? escHtml(scoreTexto(vaga.match)) + ' match'
             : 'N&atilde;o avaliado'}
@@ -5142,4 +5148,35 @@ function ei2AbrirDetalhesVaga(vaga, origem) {
   });
 
   dialog.showModal();
+}
+
+
+// EI2-FINAL-INTERVIEW-COUNT
+async function ei2AtualizarEntrevistas() {
+    const elemento = document.getElementById(
+        'ei2-final-interviews'
+    );
+
+    if (!elemento) return;
+
+    try {
+        const params = new URLSearchParams({
+            pagina: '1',
+            limite: '1',
+            situacao: 'entrevista',
+            com_metadados: 'true'
+        });
+
+        const dados = await apiFetch(
+            `${API.candidaturas}?${params}`
+        );
+
+        if (Number.isInteger(dados?.total)) {
+            elemento.textContent = dados.total;
+        } else {
+            elemento.textContent = '\u2014';
+        }
+    } catch {
+        elemento.textContent = '\u2014';
+    }
 }

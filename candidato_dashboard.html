@@ -106,6 +106,9 @@
 <link rel="stylesheet" href="/static/css/easyintern2-portfolio.css?v=2">
 <link rel="stylesheet" href="/static/css/easyintern2-mensagens.css?v=3">
 <link rel="stylesheet" href="/static/css/easyintern2-gabriel-theme.css?v=20261127-20">
+<link rel="stylesheet" href="/static/css/easyintern2-dashboard-final.css?v=3">
+
+<link rel="stylesheet" href="/static/css/easyintern2-configuracoes.css?v=2">
 </head>
 
 <body class="dash-body" data-panel="candidato">
@@ -254,7 +257,16 @@ document.addEventListener('DOMContentLoaded', () => {
         <span class="dash-greeting" id="dash-greeting">Carregando...</span>
       </div>
 
-      <div class="dash-header-actions">
+      <!-- EI2-FINAL-HEADER-SEARCH -->
+<form id="ei2-home-search" class="ei2-home-search">
+    <i class="bi bi-search" aria-hidden="true"></i>
+    <input type="search" id="ei2-home-query"
+           maxlength="120"
+           placeholder="Buscar vagas..."
+           aria-label="Buscar vagas ou habilidades">
+    <button type="submit">Buscar</button>
+</form>
+<div class="dash-header-actions">
 <!-- EI2-HEADER-NOTIFICATIONS -->
 <div class="ei2-notifications">
 
@@ -351,45 +363,40 @@ document.addEventListener('DOMContentLoaded', () => {
     <section class="dash-section active" id="section-overview">
 
 
+
 <!-- EI2-HYBRID-OVERVIEW -->
 
 <div class="ei2-home-heading">
-  <h1 id="ei2-home-greeting">Ol&aacute;, estudante!</h1>
-  <p>Descubra pessoas, projetos e oportunidades.</p>
+    <div>
+        <h1 id="ei2-home-greeting">Ol&aacute;, estudante!</h1>
+        <p>Aqui est&aacute; um resumo da sua jornada.</p>
+    </div>
+    <time id="ei2-home-date"></time>
 </div>
 
-<form id="ei2-home-search" class="ei2-home-search">
-  <i class="bi bi-search" aria-hidden="true"></i>
-  <input type="search" id="ei2-home-query"
-         maxlength="120"
-         placeholder="Buscar vagas..."
-         aria-label="Buscar vagas ou habilidades">
-  <button type="submit">Buscar</button>
-</form>
-
-<div class="ei2-home-shortcuts">
-
-  <a href="#" data-section="recomendadas"
-     class="ei2-home-shortcut">
-    <i class="bi bi-briefcase"></i>
-    <strong>Vagas para voc&ecirc;</strong>
-    <span>Explore oportunidades</span>
-  </a>
-
-  <a href="#" data-section="pessoas" class="ei2-home-shortcut">
-    <i class="bi bi-people"></i>
-    <strong>Conex&otilde;es</strong>
-    <span>Descubra pessoas</span>
-  </a>
 
 
-<a href="#" class="ei2-home-shortcut"
-   data-section="projetos">
-    <i class="bi bi-code-slash"></i>
-    <strong>Projetos</strong>
-    <span>Construa seu portfolio</span>
-</a>
+<div class="ei2-final-metrics">
 
+    <a href="#" data-section="perfil" class="ei2-final-metric">
+        <strong id="ei2-final-profile-value">&mdash;</strong>
+        <span>Perfil completo</span>
+        <div class="ei2-final-progress">
+            <div id="ei2-final-progress-fill"></div>
+        </div>
+    </a>
+
+    <a href="#" data-section="candidaturas"
+       class="ei2-final-metric">
+        <strong id="ei2-final-applications">&mdash;</strong>
+        <span>Candidaturas</span>
+    </a>
+
+    <a href="#" data-section="candidaturas"
+       class="ei2-final-metric">
+        <strong id="ei2-final-interviews">&mdash;</strong>
+        <span>Entrevistas</span>
+    </a>
 
 </div>
 
@@ -924,6 +931,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     <!-- Seção: Perfil -->
     <section class="dash-section" id="section-perfil">
+
+
+
 <!-- EI2-PROFILE-GRID -->
 
       <div class="perfil-layout ei2-profile-grid">
@@ -1156,6 +1166,201 @@ document.addEventListener('DOMContentLoaded', () => {
 
     <!-- Seção: Configurações -->
     <section class="dash-section" id="section-configuracoes">
+
+<!-- EI2-SETTINGS-FINAL -->
+
+<div class="es-heading">
+    <h1>Configura&ccedil;&otilde;es</h1>
+    <p>Ajuste sua conta, privacidade e prefer&ecirc;ncias.</p>
+</div>
+
+<div class="es-layout">
+
+    <nav class="es-menu" aria-label="Categorias">
+
+        <button type="button" data-es-tab="conta" class="active">
+            <i class="bi bi-person"></i>
+            Conta
+        </button>
+
+        <button type="button" data-es-tab="notificacoes">
+            <i class="bi bi-bell"></i>
+            Notifica&ccedil;&otilde;es
+        </button>
+
+        <button type="button" data-es-tab="privacidade">
+            <i class="bi bi-shield-check"></i>
+            Privacidade
+        </button>
+
+        <button type="button" data-es-tab="aparencia">
+            <i class="bi bi-palette"></i>
+            Apar&ecirc;ncia
+        </button>
+
+        <button type="button" data-es-tab="preferencias">
+            <i class="bi bi-briefcase"></i>
+            Prefer&ecirc;ncias de vagas
+        </button>
+
+        <button type="button" data-es-tab="dashboard">
+            <i class="bi bi-grid"></i>
+            Dashboard
+        </button>
+
+    </nav>
+
+    <div class="es-content">
+
+        <article class="es-panel" data-es-panel="conta">
+
+            <h2>Conta</h2>
+            <p>Gerencie suas informa&ccedil;&otilde;es pessoais.</p>
+
+            <div class="es-row">
+                <div>
+                    <strong>Dados pessoais</strong>
+                    <p>Nome, contato e informa&ccedil;&otilde;es profissionais.</p>
+                </div>
+
+                <button type="button" class="es-button"
+                        data-es-go="nav-perfil">
+                    Editar perfil
+                </button>
+            </div>
+
+            <div class="es-row">
+                <div>
+                    <strong>Seguran&ccedil;a da conta</strong>
+                    <p>Altera&ccedil;&atilde;o de senha pelas configura&ccedil;&otilde;es ainda indispon&iacute;vel.</p>
+                </div>
+                <i class="bi bi-lock"></i>
+            </div>
+
+        </article>
+
+        <article class="es-panel" data-es-panel="notificacoes" hidden>
+
+            <h2>Notifica&ccedil;&otilde;es</h2>
+            <p>Gerencie os avisos recebidos pela plataforma.</p>
+
+            <div class="es-empty">
+                <i class="bi bi-bell"></i>
+                <h3>Prefer&ecirc;ncias de notifica&ccedil;&otilde;es</h3>
+                <p>Recurso em desenvolvimento.</p>
+            </div>
+
+        </article>
+
+        <article class="es-panel" data-es-panel="privacidade" hidden>
+
+            <h2>Privacidade</h2>
+            <p>Controle sua visibilidade na rede profissional.</p>
+
+            <div class="es-row">
+                <div>
+                    <strong>Visibilidade do perfil</strong>
+                    <p>Escolha se outros estudantes podem encontrar seu perfil.</p>
+                </div>
+
+                <button type="button" class="es-button"
+                        data-es-go="nav-pessoas">
+                    Gerenciar
+                </button>
+            </div>
+
+        </article>
+
+        <article class="es-panel" data-es-panel="aparencia" hidden>
+
+            <h2>Apar&ecirc;ncia</h2>
+            <p>Personalize sua experi&ecirc;ncia no EasyIntern.</p>
+
+            <div class="es-divider"></div>
+
+            <h3>Tema da plataforma</h3>
+            <p>Escolha a apar&ecirc;ncia que prefere utilizar.</p>
+
+            <div class="es-theme-grid">
+
+                <button type="button" class="es-theme"
+                        data-es-theme="light">
+
+                    <div class="es-preview es-preview-light">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+
+                    <div class="es-theme-label">
+                        <i class="bi bi-sun"></i>
+                        Tema claro
+                        <i class="bi bi-check-circle-fill es-selected"></i>
+                    </div>
+
+                </button>
+
+                <button type="button" class="es-theme"
+                        data-es-theme="dark">
+
+                    <div class="es-preview es-preview-dark">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+
+                    <div class="es-theme-label">
+                        <i class="bi bi-moon-stars"></i>
+                        Tema escuro
+                        <i class="bi bi-check-circle-fill es-selected"></i>
+                    </div>
+
+                </button>
+
+            </div>
+
+            <div id="es-theme-original" hidden></div>
+
+        </article>
+
+        <article class="es-panel" data-es-panel="preferencias" hidden>
+
+            <h2>Prefer&ecirc;ncias de vagas</h2>
+            <p>Gerencie as informa&ccedil;&otilde;es utilizadas nas recomenda&ccedil;&otilde;es.</p>
+
+            <div class="es-row">
+                <div>
+                    <strong>&Aacute;rea de interesse e habilidades</strong>
+                    <p>Atualize suas informa&ccedil;&otilde;es profissionais.</p>
+                </div>
+
+                <button type="button" class="es-button"
+                        data-es-go="nav-perfil">
+                    Meu perfil
+                </button>
+            </div>
+
+        </article>
+
+        <article class="es-panel" data-es-panel="dashboard" hidden>
+
+            <h2>Dashboard</h2>
+            <p>Prefer&ecirc;ncias de visualiza&ccedil;&atilde;o do painel.</p>
+
+            <div class="es-notice">
+                Alguns controles pertencem ao modelo anterior
+                do dashboard e podem n&atilde;o afetar a nova
+                tela inicial.
+            </div>
+
+            <div id="es-dashboard-original"></div>
+
+        </article>
+
+    </div>
+
+</div>
+
 
       <div class="glass-card dash-card settings-card">
         <div class="card-header">
@@ -1577,7 +1782,7 @@ document.addEventListener('DOMContentLoaded', () => {
   <div class="toast-container" id="toast-container" aria-live="polite"></div>
 
   <script type="module" src="https://esm.sh/number-flow"></script>
-  <script src="/static/js/dashboard.js?v=17"></script>
+  <script src="/static/js/dashboard.js?v=20261127-31"></script>
   <script src="/static/js/perfil-formacoes-habilidades.js?v=1"></script>
   <script defer src="/static/js/curriculo-perfil.js?v=1"></script>
 <script defer src="/static/js/chat.js?v=4"></script>
@@ -1634,5 +1839,64 @@ document.addEventListener('DOMContentLoaded', () => {
 <script defer src="/static/js/conexoes-integradas.js?v=4"></script>
 <script defer src="/static/js/easyintern2-portfolio.js?v=1"></script>
 <script defer src="/static/js/easyintern2-mensagens.js?v=2"></script>
+
+<!-- EI2-FINAL-METRICS-SYNC -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const data = document.getElementById('ei2-home-date');
+
+    data.textContent = new Intl.DateTimeFormat('pt-BR', {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short'
+    }).format(new Date());
+
+    function sincronizar() {
+        const perfil = document.getElementById(
+            'ei2-home-profile-progress'
+        );
+
+        const progresso = perfil?.getAttribute('aria-valuenow');
+
+        if (progresso !== null && progresso !== undefined) {
+            document.getElementById(
+                'ei2-final-profile-value'
+            ).textContent = progresso + '%';
+
+            document.getElementById(
+                'ei2-final-progress-fill'
+            ).style.width = progresso + '%';
+        }
+
+        const candidaturas = document.getElementById(
+            'stat-total-c'
+        );
+
+        if (candidaturas) {
+            document.getElementById(
+                'ei2-final-applications'
+            ).textContent = candidaturas.textContent.trim() || '\u2014';
+        }
+    }
+
+    ['ei2-home-profile-progress', 'stat-total-c'].forEach(id => {
+        const origem = document.getElementById(id);
+
+        if (origem) {
+            new MutationObserver(sincronizar).observe(origem, {
+                attributes: true,
+                childList: true,
+                subtree: true,
+                characterData: true
+            });
+        }
+    });
+
+    sincronizar();
+});
+</script>
+
+
+<script defer src="/static/js/easyintern2-configuracoes.js?v=2"></script>
 </body>
 </html>
