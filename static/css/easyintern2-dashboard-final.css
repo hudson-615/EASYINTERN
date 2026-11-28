@@ -1,0 +1,331 @@
+
+/* EASYINTERN 2.0 - DASHBOARD FINAL */
+
+#section-overview {
+    max-width: 1440px;
+    width: 100%;
+    margin-inline: auto;
+}
+
+#section-overview .ei2-home-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 0 0 20px;
+}
+
+#section-overview .ei2-home-heading h1 {
+    font-size: 27px;
+    font-weight: 700;
+    letter-spacing: -.6px;
+    margin-bottom: 5px;
+}
+
+#ei2-home-date {
+    font-size: 12px;
+    color: var(--ei-muted);
+}
+
+#section-overview .ei2-final-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin: 0 0 24px;
+}
+
+#section-overview .ei2-final-metric {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 5px;
+    padding: 18px;
+    min-width: 0;
+    min-height: 104px;
+    background: var(--ei-card);
+    border: 1px solid var(--ei-border);
+    border-radius: 10px;
+    color: var(--ei-text);
+    text-decoration: none;
+}
+
+#section-overview .ei2-final-metric strong {
+    font-size: 28px;
+    font-weight: 750;
+    line-height: 1.2;
+    color: var(--ei-text);
+}
+
+#section-overview .ei2-final-metric span {
+    font-size: 13px;
+    color: var(--ei-muted);
+}
+
+.ei2-final-progress {
+    width: 100%;
+    height: 6px;
+    margin-top: 5px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--ei-surface);
+}
+
+#ei2-final-progress-fill {
+    height: 100%;
+    width: 0;
+    background: #22c55e;
+    border-radius: 8px;
+    transition: width .3s ease;
+}
+
+#section-overview .ei2-home-priorities {
+    display: block;
+    margin: 0;
+}
+
+#section-overview .ei2-home-profile,
+#section-overview .ei2-performance-title,
+#section-overview #stats-grid,
+#section-overview #dash-widgets-grid,
+#section-overview #card-timeline {
+    display: none !important;
+}
+
+#section-overview #ei2-home-jobs {
+    width: 100%;
+}
+
+#section-overview #card-top-vagas {
+    background: transparent;
+    box-shadow: none;
+    border: 0;
+}
+
+#section-overview #card-top-vagas .card-header {
+    padding: 0 0 14px;
+    border: 0;
+}
+
+#section-overview #card-top-vagas .card-header h3 {
+    font-size: 19px;
+    font-weight: 700;
+}
+
+#section-overview #card-top-vagas .card-header h3 i {
+    display: none;
+}
+
+#section-overview #top-vagas-list {
+    padding: 0;
+}
+
+#section-overview .ei2-recommended-job {
+    background: var(--ei-card);
+    border: 1px solid var(--ei-border);
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 10px;
+    box-shadow: none;
+}
+
+#section-overview .ei2-job-company {
+    width: 48px !important;
+    height: 48px !important;
+    border-radius: 9px !important;
+}
+
+#section-overview .ei2-job-info h4 {
+    font-size: 15px;
+}
+
+#section-overview .ei2-job-info p {
+    font-size: 12px;
+}
+
+@media(max-width:600px) {
+    #section-overview .ei2-final-metrics {
+        gap: 8px;
+    }
+
+    #section-overview .ei2-final-metric {
+        min-height: 96px;
+        padding: 12px 10px;
+    }
+
+    #section-overview .ei2-final-metric strong {
+        font-size: 23px;
+    }
+
+    #section-overview .ei2-final-metric span {
+        font-size: 11px;
+    }
+
+    #section-overview .ei2-home-heading h1 {
+        font-size: 23px;
+    }
+}
+
+
+/* EI2-FINAL-HEADER-REFINEMENT */
+
+.dash-header .ei2-home-search {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+    max-width: 520px;
+    width: auto;
+    height: 38px;
+    margin: 0 16px;
+    padding: 4px 10px;
+    gap: 8px;
+    border: 1px solid var(--ei-border);
+    background: var(--ei-card);
+    border-radius: 7px;
+}
+
+.dash-header .ei2-home-search input {
+    width: 100%;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    font-size: 13px;
+    color: var(--ei-text);
+}
+
+.dash-header .ei2-home-search button {
+    padding: 6px 12px;
+    font-size: 12px;
+    border-radius: 5px;
+}
+
+#section-overview .ei2-home-heading {
+    margin-bottom: 18px;
+}
+
+#section-overview .ei2-final-metrics {
+    margin-bottom: 26px;
+}
+
+#section-overview .ei2-final-metric {
+    min-height: 100px;
+    padding: 16px 18px;
+}
+
+#section-overview #card-top-vagas .card-header::after {
+    display: none;
+}
+
+#section-overview #card-top-vagas .card-link {
+    background: transparent;
+    color: var(--ei-highlight);
+    font-weight: 600;
+}
+
+#section-overview .ei2-recommended-job {
+    padding: 14px 16px;
+    margin-bottom: 8px;
+}
+
+#section-overview .ei2-job-match {
+    font-size: 12px;
+    font-weight: 650;
+    white-space: nowrap;
+}
+
+body[data-theme="dark"]
+#section-overview .ei2-job-match {
+    background: #243044;
+}
+
+body:not([data-theme="dark"])
+#section-overview .ei2-job-match {
+    background: #e9edf2;
+}
+
+@media(max-width: 650px) {
+    .dash-header {
+        flex-wrap: wrap;
+    }
+
+    .dash-header .ei2-home-search {
+        order: 10;
+        flex: 0 0 100%;
+        width: 100%;
+        max-width: none;
+        margin: 4px 0;
+    }
+
+    #section-overview .ei2-final-metric {
+        padding: 12px 8px;
+        min-height: 92px;
+    }
+}
+
+
+/* EI2-DASHBOARD-FINAL-CONTRAST */
+
+body[data-theme="dark"] #section-overview {
+    --ei-card: #1a1f2e;
+    --ei-surface: #252b3c;
+    --ei-border: #363d50;
+    --ei-muted: #b2bed0;
+    --ei-text: #f5f5fa;
+}
+
+#section-overview .ei2-job-match {
+    color: #475569;
+    background: #e5e7eb;
+}
+
+#section-overview .ei2-job-match[data-score-level="high"] {
+    color: #166534;
+    background: #dcfce7;
+}
+
+#section-overview .ei2-job-match[data-score-level="medium"] {
+    color: #1e40af;
+    background: #dbeafe;
+}
+
+#section-overview .ei2-job-match[data-score-level="partial"] {
+    color: #92400e;
+    background: #fef3c7;
+}
+
+body[data-theme="dark"]
+#section-overview .ei2-job-match {
+    color: #cbd5e1;
+    background: #303747;
+}
+
+body[data-theme="dark"]
+#section-overview .ei2-job-match[data-score-level="high"] {
+    color: #86efac;
+    background: #17392d;
+}
+
+body[data-theme="dark"]
+#section-overview .ei2-job-match[data-score-level="medium"] {
+    color: #93c5fd;
+    background: #203553;
+}
+
+body[data-theme="dark"]
+#section-overview .ei2-job-match[data-score-level="partial"] {
+    color: #fcd34d;
+    background: #42351d;
+}
+
+body:not([data-theme="dark"])
+#nav-overview.active {
+    background: #e9defb !important;
+    color: #6430bd !important;
+}
+
+body:not([data-theme="dark"])
+#nav-overview.active i {
+    color: #6430bd !important;
+}
